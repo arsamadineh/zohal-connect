@@ -1,0 +1,26 @@
+[package]
+name = "zohal-engine"
+version = "0.1.0"
+edition = "2021"
+authors = ["Zohal Connect Team <dev@zohal.app>"]
+license = "AGPL-3.0-only"
+
+[dependencies]
+zohal-proto = { workspace = true }
+zohal-platform = { workspace = true }
+zohal-tun = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+interprocess = { workspace = true }
+sha2 = { workspace = true }
+parking_lot = { workspace = true }
+ureq = { workspace = true }
+
+[dev-dependencies]
+proptest = { workspace = true }
+tempfile = "3.17"

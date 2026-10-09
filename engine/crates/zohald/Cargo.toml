@@ -1,0 +1,13 @@
+[package]
+name = "zohald"
+version = "0.1.0"
+edition = "2021"
+authors = ["Zohal Connect Team <dev@zohal.app>"]
+license = "AGPL-3.0-only"
+
+[dependencies]
+zohal-proto = { workspace = true }
+zohal-engine = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

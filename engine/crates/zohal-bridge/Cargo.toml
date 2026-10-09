@@ -1,0 +1,12 @@
+[package]
+name = "zohal-bridge"
+version = "0.1.0"
+edition = "2021"
+authors = ["Zohal Connect Team <dev@zohal.app>"]
+license = "AGPL-3.0-only"
+
+[dependencies]
+zohal-proto = { workspace = true }
+tokio = { workspace = true }
+interprocess = { workspace = true }
+tracing = { workspace = true }

@@ -16,18 +16,18 @@
 - [x] Phase 0 Gate: `docs/AETHER_NOTES.md` complete with numbers and verified items
 
 ## Phase 1: Engine Core (Linux, Fake Aether)
-- [ ] T1.1 `zohal-proto`: types, IPC messages, settings schema with validation, error codes
-- [ ] T1.2 `zohal-engine`: supervisor reconcile loop with level-triggered watch channel and settle window
-- [ ] T1.3 Fake-Aether test harness (delays, failures, port readiness, crash simulation)
-- [ ] T1.4 Auto ladder and rung memory implementation
-- [ ] T1.5 Cache system (`endpoints.json`, `rungs.json`, atomic IO, corruption recovery)
-- [ ] T1.6 Journal and idempotent undo system
-- [ ] T1.7 IPC server and client implementation (`interprocess` newline-delimited JSON)
-- [ ] T1.8 Log ring buffer (2000 events) and diagnostic export
-- [ ] T1.9 Error taxonomy implementation
-- [ ] T1.10 Unit tests and property test (10,000 toggles x 20 seeds)
-- [ ] T1.11 IPC parser fuzz test
-- [ ] Phase 1 Gate: All tests green, zero leaked processes/journal entries, clippy/fmt clean
+- [x] T1.1 `zohal-proto`: types, IPC messages, settings schema with validation, error codes
+- [x] T1.2 `zohal-engine`: supervisor reconcile loop with level-triggered watch channel and settle window
+- [x] T1.3 Fake-Aether test harness (delays, failures, port readiness, crash simulation)
+- [x] T1.4 Auto ladder and rung memory implementation
+- [x] T1.5 Cache system (`endpoints.json`, `rungs.json`, atomic IO, corruption recovery)
+- [x] T1.6 Journal and idempotent undo system
+- [x] T1.7 IPC server and client implementation (`interprocess` newline-delimited JSON)
+- [x] T1.8 Log ring buffer (2000 events) and diagnostic export
+- [x] T1.9 Error taxonomy implementation
+- [x] T1.10 Unit tests and property test (10,000 toggles x 20 seeds)
+- [x] T1.11 IPC parser fuzz test
+- [x] Phase 1 Gate: All tests green, zero leaked processes/journal entries, clippy/fmt clean
 
 ## Phase 2: Linux Platform with Real Aether
 - [ ] T2.1 Aether process supervisor (lifecycle, flag generation, stdin closed, kill escalation)

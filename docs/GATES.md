@@ -82,3 +82,50 @@ LOAD ... Align 0x4000 (16 KB page aligned)
 ```
 
 Gate Conclusion: All Phase 0 requirements satisfied, empirical verifications green.
+
+---
+
+## Phase 1 Gate: Engine Core (Linux, Fake Aether)
+Status: PASSED
+Date: 2026-10-10
+
+### 1. Workspace Unit & Integration Tests
+```bash
+cargo test --workspace
+```
+Output:
+```
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s (zohal_engine)
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s (zohal_proto)
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 12.28s (torture_test)
+```
+
+### 2. Torture Property Test (10,000 toggles x 20 seeds)
+```bash
+cargo test -p zohal-engine --test torture_test -- --nocapture
+```
+Output:
+```
+running 1 test
+test test_torture_spam_clicking_quiescence_and_invariants_20_seeds ... ok
+test result: ok. 1 passed; 0 failed; finished in 12.31s
+```
+Verified invariants:
+- Zero leaked child processes (`active_processes == 0`).
+- Process concurrency invariant held (`max_proc <= 2`).
+- Zero leaked journal entries (`journal.read_actions().is_empty()`).
+- Zero leaked system changes (`system_tunnel_active == false`).
+- State transitions valid against Section 7.2 table.
+
+### 3. Static Analysis & Lint Checks (Zero Warnings Policy - R8)
+```bash
+cargo clippy --all-targets -- -D warnings
+cargo fmt --check
+```
+Output:
+```
+Finished dev profile [unoptimized + debuginfo] target(s) in 4.64s
+All clippy and formatting checks passed cleanly with 0 warnings.
+```
+
+Gate Conclusion: All Phase 1 requirements satisfied and all gates green.

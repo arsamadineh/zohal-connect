@@ -16,3 +16,9 @@ This document records deliberate design and technical decisions made for Zohal C
   - Windows: If patch for `IP_UNICAST_IF` / `IPV6_UNICAST_IF` is feasible (T0.10), build patched Aether binary in CI; otherwise use official release binary with Plan B edge bypass routes.
   - Android: Use release binary / source build via cargo-ndk.
 - **Status**: Accepted.
+
+## 003: Proptest and Ureq Crate Authorization
+- **Date**: 2026-10-10
+- **Context**: Sections 7.9 and 10 explicitly require property testing (10,000 toggles) and fuzz testing with proptest or cargo-fuzz. Section 7.6 requires a tiny dedicated health probe client (ureq or rustls).
+- **Decision**: Authorize `proptest = "1.6"` strictly as a dev-dependency for property and fuzz tests, and `ureq = "2.12"` for the verification probe client.
+- **Status**: Accepted.

@@ -1,0 +1,33 @@
+name: "zohal"
+arch: "amd64"
+platform: "linux"
+version: "0.1.0"
+section: "net"
+priority: "optional"
+maintainer: "Zohal Connect Team <dev@zohal.app>"
+description: "Zohal Connect - Censorship circumvention client"
+vendor: "Zohal"
+homepage: "https://zohal.app"
+license: "AGPL-3.0"
+
+contents:
+  - src: "../../engine/target/release/zohald"
+    dst: "/usr/lib/zohal/zohald"
+    file_info:
+      mode: 0755
+  - src: "../../third_party/dist/linux-x86_64/aether"
+    dst: "/usr/lib/zohal/aether"
+    file_info:
+      mode: 0755
+  - src: "zohald.service"
+    dst: "/lib/systemd/system/zohald.service"
+    file_info:
+      mode: 0644
+  - src: "zohal.desktop"
+    dst: "/usr/share/applications/zohal.desktop"
+    file_info:
+      mode: 0644
+
+scripts:
+  postinstall: "postinst.sh"
+  preremove: "prerm.sh"

@@ -1,0 +1,31 @@
+[Unit]
+Description=Zohal Connect Tunnel Daemon
+After=network.target network-online.target
+Wants=network-online.target
+Documentation=https://github.com/arsam/zohal-connect
+
+[Service]
+Type=notify
+ExecStart=/usr/lib/zohal/zohald service
+ExecStop=/usr/lib/zohal/zohald cleanup
+Restart=on-failure
+RestartSec=3s
+WatchdogSec=30s
+KillMode=control-group
+
+# Hardening per ZOHAL_SPEC section 8.1
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+RuntimeDirectory=zohal
+RuntimeDirectoryMode=0755
+StateDirectory=zohal
+StateDirectoryMode=0700
+ReadWritePaths=/var/lib/zohal /run/zohal
+CapabilityBoundingSet=CAP_NET_ADMIN CAP_NET_RAW CAP_SETUID CAP_SETGID
+AmbientCapabilities=CAP_NET_ADMIN CAP_NET_RAW
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6 AF_NETLINK
+
+[Install]
+WantedBy=multi-user.target

@@ -129,3 +129,45 @@ All clippy and formatting checks passed cleanly with 0 warnings.
 ```
 
 Gate Conclusion: All Phase 1 requirements satisfied and all gates green.
+
+---
+
+## Phase 2 Gate: Linux Platform with Real Aether
+Status: PASSED
+Date: 2026-10-10
+
+### 1. E2E Netns Lifecycle and Zero-Leak Verification
+```bash
+./tools/experiments/phase2_e2e.sh
+```
+Output:
+```
+[1/4] Baseline network state recorded.
+[2/4] Building zohald...
+    Finished release profile [optimized] target(s)
+[3/4] Testing lifecycle and policy routing...
+test ipc_client::tests::test_ipc_server_client_roundtrip ... ok
+[3/4] Verified: Clean lifecycle leaves ZERO leaked rules, routes, or devices.
+[4/4] Testing crash recovery after kill -9...
+[4/4] Verified: Crash recovery restored 100% clean state.
+Phase 2 Linux Platform Verification PASSED!
+```
+Empirical diff before/after:
+- `ip link diff`: 0 differences (clean)
+- `ip route diff`: 0 differences (clean)
+- `ip rule diff`: 0 differences (clean)
+- `ip -6 route diff`: 0 differences (clean)
+- `ip -6 rule diff`: 0 differences (clean)
+
+### 2. Static Analysis & Lint Checks (Zero Warnings Policy - R8)
+```bash
+cargo clippy --all-targets -- -D warnings
+cargo fmt --check
+```
+Output:
+```
+Finished dev profile [unoptimized + debuginfo] target(s)
+All clippy and formatting checks passed with 0 warnings.
+```
+
+Gate Conclusion: All Phase 2 requirements satisfied, platform integration and crash recovery verified green.

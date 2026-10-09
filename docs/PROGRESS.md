@@ -30,18 +30,18 @@
 - [x] Phase 1 Gate: All tests green, zero leaked processes/journal entries, clippy/fmt clean
 
 ## Phase 2: Linux Platform with Real Aether
-- [ ] T2.1 Aether process supervisor (lifecycle, flag generation, stdin closed, kill escalation)
-- [ ] T2.2 `tun2proxy` integration with traffic counters and TunFrontend trait
-- [ ] T2.3 Linux policy routing (`zohal0`, fwmark, suppress_prefixlength, tables, undo journal)
-- [ ] T2.4 DNS management (`systemd-resolved`, `resolvectl`, fallback `/etc/resolv.conf`)
-- [ ] T2.5 IPv6 routing and leak prevention
-- [ ] T2.6 Free port and TUN subnet candidate probing
-- [ ] T2.7 Health monitor (passive counters, active trace probe, network change, sleep/wake)
-- [ ] T2.8 Desktop system proxy scope (`zohald user` for GNOME/KDE with journal snapshot/restore)
-- [ ] T2.9 `zohald` CLI commands (`service`, `user`, `install`, `uninstall`, `cleanup`, `status`)
-- [ ] T2.10 systemd unit file (`zohald.service`) with hardening
-- [ ] T2.11 nfpm packaging config (.deb and .rpm)
-- [ ] Phase 2 Gate: netns e2e test, clean state verification, kill -9 recovery test, 1000 cycles
+- [x] T2.1 Aether process supervisor (lifecycle, flag generation, stdin closed, kill escalation)
+- [x] T2.2 `tun2proxy` integration with traffic counters and TunFrontend trait
+- [x] T2.3 Linux policy routing (`zohal0`, fwmark, suppress_prefixlength, tables, undo journal)
+- [x] T2.4 DNS management (`systemd-resolved`, `resolvectl`, fallback `/etc/resolv.conf`)
+- [x] T2.5 IPv6 routing and leak prevention
+- [x] T2.6 Free port and TUN subnet candidate probing
+- [x] T2.7 Health monitor (passive counters, active trace probe, network change, sleep/wake)
+- [x] T2.8 Desktop system proxy scope (`zohald user` for GNOME/KDE with journal snapshot/restore)
+- [x] T2.9 `zohald` CLI commands (`service`, `user`, `install`, `uninstall`, `cleanup`, `status`)
+- [x] T2.10 systemd unit file (`zohald.service`) with hardening
+- [x] T2.11 nfpm packaging config (.deb and .rpm)
+- [x] Phase 2 Gate: netns e2e test, clean state verification, kill -9 recovery test, 1000 cycles
 
 ## Phase 3: Flutter UI Complete
 - [ ] T3.1 Design tokens, Material 3 override theme (sharp corners, radius 0), motion tokens

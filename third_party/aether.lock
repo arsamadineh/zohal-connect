@@ -1,0 +1,19 @@
+# Pinned Aether upstream release
+version = "v2.3.0"
+commit = "6175b67df370ab856bcee07fe85b524031903956"
+release_date = "2026-10-04T14:11:53Z"
+repository = "https://github.com/CluvexStudio/Aether"
+
+[checksums]
+"aether-android-arm64.tar.gz" = "038748745244828ea41a808958f16a1c25053dc61db977c95ceb2d3a0b2f7970"
+"aether-android-armv7.tar.gz" = "9e9c59b188ff235053ae22b9f007f31de3e9bc71c8252ef73b0d626b85b64dae"
+"aether-android-x86_64.tar.gz" = "9acd35dc7bafd4bbf0f4bd8337cb26c4efe6ab0d84ec01d1a0a9fa68168b09c1"
+"aether-linux-aarch64-musl.tar.gz" = "83d19d655f1a5cdbc4f19f4e12f9c908f2ad12a441e475ba2947e14b6c7d4554"
+"aether-linux-arm64.tar.gz" = "7251cbb90c4a0eccb62412727ebee9f0a7b775d20d26492c082ba5df64f8c21f"
+"aether-linux-armv7-musl.tar.gz" = "a1ccc643eea7c4c3adde1a0e3a3cfd8643a0aadf5052d669da3d3a2ffbae0817"
+"aether-linux-armv7.tar.gz" = "c7f41abb99676a866a9ef8fb3d3234e421740161765e6568ae185fa963d76b06"
+"aether-linux-x86_64-musl.tar.gz" = "11bc70d7d91454c3ae8e8ddcae5340d20f4ddd88a12a8cd4d40e561bac52df53"
+"aether-linux-x86_64.tar.gz" = "77c6ce41695a616660d834b55be235c17e7588a474dfd737b71ca80b685bdc8a"
+"aether-macos-arm64.tar.gz" = "e89cbb5b53848fee1a28510dac14ff358aa38ebecc7fd00eeeee5bd415d12b12"
+"aether-macos-x86_64.tar.gz" = "25d930bba78fbd09ba86b09e21afd4e1ed1e91685a34388dd067be130aa269b3"
+"aether-windows-x86_64.zip" = "0cc32dd2d7573f91d2e55d4f427bfe4c6f6252342494e1b410d61b12d1e4dc79"

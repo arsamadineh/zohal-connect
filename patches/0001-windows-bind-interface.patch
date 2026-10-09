@@ -1,0 +1,80 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Zohal Connect Team <dev@zohal.app>
+Date: Fri, 10 Oct 2026 00:00:00 +0000
+Subject: [PATCH] egress: support ZOHAL_BIND_IFINDEX for Windows interface binding
+
+Allows binding outbound Aether sockets to a specific network interface index
+on Windows using IP_UNICAST_IF / IPV6_UNICAST_IF, avoiding loop routing
+issues in TUN scope without needing manual edge IP bypass routes.
+---
+ aether/Cargo.toml     |  3 +++
+ aether/src/egress.rs | 35 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 38 insertions(+)
+
+diff --git a/aether/Cargo.toml b/aether/Cargo.toml
+index 1234567..89abcdef 100644
+--- a/aether/Cargo.toml
++++ b/aether/Cargo.toml
+@@ -58,6 +58,9 @@ liblzma = { version = "0.4", features = ["static"], optional = true }
+ tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "env-filter", "ansi"], optional = true }
+ 
++[target.'cfg(windows)'.dependencies]
++windows-sys = { version = "0.59", features = ["Win32_Networking_WinSock"] }
++
+ [features]
+ default = []
+ tor = ["dep:arti-client", "dep:tor-chanmgr", "dep:tor-rtcompat", "dep:tokio-util", "dep:liblzma", "dep:tracing-subscriber"]
+diff --git a/aether/src/egress.rs b/aether/src/egress.rs
+index abcdef0..1234567 100644
+--- a/aether/src/egress.rs
++++ b/aether/src/egress.rs
+@@ -14,8 +14,17 @@ use crate::error::{AetherError, Result};
+ 
+ static MARK: AtomicU32 = AtomicU32::new(0);
++static BIND_IFINDEX: AtomicU32 = AtomicU32::new(0);
+ 
+ pub fn init() -> Result<()> {
++    #[cfg(target_os = "windows")]
++    if let Ok(value) = std::env::var("ZOHAL_BIND_IFINDEX") {
++        if let Ok(idx) = value.trim().parse::<u32>() {
++            BIND_IFINDEX.store(idx, Ordering::Relaxed);
++            log::info!("[+] outgoing sockets bind to interface index {idx}");
++        }
++    }
++
+     let raw = match std::env::var("AETHER_MARK") {
+         Ok(value) if !value.trim().is_empty() => value,
+         _ => {
+@@ -74,6 +83,32 @@ pub fn apply(socket: SockRef<'_>) -> io::Result<()> {
+             socket.set_mark(mark)?;
+         }
+     }
++    #[cfg(target_os = "windows")]
++    {
++        let ifindex = BIND_IFINDEX.load(Ordering::Relaxed);
++        if ifindex != 0 {
++            use std::os::windows::io::AsRawSocket;
++            let raw_sock = socket.as_raw_socket();
++            let ifindex_net = ifindex.to_be();
++            unsafe {
++                windows_sys::Win32::Networking::WinSock::setsockopt(
++                    raw_sock as usize,
++                    windows_sys::Win32::Networking::WinSock::IPPROTO_IP as i32,
++                    31, // IP_UNICAST_IF
++                    &ifindex_net as *const _ as *const u8,
++                    std::mem::size_of::<u32>() as i32,
++                );
++                windows_sys::Win32::Networking::WinSock::setsockopt(
++                    raw_sock as usize,
++                    windows_sys::Win32::Networking::WinSock::IPPROTO_IPV6 as i32,
++                    31, // IPV6_UNICAST_IF
++                    &ifindex as *const _ as *const u8,
++                    std::mem::size_of::<u32>() as i32,
++                );
++            }
++        }
++    }
+     #[cfg(not(any(target_os = "linux", target_os = "android")))]
+     let _ = socket;
+     Ok(())
+-- 

@@ -1,0 +1,27 @@
+# Rust targets
+target/
+**/target/
+
+# Third-party downloaded distributions and source clones
+third_party/dist/
+third_party/aether-src/
+
+# Build artifacts and temp files
+*.log
+!tools/experiments/aether-logs/*.log
+*.tmp
+*.bak
+*.swp
+
+# Flutter & Dart
+.dart_tool/
+.packages
+build/
+app/build/
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+
+# OS artifacts
+.DS_Store
+Thumbs.db

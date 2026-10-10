@@ -42,15 +42,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final hairline = isDark
-        ? ZohalTokens.darkHairline
-        : ZohalTokens.lightHairline;
-    final textPrimary = isDark
-        ? ZohalTokens.darkTextPrimary
-        : ZohalTokens.lightTextPrimary;
-    final textSecondary = isDark
-        ? ZohalTokens.darkTextSecondary
-        : ZohalTokens.lightTextSecondary;
+    final hairline =
+        isDark ? ZohalTokens.darkHairline : ZohalTokens.lightHairline;
+    final textPrimary =
+        isDark ? ZohalTokens.darkTextPrimary : ZohalTokens.lightTextPrimary;
+    final textSecondary =
+        isDark ? ZohalTokens.darkTextSecondary : ZohalTokens.lightTextSecondary;
     final accent = theme.colorScheme.primary;
 
     final engineState = ref.watch(engineStateProvider);
@@ -207,9 +204,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             : hairline,
                       ),
                       onTap: () {
-                        ref
-                            .read(zohalSettingsProvider.notifier)
-                            .updateSettings(
+                        ref.read(zohalSettingsProvider.notifier).updateSettings(
                               settings.copyWith(
                                 connectionMode: ConnectionMode.auto,
                               ),
@@ -227,9 +222,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             : hairline,
                       ),
                       onTap: () {
-                        ref
-                            .read(zohalSettingsProvider.notifier)
-                            .updateSettings(
+                        ref.read(zohalSettingsProvider.notifier).updateSettings(
                               settings.copyWith(
                                 connectionMode: ConnectionMode.masque3,
                               ),
@@ -247,9 +240,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                             : hairline,
                       ),
                       onTap: () {
-                        ref
-                            .read(zohalSettingsProvider.notifier)
-                            .updateSettings(
+                        ref.read(zohalSettingsProvider.notifier).updateSettings(
                               settings.copyWith(
                                 connectionMode: ConnectionMode.masque2,
                               ),

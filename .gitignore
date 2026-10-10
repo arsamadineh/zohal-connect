@@ -7,6 +7,7 @@ third_party/dist/
 third_party/aether-src/
 
 # Build artifacts and temp files
+dist/
 *.log
 !tools/experiments/aether-logs/*.log
 *.tmp
@@ -21,6 +22,8 @@ app/build/
 app/.dart_tool/
 app/.flutter-plugins
 app/.flutter-plugins-dependencies
+**/local.properties
+**/GeneratedPluginRegistrant.java
 
 # OS artifacts
 .DS_Store

@@ -2,9 +2,8 @@
 // Unit tests enforcing Rule R18: Sharp corners only, zero border radius everywhere.
 
 import 'package:flutter/material.dart';
-import 'package:test/test.dart';
-
-import '../../lib/design/theme.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:zohal/design/theme.dart';
 
 void main() {
   group('Shape Lock: Zero Border Radius', () {

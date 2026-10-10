@@ -15,18 +15,14 @@ class ZohalTheme {
 
   static ThemeData createTheme({required bool isDark, Color? systemAccent}) {
     final surface = isDark ? ZohalTokens.darkSurface : ZohalTokens.lightSurface;
-    final surfaceRaised = isDark
-        ? ZohalTokens.darkSurfaceRaised
-        : ZohalTokens.lightSurfaceRaised;
-    final hairline = isDark
-        ? ZohalTokens.darkHairline
-        : ZohalTokens.lightHairline;
-    final textPrimary = isDark
-        ? ZohalTokens.darkTextPrimary
-        : ZohalTokens.lightTextPrimary;
-    final textSecondary = isDark
-        ? ZohalTokens.darkTextSecondary
-        : ZohalTokens.lightTextSecondary;
+    final surfaceRaised =
+        isDark ? ZohalTokens.darkSurfaceRaised : ZohalTokens.lightSurfaceRaised;
+    final hairline =
+        isDark ? ZohalTokens.darkHairline : ZohalTokens.lightHairline;
+    final textPrimary =
+        isDark ? ZohalTokens.darkTextPrimary : ZohalTokens.lightTextPrimary;
+    final textSecondary =
+        isDark ? ZohalTokens.darkTextSecondary : ZohalTokens.lightTextSecondary;
     final error = isDark ? ZohalTokens.darkError : ZohalTokens.lightError;
     final accent = ZohalTokens.resolveAccent(systemAccent, isDark);
 
@@ -84,7 +80,7 @@ class ZohalTheme {
       cardColor: surfaceRaised,
       dividerColor: hairline,
       splashFactory: NoSplash.splashFactory,
-      highlightColor: textPrimary.withOpacity(0.08),
+      highlightColor: textPrimary.withValues(alpha: 0.08),
       colorScheme: ColorScheme(
         brightness: isDark ? Brightness.dark : Brightness.light,
         primary: accent,
@@ -95,22 +91,20 @@ class ZohalTheme {
         onSecondary: surface,
         error: error,
         onError: surface,
-        background: surface,
-        onBackground: textPrimary,
         surface: surface,
         onSurface: textPrimary,
-        surfaceVariant: surfaceRaised,
+        surfaceContainerHighest: surfaceRaised,
         onSurfaceVariant: textSecondary,
         outline: hairline,
       ),
       textTheme: textTheme,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surfaceRaised,
         elevation: 0.0,
         margin: EdgeInsets.zero,
         shape: zeroBorder,
       ),
-      dialogTheme: DialogTheme(
+      dialogTheme: DialogThemeData(
         backgroundColor: surfaceRaised,
         elevation: 0.0,
         shape: zeroBorder,

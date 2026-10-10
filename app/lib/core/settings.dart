@@ -71,8 +71,7 @@ class AppSplitConfig {
 
     return AppSplitConfig(
       mode: parseMode(json['mode'] as String?),
-      packages:
-          (json['packages'] as List<dynamic>?)
+      packages: (json['packages'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const [],
@@ -177,27 +176,27 @@ class ZohalSettings {
   }
 
   Map<String, dynamic> toJson() => {
-    'connection_mode': connectionMode.name,
-    'ip_version': ipVersion.name,
-    'scan_profile': scanProfile.name,
-    'noize_profile': noiseProfile.name,
-    'scope': scope,
-    'kill_switch': killSwitch,
-    'auto_connect_on_launch': autoConnectOnLaunch,
-    'restore_last_state': restoreLastState,
-    'auto_connect_on_boot': autoConnectOnBoot,
-    'start_with_system': startWithSystem,
-    'minimize_to_tray': minimizeToTray,
-    'routing.smart_domestic_direct': smartDomesticDirect,
-    'routing.lan_direct': lanDirect,
-    'routing.direct_rules': directRules.map((e) => e.toJson()).toList(),
-    'routing.block_rules': blockRules.map((e) => e.toJson()).toList(),
-    'routing.app_split': appSplit.toJson(),
-    'dns.servers': dnsServers,
-    'advanced.fragment': fragment,
-    'advanced.ech': ech,
-    'diagnostic_log': diagnosticLog,
-  };
+        'connection_mode': connectionMode.name,
+        'ip_version': ipVersion.name,
+        'scan_profile': scanProfile.name,
+        'noize_profile': noiseProfile.name,
+        'scope': scope,
+        'kill_switch': killSwitch,
+        'auto_connect_on_launch': autoConnectOnLaunch,
+        'restore_last_state': restoreLastState,
+        'auto_connect_on_boot': autoConnectOnBoot,
+        'start_with_system': startWithSystem,
+        'minimize_to_tray': minimizeToTray,
+        'routing.smart_domestic_direct': smartDomesticDirect,
+        'routing.lan_direct': lanDirect,
+        'routing.direct_rules': directRules.map((e) => e.toJson()).toList(),
+        'routing.block_rules': blockRules.map((e) => e.toJson()).toList(),
+        'routing.app_split': appSplit.toJson(),
+        'dns.servers': dnsServers,
+        'advanced.fragment': fragment,
+        'advanced.ech': ech,
+        'diagnostic_log': diagnosticLog,
+      };
 
   factory ZohalSettings.fromJson(Map<String, dynamic> json) {
     ConnectionMode parseMode(String? val) {
@@ -227,13 +226,11 @@ class ZohalSettings {
       smartDomesticDirect:
           json['routing.smart_domestic_direct'] as bool? ?? true,
       lanDirect: json['routing.lan_direct'] as bool? ?? true,
-      directRules:
-          (json['routing.direct_rules'] as List<dynamic>?)
+      directRules: (json['routing.direct_rules'] as List<dynamic>?)
               ?.map((e) => RoutingRule.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      blockRules:
-          (json['routing.block_rules'] as List<dynamic>?)
+      blockRules: (json['routing.block_rules'] as List<dynamic>?)
               ?.map((e) => RoutingRule.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
@@ -242,8 +239,7 @@ class ZohalSettings {
               json['routing.app_split'] as Map<String, dynamic>,
             )
           : const AppSplitConfig(),
-      dnsServers:
-          (json['dns.servers'] as List<dynamic>?)
+      dnsServers: (json['dns.servers'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const ['1.1.1.1', '1.0.0.1'],

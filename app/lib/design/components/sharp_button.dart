@@ -70,12 +70,10 @@ class _SharpButtonState extends State<SharpButton>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final surface = isDark ? ZohalTokens.darkSurface : ZohalTokens.lightSurface;
-    final hairline = isDark
-        ? ZohalTokens.darkHairline
-        : ZohalTokens.lightHairline;
-    final textPrimary = isDark
-        ? ZohalTokens.darkTextPrimary
-        : ZohalTokens.lightTextPrimary;
+    final hairline =
+        isDark ? ZohalTokens.darkHairline : ZohalTokens.lightHairline;
+    final textPrimary =
+        isDark ? ZohalTokens.darkTextPrimary : ZohalTokens.lightTextPrimary;
     final error = isDark ? ZohalTokens.darkError : ZohalTokens.lightError;
     final accent = theme.colorScheme.primary;
 
@@ -99,7 +97,7 @@ class _SharpButtonState extends State<SharpButton>
     }
 
     final effectiveTextColor = widget.onPressed == null
-        ? textColor.withOpacity(0.4)
+        ? textColor.withValues(alpha: 0.4)
         : textColor;
 
     return Semantics(

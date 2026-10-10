@@ -22,15 +22,12 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final hairline = isDark
-        ? ZohalTokens.darkHairline
-        : ZohalTokens.lightHairline;
-    final textPrimary = isDark
-        ? ZohalTokens.darkTextPrimary
-        : ZohalTokens.lightTextPrimary;
-    final textSecondary = isDark
-        ? ZohalTokens.darkTextSecondary
-        : ZohalTokens.lightTextSecondary;
+    final hairline =
+        isDark ? ZohalTokens.darkHairline : ZohalTokens.lightHairline;
+    final textPrimary =
+        isDark ? ZohalTokens.darkTextPrimary : ZohalTokens.lightTextPrimary;
+    final textSecondary =
+        isDark ? ZohalTokens.darkTextSecondary : ZohalTokens.lightTextSecondary;
     final accent = theme.colorScheme.primary;
 
     return Scaffold(

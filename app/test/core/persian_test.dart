@@ -1,10 +1,9 @@
 // test/core/persian_test.dart
 // Unit tests for Persian formatting and typography helpers.
 
-import 'package:test/test.dart';
-
-import '../../lib/core/persian.dart';
-import '../../lib/l10n/strings_fa.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:zohal/core/persian.dart';
+import 'package:zohal/l10n/strings_fa.dart';
 
 void main() {
   group('Persian Digit Conversion', () {

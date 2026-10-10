@@ -58,12 +58,10 @@ class _SharpSwitchState extends State<SharpSwitch>
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final surface = isDark ? ZohalTokens.darkSurface : ZohalTokens.lightSurface;
-    final hairline = isDark
-        ? ZohalTokens.darkHairline
-        : ZohalTokens.lightHairline;
-    final textSecondary = isDark
-        ? ZohalTokens.darkTextSecondary
-        : ZohalTokens.lightTextSecondary;
+    final hairline =
+        isDark ? ZohalTokens.darkHairline : ZohalTokens.lightHairline;
+    final textSecondary =
+        isDark ? ZohalTokens.darkTextSecondary : ZohalTokens.lightTextSecondary;
     final accent = theme.colorScheme.primary;
 
     const double trackWidth = 44.0;

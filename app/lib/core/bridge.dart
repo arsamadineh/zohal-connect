@@ -15,21 +15,21 @@ import 'settings.dart';
 // Riverpod Providers
 final engineStateProvider =
     StateNotifierProvider<EngineStateNotifier, EngineState>((ref) {
-      final bridge = ref.watch(bridgeClientProvider);
-      return EngineStateNotifier(bridge);
-    });
+  final bridge = ref.watch(bridgeClientProvider);
+  return EngineStateNotifier(bridge);
+});
 
 final engineStatsProvider =
     StateNotifierProvider<EngineStatsNotifier, EngineStats>((ref) {
-      final bridge = ref.watch(bridgeClientProvider);
-      return EngineStatsNotifier(bridge);
-    });
+  final bridge = ref.watch(bridgeClientProvider);
+  return EngineStatsNotifier(bridge);
+});
 
 final zohalSettingsProvider =
     StateNotifierProvider<ZohalSettingsNotifier, ZohalSettings>((ref) {
-      final bridge = ref.watch(bridgeClientProvider);
-      return ZohalSettingsNotifier(bridge);
-    });
+  final bridge = ref.watch(bridgeClientProvider);
+  return ZohalSettingsNotifier(bridge);
+});
 
 final systemAccentProvider = StateProvider<Color?>((ref) => null);
 
@@ -162,19 +162,20 @@ class ZohalBridgeClient {
 
     // Read lines
     _socket
-        ?.transform(utf8.decoder)
-        .transform(const LineSplitter())
+        ?.cast<List<int>>()
+        .transform<String>(utf8.decoder)
+        .transform<String>(const LineSplitter())
         .listen(
-          _handleLine,
-          onError: (e) {
-            ZohalLogger().warn('IPC socket error: $e');
-            _disconnect();
-          },
-          onDone: () {
-            ZohalLogger().warn('IPC socket closed by engine');
-            _disconnect();
-          },
-        );
+      _handleLine,
+      onError: (Object e) {
+        ZohalLogger().warn('IPC socket error: $e');
+        _disconnect();
+      },
+      onDone: () {
+        ZohalLogger().warn('IPC socket closed by engine');
+        _disconnect();
+      },
+    );
   }
 
   void _handleLine(String line) {
@@ -195,7 +196,11 @@ class ZohalBridgeClient {
         case 'log':
           final msg = json['msg'] as String? ?? '';
           final code = json['code'] as String?;
-          ZohalLogger().info(msg);
+          if (code != null) {
+            ZohalLogger().info('[$code] $msg');
+          } else {
+            ZohalLogger().info(msg);
+          }
           break;
       }
     } catch (e) {

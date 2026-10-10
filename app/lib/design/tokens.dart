@@ -40,9 +40,9 @@ class ZohalTokens {
 
   // Contrast calculation helpers (WCAG AA: 4.5:1 for normal text)
   static double calculateLuminance(Color color) {
-    double r = color.red / 255.0;
-    double g = color.green / 255.0;
-    double b = color.blue / 255.0;
+    double r = color.r;
+    double g = color.g;
+    double b = color.b;
 
     r = (r <= 0.03928)
         ? r / 12.92
@@ -73,7 +73,7 @@ class ZohalTokens {
 
     if (systemAccent == null) return fallback;
 
-    double ratio = contrastRatio(systemAccent, surface);
+    final double ratio = contrastRatio(systemAccent, surface);
     if (ratio >= 4.5) return systemAccent;
 
     // Adjust brightness iteratively

@@ -4,28 +4,60 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Install Rust
+      - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Fetch Aether binary
+        run: bash tools/fetch-aether.sh linux-x86_64
 
       - name: Build zohald Release Binary
         run: cargo build --release -p zohald
         working-directory: engine
 
       - name: Install nfpm
-        run: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+        run: |
+          curl -sfL https://github.com/goreleaser/nfpm/releases/download/v2.41.3/nfpm_2.41.3_Linux_x86_64.tar.gz | sudo tar -xz -C /usr/local/bin nfpm
 
-      - name: Package .deb and .rpm
+      - name: Package Release Assets (.deb, .rpm, tarball)
         run: |
           mkdir -p dist/linux
-          nfpm pkg --packager deb --target dist/linux/zohal_${GITHUB_REF_NAME}_amd64.deb -f packaging/linux/nfpm.yaml
-          nfpm pkg --packager rpm --target dist/linux/zohal-${GITHUB_REF_NAME}.x86_64.rpm -f packaging/linux/nfpm.yaml
+          TAG_NAME="${GITHUB_REF_NAME:-v0.1.0}"
+          VERSION="${TAG_NAME#v}"
+
+          # Package .deb and .rpm via nfpm
+          cd packaging/linux
+          nfpm pkg --packager deb --target "../../dist/linux/zohal_${VERSION}_amd64.deb" -f nfpm.yaml
+          nfpm pkg --packager rpm --target "../../dist/linux/zohal-${VERSION}.x86_64.rpm" -f nfpm.yaml
+          cd ../..
+
+          # Package standalone tarball (.tar.gz)
+          PKG_NAME="zohal-${TAG_NAME}-linux-x86_64"
+          PKG_DIR="dist/linux/${PKG_NAME}"
+          mkdir -p "$PKG_DIR"
+          cp engine/target/release/zohald "$PKG_DIR/"
+          cp third_party/dist/linux-x86_64/aether "$PKG_DIR/"
+          cp packaging/linux/zohald.service "$PKG_DIR/"
+          cp packaging/linux/zohal.desktop "$PKG_DIR/"
+          cp README.md "$PKG_DIR/"
+          tar -czf "dist/linux/${PKG_NAME}.tar.gz" -C dist/linux "$PKG_NAME"
+          rm -rf "$PKG_DIR"
+
+          # Generate SHA256 checksums
+          cd dist/linux
+          sha256sum zohal* > SHA256SUMS.txt
+          cat SHA256SUMS.txt
 
       - name: Upload Linux Artifacts
         uses: actions/upload-artifact@v4
@@ -33,30 +65,15 @@ jobs:
           name: linux-packages
           path: dist/linux/*
 
-  build-android:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-
-      - name: Build APKs
-        run: |
-          flutter pub get
-          flutter build apk --release --split-per-abi
-        working-directory: app
-
-      - name: Upload Android Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apks
-          path: app/build/app/outputs/flutter-apk/*.apk
+          files: |
+            dist/linux/zohal_*
+            dist/linux/zohal-*
+            dist/linux/SHA256SUMS.txt
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

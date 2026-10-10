@@ -5,7 +5,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart';
 
 import '../../core/engine_state.dart';
 import '../../l10n/strings_fa.dart';
@@ -35,8 +34,6 @@ class _ConnectControlState extends State<ConnectControl>
   late AnimationController _orbitController;
   late AnimationController _fillController;
   late AnimationController _pressController;
-
-  bool _isPressed = false;
 
   @override
   void initState() {
@@ -103,18 +100,15 @@ class _ConnectControlState extends State<ConnectControl>
   }
 
   void _handleTapDown(TapDownDetails details) {
-    setState(() => _isPressed = true);
     _pressController.forward();
   }
 
   void _handleTapUp(TapUpDetails details) {
-    setState(() => _isPressed = false);
     _pressController.reverse();
     widget.onTap();
   }
 
   void _handleTapCancel() {
-    setState(() => _isPressed = false);
     _pressController.reverse();
   }
 
@@ -141,15 +135,12 @@ class _ConnectControlState extends State<ConnectControl>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final hairline = isDark
-        ? ZohalTokens.darkHairline
-        : ZohalTokens.lightHairline;
-    final textPrimary = isDark
-        ? ZohalTokens.darkTextPrimary
-        : ZohalTokens.lightTextPrimary;
-    final textSecondary = isDark
-        ? ZohalTokens.darkTextSecondary
-        : ZohalTokens.lightTextSecondary;
+    final hairline =
+        isDark ? ZohalTokens.darkHairline : ZohalTokens.lightHairline;
+    final textPrimary =
+        isDark ? ZohalTokens.darkTextPrimary : ZohalTokens.lightTextPrimary;
+    final textSecondary =
+        isDark ? ZohalTokens.darkTextSecondary : ZohalTokens.lightTextSecondary;
     final accent = theme.colorScheme.primary;
     final error = isDark ? ZohalTokens.darkError : ZohalTokens.lightError;
 
@@ -268,7 +259,7 @@ class _ConnectControlPainter extends CustomPainter {
     } else if (phase == ConnectionPhase.failed) {
       ringColor = errorColor;
     } else {
-      ringColor = textPrimaryColor.withOpacity(0.70);
+      ringColor = textPrimaryColor.withValues(alpha: 0.70);
     }
 
     final ringPaint = Paint()
@@ -277,7 +268,7 @@ class _ConnectControlPainter extends CustomPainter {
 
     // 2. Ring UPPER HALF (y < center.y) drawn BEFORE planet (behind)
     canvas.save();
-    canvas.clipRect(Rect.fromLTRB(0, 0, size.width, center.y));
+    canvas.clipRect(Rect.fromLTRB(0, 0, size.width, center.dy));
     _drawRotatedRing(
       canvas,
       center,
@@ -330,7 +321,7 @@ class _ConnectControlPainter extends CustomPainter {
 
     // 4. Ring LOWER HALF (y >= center.y) drawn AFTER planet (in front)
     canvas.save();
-    canvas.clipRect(Rect.fromLTRB(0, center.y, size.width, size.height));
+    canvas.clipRect(Rect.fromLTRB(0, center.dy, size.width, size.height));
     _drawRotatedRing(
       canvas,
       center,
@@ -368,10 +359,9 @@ class _ConnectControlPainter extends CustomPainter {
   void _drawStageTicks(Canvas canvas, Offset center, double side) {
     const double tickLength = 12.0;
     const double tickThickness = 2.0;
-    const double offsetDist = side / 2.0 + 4.0; // just outside the frame
+    final double offsetDist = side / 2.0 + 4.0; // just outside the frame
 
-    final isConnecting =
-        phase == ConnectionPhase.connecting ||
+    final isConnecting = phase == ConnectionPhase.connecting ||
         phase == ConnectionPhase.reconnecting ||
         phase == ConnectionPhase.preparing;
     final isFailed = phase == ConnectionPhase.failed;
@@ -389,21 +379,18 @@ class _ConnectControlPainter extends CustomPainter {
         bool active = false;
         switch (i) {
           case 0:
-            active =
-                stage == ConnectionStage.prepare ||
+            active = stage == ConnectionStage.prepare ||
                 stage == ConnectionStage.findGateway ||
                 stage == ConnectionStage.buildTunnel ||
                 stage == ConnectionStage.verifyPath;
             break;
           case 1:
-            active =
-                stage == ConnectionStage.findGateway ||
+            active = stage == ConnectionStage.findGateway ||
                 stage == ConnectionStage.buildTunnel ||
                 stage == ConnectionStage.verifyPath;
             break;
           case 2:
-            active =
-                stage == ConnectionStage.buildTunnel ||
+            active = stage == ConnectionStage.buildTunnel ||
                 stage == ConnectionStage.verifyPath;
             break;
           case 3:

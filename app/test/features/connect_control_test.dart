@@ -3,10 +3,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import '../../lib/core/engine_state.dart';
-import '../../lib/design/components/connect_control.dart';
-import '../../lib/l10n/strings_fa.dart';
+import 'package:zohal/core/engine_state.dart';
+import 'package:zohal/design/components/connect_control.dart';
+import 'package:zohal/l10n/strings_fa.dart';
 
 void main() {
   testWidgets('ConnectControl displays idle state with correct semantics', (

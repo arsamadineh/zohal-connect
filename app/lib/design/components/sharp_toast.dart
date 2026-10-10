@@ -16,15 +16,12 @@ class SharpToast {
     final overlay = Overlay.of(context);
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final surfaceRaised = isDark
-        ? ZohalTokens.darkSurfaceRaised
-        : ZohalTokens.lightSurfaceRaised;
-    final hairline = isDark
-        ? ZohalTokens.darkHairline
-        : ZohalTokens.lightHairline;
-    final textPrimary = isDark
-        ? ZohalTokens.darkTextPrimary
-        : ZohalTokens.lightTextPrimary;
+    final surfaceRaised =
+        isDark ? ZohalTokens.darkSurfaceRaised : ZohalTokens.lightSurfaceRaised;
+    final hairline =
+        isDark ? ZohalTokens.darkHairline : ZohalTokens.lightHairline;
+    final textPrimary =
+        isDark ? ZohalTokens.darkTextPrimary : ZohalTokens.lightTextPrimary;
     final error = isDark ? ZohalTokens.darkError : ZohalTokens.lightError;
 
     late OverlayEntry entry;

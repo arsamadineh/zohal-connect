@@ -15,6 +15,7 @@ import '../../core/persian.dart';
 import '../../core/settings.dart';
 import '../../design/components/connect_control.dart';
 import '../../design/components/sharp_row.dart';
+import '../../design/components/sharp_sheet.dart';
 import '../../design/components/sharp_toast.dart';
 import '../../design/motion.dart';
 import '../../design/tokens.dart';
@@ -172,15 +173,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final hairline = isDark
-        ? ZohalTokens.darkHairline
-        : ZohalTokens.lightHairline;
-    final textPrimary = isDark
-        ? ZohalTokens.darkTextPrimary
-        : ZohalTokens.lightTextPrimary;
-    final textSecondary = isDark
-        ? ZohalTokens.darkTextSecondary
-        : ZohalTokens.lightTextSecondary;
+    final hairline =
+        isDark ? ZohalTokens.darkHairline : ZohalTokens.lightHairline;
+    final textPrimary =
+        isDark ? ZohalTokens.darkTextPrimary : ZohalTokens.lightTextPrimary;
+    final textSecondary =
+        isDark ? ZohalTokens.darkTextSecondary : ZohalTokens.lightTextSecondary;
     final accent = theme.colorScheme.primary;
 
     final engineState = ref.watch(engineStateProvider);

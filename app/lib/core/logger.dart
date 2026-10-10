@@ -42,7 +42,7 @@ class LogEntry {
 
   String toExportString() {
     final codeStr = code != null ? ' [$code]' : '';
-    return '${timestamp.toIso8601String()} [${levelLabel}]$codeStr $message';
+    return '${timestamp.toIso8601String()} [$levelLabel]$codeStr $message';
   }
 }
 

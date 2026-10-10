@@ -25,9 +25,8 @@ class SharpSheet extends StatelessWidget {
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final surfaceRaised = isDark
-        ? ZohalTokens.darkSurfaceRaised
-        : ZohalTokens.lightSurfaceRaised;
+    final surfaceRaised =
+        isDark ? ZohalTokens.darkSurfaceRaised : ZohalTokens.lightSurfaceRaised;
 
     return showModalBottomSheet<T>(
       context: context,
@@ -44,15 +43,12 @@ class SharpSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final hairline = isDark
-        ? ZohalTokens.darkHairline
-        : ZohalTokens.lightHairline;
-    final textPrimary = isDark
-        ? ZohalTokens.darkTextPrimary
-        : ZohalTokens.lightTextPrimary;
-    final textSecondary = isDark
-        ? ZohalTokens.darkTextSecondary
-        : ZohalTokens.lightTextSecondary;
+    final hairline =
+        isDark ? ZohalTokens.darkHairline : ZohalTokens.lightHairline;
+    final textPrimary =
+        isDark ? ZohalTokens.darkTextPrimary : ZohalTokens.lightTextPrimary;
+    final textSecondary =
+        isDark ? ZohalTokens.darkTextSecondary : ZohalTokens.lightTextSecondary;
 
     return Container(
       decoration: BoxDecoration(
@@ -72,7 +68,7 @@ class SharpSheet extends StatelessWidget {
           Container(
             width: 24.0,
             height: 2.0,
-            color: textSecondary.withOpacity(0.4),
+            color: textSecondary.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16.0),
           // Header

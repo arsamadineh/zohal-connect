@@ -2,9 +2,8 @@
 // Unit tests verifying WCAG AA contrast ratio (>= 4.5:1) for design tokens.
 
 import 'package:flutter/material.dart';
-import 'package:test/test.dart';
-
-import '../../lib/design/tokens.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:zohal/design/tokens.dart';
 
 void main() {
   group('Design Tokens Contrast (WCAG AA >= 4.5:1)', () {

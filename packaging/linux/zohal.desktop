@@ -7,5 +7,5 @@ Exec=/opt/zohal/zohal_app
 Icon=zohal
 Terminal=false
 Type=Application
-Categories=Network;Security;VPN;
+Categories=Network;Security;
 StartupWMClass=zohal

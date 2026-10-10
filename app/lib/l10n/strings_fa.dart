@@ -87,7 +87,6 @@ class StringsFa {
   static const String modeGoolDesc =
       'دو لایه رمزنگاری؛ آخرین راه برای شبکه‌های سخت‌گیر.';
 
-
   // Rule Types
   static const String ruleTypeDomain = 'دامنه (و زیر‌دامنه‌ها)';
   static const String ruleTypeDomainExact = 'دامنه دقیق';

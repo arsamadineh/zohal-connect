@@ -1,7 +1,7 @@
 name: zohal
 description: "قندشکن زحل - Zohal Connect"
 publish_to: "none"
-version: 0.1.9+9
+version: 0.1.10+10
 
 environment:
   sdk: ">=3.0.0 <4.0.0"

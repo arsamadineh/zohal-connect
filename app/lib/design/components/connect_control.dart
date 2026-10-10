@@ -105,7 +105,6 @@ class _ConnectControlState extends State<ConnectControl>
 
   void _handleTapUp(TapUpDetails details) {
     _pressController.reverse();
-    widget.onTap();
   }
 
   void _handleTapCancel() {
@@ -151,6 +150,7 @@ class _ConnectControlState extends State<ConnectControl>
         onTapDown: _handleTapDown,
         onTapUp: _handleTapUp,
         onTapCancel: _handleTapCancel,
+        onTap: widget.onTap,
         behavior: HitTestBehavior.opaque,
         child: AnimatedBuilder(
           animation: Listenable.merge([

@@ -28,7 +28,6 @@ class AboutScreen extends StatelessWidget {
         isDark ? ZohalTokens.darkTextPrimary : ZohalTokens.lightTextPrimary;
     final textSecondary =
         isDark ? ZohalTokens.darkTextSecondary : ZohalTokens.lightTextSecondary;
-    final accent = theme.colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(
@@ -56,12 +55,13 @@ class AboutScreen extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  Container(
-                    width: 48.0,
-                    height: 48.0,
-                    decoration: BoxDecoration(
-                      color: accent,
-                      borderRadius: BorderRadius.zero,
+                  ClipRRect(
+                    borderRadius: BorderRadius.zero,
+                    child: Image.asset(
+                      'assets/images/logo.png',
+                      width: 64.0,
+                      height: 64.0,
+                      fit: BoxFit.contain,
                     ),
                   ),
                   const SizedBox(height: 16.0),

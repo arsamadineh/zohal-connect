@@ -73,7 +73,7 @@ class EngineStateNotifier extends StateNotifier<EngineState> {
     );
     state = optimistic;
     _convergeTimer?.cancel();
-    _convergeTimer = Timer(const Duration(seconds: 2), () {
+    _convergeTimer = Timer(const Duration(seconds: 15), () {
       state = _lastEngineState;
     });
     bridge.setDesired(up, settings: settings);

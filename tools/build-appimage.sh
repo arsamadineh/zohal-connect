@@ -58,7 +58,7 @@ if [ -z "${APPIMAGETOOL:-}" ]; then
   chmod +x /tmp/appimagetool.AppImage
   APPIMAGETOOL=/tmp/appimagetool.AppImage
 fi
-ARCH=x86_64 "$APPIMAGETOOL" --appimage-extract-and-run "$APPDIR" "$APPIMAGE" 2>&1 | tail -3
+ARCH=x86_64 "$APPIMAGETOOL" --appimage-extract-and-run "$APPDIR" "$APPIMAGE"
 chmod +x "$APPIMAGE"
 echo "Built $APPIMAGE"
 ls -la "$APPIMAGE"

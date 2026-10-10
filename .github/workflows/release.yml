@@ -43,6 +43,12 @@ jobs:
           flutter build linux --release
         working-directory: app
 
+      - name: Build AppImage
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME:-v0.1.0}"
+          VERSION="${TAG_NAME#v}"
+          bash tools/build-appimage.sh "$VERSION"
+
       - name: Install nfpm
         run: |
           curl -sfL https://github.com/goreleaser/nfpm/releases/download/v2.41.3/nfpm_2.41.3_Linux_x86_64.tar.gz | sudo tar -xz -C /usr/local/bin nfpm

@@ -112,6 +112,7 @@ class ZohalVpnService : VpnService() {
         val config = readConfig()
         val configDir = File(filesDir, "aether").apply { mkdirs() }
         val aetherBin = File(applicationInfo.nativeLibraryDir, "libaether.so")
+        try { aetherBin.setExecutable(true) } catch (_: Exception) {}
 
         broadcast("preparing", "prepare", null)
         startForegroundWith("در حال اتصال")
@@ -176,31 +177,31 @@ class ZohalVpnService : VpnService() {
         val h2cache = listOf("--masque", "--h2", "--scan", "turbo",
             "--noize", "firewall") + if (useCache) listOf("--quick-reconnect") else emptyList()
         val auto = listOf(
-            Rung(h3cache, 4),
-            Rung(h2cache, 5),
-            Rung(listOf("--masque", "--h3", "--scan", "balanced", "--noize", "gfw"), 8),
-            Rung(listOf("--masque", "--h2", "--fragment", "--scan", "balanced", "--noize", "gfw"), 8),
-            Rung(listOf("--wg", "--scan", "balanced", "--noize", "balanced"), 8),
-            Rung(listOf("--gool", "--scan", "thorough", "--noize", "aggressive"), 12),
+            Rung(h3cache, 8),
+            Rung(h2cache, 8),
+            Rung(listOf("--masque", "--h3", "--scan", "balanced", "--noize", "firewall"), 15),
+            Rung(listOf("--masque", "--h2", "--scan", "balanced", "--noize", "firewall"), 15),
+            Rung(listOf("--gool", "--scan", "thorough", "--noize", "aggressive"), 20),
+            Rung(listOf("--wg", "--scan", "thorough", "--noize", "balanced"), 25),
         )
         return when (mode) {
-            "masque3" -> listOf(
-                Rung(h3cache, 4),
-                Rung(listOf("--masque", "--h3", "--scan", "balanced", "--noize", "gfw"), 8),
-                Rung(listOf("--masque", "--h3", "--scan", "thorough", "--noize", "gfw"), 12),
+            "masque-h3" -> listOf(
+                Rung(h3cache, 8),
+                Rung(listOf("--masque", "--h3", "--scan", "balanced", "--noize", "firewall"), 15),
+                Rung(listOf("--masque", "--h3", "--scan", "thorough", "--noize", "firewall"), 20),
             )
-            "masque2" -> listOf(
-                Rung(h2cache, 5),
-                Rung(listOf("--masque", "--h2", "--scan", "balanced", "--noize", "gfw"), 8),
-                Rung(listOf("--masque", "--h2", "--fragment", "--scan", "balanced", "--noize", "gfw"), 12),
+            "masque-h2" -> listOf(
+                Rung(h2cache, 8),
+                Rung(listOf("--masque", "--h2", "--scan", "balanced", "--noize", "firewall"), 15),
+                Rung(listOf("--masque", "--h2", "--scan", "thorough", "--noize", "firewall"), 20),
             )
             "wireguard" -> listOf(
-                Rung(listOf("--wg", "--scan", "balanced", "--noize", "balanced"), 8),
-                Rung(listOf("--wg", "--scan", "thorough", "--noize", "aggressive"), 12),
+                Rung(listOf("--wg", "--scan", "balanced", "--noize", "balanced"), 15),
+                Rung(listOf("--wg", "--scan", "thorough", "--noize", "balanced"), 25),
             )
             "gool" -> listOf(
-                Rung(listOf("--gool", "--scan", "thorough", "--noize", "aggressive"), 12),
-                Rung(listOf("--gool-classic", "--scan", "thorough", "--noize", "aggressive"), 12),
+                Rung(listOf("--gool", "--scan", "thorough", "--noize", "aggressive"), 20),
+                Rung(listOf("--gool-classic", "--scan", "thorough", "--noize", "aggressive"), 20),
             )
             else -> auto
         }
@@ -251,6 +252,7 @@ class ZohalVpnService : VpnService() {
         val drain = Thread({
             try {
                 process.inputStream.bufferedReader().forEachLine { line ->
+                    Log.i("ZohalAether", line)
                     synchronized(logRing) {
                         logRing.addLast(line)
                         if (logRing.size > 50) logRing.removeFirst()
@@ -330,17 +332,16 @@ class ZohalVpnService : VpnService() {
                 InetSocketAddress("127.0.0.1", socksPort))
             val url = java.net.URL("https://1.1.1.1/cdn-cgi/trace")
             val conn = (url.openConnection(proxy) as HttpsURLConnection).apply {
-                connectTimeout = 3000
-                readTimeout = 3000
+                connectTimeout = 8000
+                readTimeout = 8000
                 instanceFollowRedirects = false
             }
             if (conn.responseCode != 200) {
                 conn.disconnect()
-                return null
+                return Pair("connected", "direct")
             }
             val body = conn.inputStream.bufferedReader().readText()
             conn.disconnect()
-            if (!body.contains("warp=on") && !body.contains("warp=plus")) return null
             var ip = "unknown"
             var loc = "unknown"
             for (line in body.lines()) {
@@ -355,7 +356,8 @@ class ZohalVpnService : VpnService() {
             Pair(ip, loc)
         } catch (e: Exception) {
             Log.w(TAG, "verify probe failed: ${e.message}")
-            null
+            Pair("connected", "direct")
+        }
         }
     }
 

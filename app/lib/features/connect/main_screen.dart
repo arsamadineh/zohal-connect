@@ -188,7 +188,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         isDark ? ZohalTokens.darkTextPrimary : ZohalTokens.lightTextPrimary;
     final textSecondary =
         isDark ? ZohalTokens.darkTextSecondary : ZohalTokens.lightTextSecondary;
-    final accent = theme.colorScheme.primary;
 
     final engineState = ref.watch(engineStateProvider);
     final engineStats = ref.watch(engineStatsProvider);
@@ -212,12 +211,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   child: Row(
                     children: [
                       // Wordmark with 14 dp square mark
-                      Container(
-                        width: 14.0,
-                        height: 14.0,
-                        decoration: BoxDecoration(
-                          color: accent,
-                          borderRadius: BorderRadius.zero,
+                      ClipRRect(
+                        borderRadius: BorderRadius.zero,
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          width: 22.0,
+                          height: 22.0,
+                          fit: BoxFit.contain,
                         ),
                       ),
                       const SizedBox(width: 10.0),

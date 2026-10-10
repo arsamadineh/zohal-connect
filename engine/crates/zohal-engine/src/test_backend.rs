@@ -18,6 +18,7 @@ pub struct FakeAetherBackend {
     pub start_delay: Duration,
     pub fail_start: Arc<AtomicBool>,
     pub fail_verify: Arc<AtomicBool>,
+    pub fail_verify_times: Arc<std::sync::atomic::AtomicU32>,
 }
 
 impl Default for FakeAetherBackend {
@@ -36,6 +37,7 @@ impl FakeAetherBackend {
             start_delay: Duration::from_millis(10),
             fail_start: Arc::new(AtomicBool::new(false)),
             fail_verify: Arc::new(AtomicBool::new(false)),
+            fail_verify_times: Arc::new(std::sync::atomic::AtomicU32::new(0)),
         }
     }
 
@@ -93,7 +95,18 @@ impl TunnelBackend for FakeAetherBackend {
         _handle: &'a CandidateHandle,
     ) -> Pin<Box<dyn Future<Output = Result<PathTrace, BackendError>> + Send + 'a>> {
         Box::pin(async move {
-            if self.fail_verify.load(Ordering::Relaxed) {
+            if self.fail_verify.load(Ordering::Relaxed)
+                || self
+                    .fail_verify_times
+                    .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |x| {
+                        if x > 0 {
+                            Some(x - 1)
+                        } else {
+                            None
+                        }
+                    })
+                    .is_ok()
+            {
                 return Err(BackendError::VerificationFailed(
                     "Simulated trace failure".into(),
                 ));

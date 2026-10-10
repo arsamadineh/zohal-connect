@@ -304,8 +304,56 @@ fn run_uninstall() -> Result<(), Box<dyn std::error::Error>> {
     run_cleanup()
 }
 
+#[derive(serde::Serialize)]
+struct BenchRun {
+    run_index: usize,
+    ok: bool,
+    failure_reason: Option<String>,
+    winning_rung: u8,
+    winning_transport: String,
+    used_cache: bool,
+    gateway_ms: f64,
+    build_ms: f64,
+    verify_ms: f64,
+    total_ms: f64,
+}
+
+#[derive(serde::Serialize)]
+struct BenchReport {
+    label: String,
+    runs_started: usize,
+    ok: usize,
+    failed: usize,
+    failure_reasons: std::collections::HashMap<String, usize>,
+    p50_total_ms: f64,
+    p95_total_ms: f64,
+    runs: Vec<BenchRun>,
+}
+
+fn extract_lastconn_peer(data_dir: &Path) -> Option<String> {
+    for name in &[
+        "aether-masque-lastconn.toml",
+        "aether-lastconn.toml",
+        "aether-wg-lastconn.toml",
+    ] {
+        let p = data_dir.join(name);
+        if let Ok(content) = std::fs::read_to_string(&p) {
+            for line in content.lines() {
+                if let Some(rest) = line.strip_prefix("peer = ") {
+                    let peer = rest.trim().trim_matches('"');
+                    if !peer.is_empty() {
+                        return Some(peer.to_string());
+                    }
+                }
+            }
+        }
+    }
+    None
+}
+
 async fn run_bench(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
     let mut runs = 20;
+    let mut label = "bench".to_string();
     let mut i = 0;
     while i < args.len() {
         if args[i] == "--runs" && i + 1 < args.len() {
@@ -313,66 +361,172 @@ async fn run_bench(args: &[String]) -> Result<(), Box<dyn std::error::Error>> {
                 runs = n;
             }
             i += 2;
+        } else if args[i] == "--label" && i + 1 < args.len() {
+            label = args[i + 1].clone();
+            i += 2;
         } else {
             i += 1;
         }
     }
-    run_bench_connect(runs).await
+    run_bench_connect(runs, &label).await
 }
 
-async fn run_bench_connect(runs: usize) -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== Zohal Connect Benchmark (runs: {}) ===", runs);
-    let tmp = std::env::temp_dir().join(format!("zohal_bench_{}", std::process::id()));
+async fn run_bench_connect(runs: usize, label: &str) -> Result<(), Box<dyn std::error::Error>> {
+    println!(
+        "=== Zohal Connect Benchmark (runs: {}, label: {}) ===",
+        runs, label
+    );
+    let tmp = get_user_runtime_dir().join(format!("zohal_bench_{}", std::process::id()));
     std::fs::create_dir_all(&tmp)?;
 
     let aether_bin = find_aether_bin();
     println!("Using aether binary: {:?}", aether_bin);
+
+    // Pre-register identity once if missing so runs measure connection timeline, not account creation
+    let base_config = tmp.join("aether.toml");
+    if !base_config.exists() {
+        print!("Initializing benchmark identity once... ");
+        let _ = std::io::stdout().flush();
+        let _ = std::process::Command::new(&aether_bin)
+            .arg("--config")
+            .arg(&base_config)
+            .arg("--register")
+            .arg("all")
+            .output();
+        println!("ready.");
+    }
+
     let backend = Arc::new(RealAetherBackend::new(aether_bin, &tmp));
 
-    let mut gateway_times = Vec::with_capacity(runs);
-    let mut build_times = Vec::with_capacity(runs);
-    let mut verify_times = Vec::with_capacity(runs);
-    let mut total_times = Vec::with_capacity(runs);
+    let mut gateway_times = Vec::new();
+    let mut build_times = Vec::new();
+    let mut verify_times = Vec::new();
+    let mut total_times = Vec::new();
+    let mut records = Vec::with_capacity(runs);
+    let mut failure_reasons: std::collections::HashMap<String, usize> =
+        std::collections::HashMap::new();
 
-    let rung = RungConfig {
-        rung_number: 1,
-        transport: Transport::Masque2,
-        scan: ScanProfile::Turbo,
-        noize: NoizeProfile::Firewall,
-        use_cache: true,
-        h2_proven_only: true,
-        fragment: true,
-        deadline: Duration::from_secs(5),
-    };
+    let mut cached_endpoint: Option<String> = None;
 
     for run_idx in 1..=runs {
         print!("Run {:2}/{:2}: ", run_idx, runs);
         let _ = std::io::stdout().flush();
 
+        if cached_endpoint.is_none() {
+            cached_endpoint = extract_lastconn_peer(&tmp);
+        }
+
+        let use_cache = cached_endpoint.is_some();
+        let rung = RungConfig {
+            rung_number: 1,
+            transport: Transport::Masque2,
+            scan: ScanProfile::Turbo,
+            noize: NoizeProfile::Firewall,
+            use_cache,
+            h2_proven_only: use_cache,
+            fragment: true,
+            deadline: Duration::from_secs(if use_cache { 5 } else { 8 }),
+        };
+
         let t0 = Instant::now();
-        let cand = match backend.start_candidate(&rung, None).await {
+        let cand = match backend
+            .start_candidate(&rung, cached_endpoint.as_deref())
+            .await
+        {
             Ok(c) => c,
             Err(e) => {
-                println!("start_candidate failed: {:?}", e);
+                let reason = format!("{e:?}");
+                println!("FAILED in start_candidate: {reason}");
+                *failure_reasons.entry(reason.clone()).or_insert(0) += 1;
+                records.push(BenchRun {
+                    run_index: run_idx,
+                    ok: false,
+                    failure_reason: Some(reason),
+                    winning_rung: 1,
+                    winning_transport: "masque2".to_string(),
+                    used_cache: use_cache,
+                    gateway_ms: t0.elapsed().as_millis() as f64,
+                    build_ms: 0.0,
+                    verify_ms: 0.0,
+                    total_ms: t0.elapsed().as_millis() as f64,
+                });
+                tokio::time::sleep(Duration::from_millis(200)).await;
                 continue;
             }
         };
         let t_gw = t0.elapsed();
 
+        if cached_endpoint.is_none() && cand.endpoint.is_some() {
+            cached_endpoint = cand.endpoint.clone();
+        }
+
         let t1 = Instant::now();
-        let journal = Journal::new(&tmp)?;
+        let journal = match Journal::new(&tmp) {
+            Ok(j) => j,
+            Err(e) => {
+                let reason = format!("journal_error: {e:?}");
+                println!("FAILED: {reason}");
+                *failure_reasons.entry(reason.clone()).or_insert(0) += 1;
+                let _ = backend.stop_candidate(cand).await;
+                records.push(BenchRun {
+                    run_index: run_idx,
+                    ok: false,
+                    failure_reason: Some(reason),
+                    winning_rung: 1,
+                    winning_transport: "masque2".to_string(),
+                    used_cache: use_cache,
+                    gateway_ms: t_gw.as_millis() as f64,
+                    build_ms: 0.0,
+                    verify_ms: 0.0,
+                    total_ms: t0.elapsed().as_millis() as f64,
+                });
+                tokio::time::sleep(Duration::from_millis(200)).await;
+                continue;
+            }
+        };
+
         if let Err(e) = backend.apply_system_tunnel(&cand, &journal).await {
-            println!("apply_system_tunnel failed: {:?}", e);
+            let reason = format!("apply_system_tunnel: {e:?}");
+            println!("FAILED: {reason}");
+            *failure_reasons.entry(reason.clone()).or_insert(0) += 1;
             let _ = backend.stop_candidate(cand).await;
+            records.push(BenchRun {
+                run_index: run_idx,
+                ok: false,
+                failure_reason: Some(reason),
+                winning_rung: 1,
+                winning_transport: "masque2".to_string(),
+                used_cache: use_cache,
+                gateway_ms: t_gw.as_millis() as f64,
+                build_ms: t1.elapsed().as_millis() as f64,
+                verify_ms: 0.0,
+                total_ms: t0.elapsed().as_millis() as f64,
+            });
+            tokio::time::sleep(Duration::from_millis(200)).await;
             continue;
         }
         let t_build = t1.elapsed();
 
         let t2 = Instant::now();
         if let Err(e) = backend.verify_path(&cand).await {
-            println!("verify_path failed: {:?}", e);
+            let reason = format!("verify_path: {e:?}");
+            println!("FAILED: {reason}");
+            *failure_reasons.entry(reason.clone()).or_insert(0) += 1;
             let _ = backend.teardown_system_tunnel(&journal).await;
             let _ = backend.stop_candidate(cand).await;
+            records.push(BenchRun {
+                run_index: run_idx,
+                ok: false,
+                failure_reason: Some(reason),
+                winning_rung: 1,
+                winning_transport: "masque2".to_string(),
+                used_cache: use_cache,
+                gateway_ms: t_gw.as_millis() as f64,
+                build_ms: t_build.as_millis() as f64,
+                verify_ms: t2.elapsed().as_millis() as f64,
+                total_ms: t0.elapsed().as_millis() as f64,
+            });
+            tokio::time::sleep(Duration::from_millis(200)).await;
             continue;
         }
         let t_ver = t2.elapsed();
@@ -381,18 +535,35 @@ async fn run_bench_connect(runs: usize) -> Result<(), Box<dyn std::error::Error>
         let _ = backend.teardown_system_tunnel(&journal).await;
         let _ = backend.stop_candidate(cand).await;
 
-        gateway_times.push(t_gw.as_millis() as f64);
-        build_times.push(t_build.as_millis() as f64);
-        verify_times.push(t_ver.as_millis() as f64);
-        total_times.push(t_tot.as_millis() as f64);
+        let gw_ms = t_gw.as_millis() as f64;
+        let bld_ms = t_build.as_millis() as f64;
+        let ver_ms = t_ver.as_millis() as f64;
+        let tot_ms = t_tot.as_millis() as f64;
+
+        gateway_times.push(gw_ms);
+        build_times.push(bld_ms);
+        verify_times.push(ver_ms);
+        total_times.push(tot_ms);
+
+        records.push(BenchRun {
+            run_index: run_idx,
+            ok: true,
+            failure_reason: None,
+            winning_rung: 1,
+            winning_transport: "masque2".to_string(),
+            used_cache: use_cache,
+            gateway_ms: gw_ms,
+            build_ms: bld_ms,
+            verify_ms: ver_ms,
+            total_ms: tot_ms,
+        });
 
         println!(
-            "gw: {:4.0}ms, build: {:3.0}ms, verify: {:3.0}ms, total: {:4.0}ms",
-            t_gw.as_millis(),
-            t_build.as_millis(),
-            t_ver.as_millis(),
-            t_tot.as_millis()
+            "OK (cache={}) -> gw: {:4.0}ms, build: {:3.0}ms, verify: {:3.0}ms, total: {:4.0}ms",
+            use_cache, gw_ms, bld_ms, ver_ms, tot_ms
         );
+
+        tokio::time::sleep(Duration::from_millis(200)).await;
     }
 
     let _ = std::fs::remove_dir_all(&tmp);
@@ -411,7 +582,22 @@ async fn run_bench_connect(runs: usize) -> Result<(), Box<dyn std::error::Error>
         (min, mean, p50, p95, max)
     }
 
-    println!("\n=== Benchmark Summary (N={}) ===", gateway_times.len());
+    let ok_count = gateway_times.len();
+    let failed_count = runs - ok_count;
+
+    println!("\n=== Benchmark Summary ===");
+    println!("runs_started: {}", runs);
+    println!("ok:           {}", ok_count);
+    println!("failed:       {}", failed_count);
+
+    if !failure_reasons.is_empty() {
+        println!("\nFailure Reasons:");
+        for (reason, count) in &failure_reasons {
+            println!("  - {}: {} count(s)", reason, count);
+        }
+    }
+
+    println!("\nPercentiles (over OK runs only):");
     println!(
         "{:<16} | {:>8} | {:>8} | {:>8} | {:>8} | {:>8}",
         "Stage", "Min(ms)", "Mean(ms)", "P50(ms)", "P95(ms)", "Max(ms)"
@@ -440,6 +626,27 @@ async fn run_bench_connect(runs: usize) -> Result<(), Box<dyn std::error::Error>
         "{:<16} | {:8.1} | {:8.1} | {:8.1} | {:8.1} | {:8.1}",
         "Total Connect", t_min, t_mean, t_p50, t_p95, t_max
     );
+
+    // Save JSON to docs/perf/bench-<timestamp>.json
+    let now_ts = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0);
+    let json_path = format!("docs/perf/bench-{}-{}.json", label, now_ts);
+    let report = BenchReport {
+        label: label.to_string(),
+        runs_started: runs,
+        ok: ok_count,
+        failed: failed_count,
+        failure_reasons,
+        p50_total_ms: t_p50,
+        p95_total_ms: t_p95,
+        runs: records,
+    };
+    if let Ok(json_str) = serde_json::to_string_pretty(&report) {
+        let _ = std::fs::write(&json_path, json_str);
+        println!("\nWrote detailed benchmark run JSON to {}", json_path);
+    }
 
     Ok(())
 }

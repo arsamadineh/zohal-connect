@@ -5,7 +5,7 @@ use nix::sys::signal::{kill, Signal};
 use nix::unistd::Pid;
 use std::collections::HashMap;
 use std::future::Future;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::pin::Pin;
 use std::process::Stdio;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -68,6 +68,27 @@ async fn tcp_probe_socks(socks_port: u16) -> Result<(), BackendError> {
             conn_resp[1]
         )))
     }
+}
+
+fn extract_lastconn_peer(data_dir: &Path) -> Option<String> {
+    for name in &[
+        "aether-masque-lastconn.toml",
+        "aether-lastconn.toml",
+        "aether-wg-lastconn.toml",
+    ] {
+        let p = data_dir.join(name);
+        if let Ok(content) = std::fs::read_to_string(&p) {
+            for line in content.lines() {
+                if let Some(rest) = line.strip_prefix("peer = ") {
+                    let peer = rest.trim().trim_matches('"');
+                    if !peer.is_empty() {
+                        return Some(peer.to_string());
+                    }
+                }
+            }
+        }
+    }
+    None
 }
 
 pub struct RealAetherBackend {
@@ -218,16 +239,49 @@ impl TunnelBackend for RealAetherBackend {
                 let maybe_child = { self.children.lock().remove(&id) };
                 if let Some(mut ch) = maybe_child {
                     let _ = ch.kill().await;
+                    let _ = ch.wait().await;
                 }
+                // Purge any stale lastconn so subsequent attempts do not retry an unresponsive gateway
+                let _ = std::fs::remove_file(self.data_dir.join("aether-masque-lastconn.toml"));
+                let _ = std::fs::remove_file(self.data_dir.join("aether-lastconn.toml"));
                 return Err(BackendError::Timeout);
             }
 
             info!("[aether] candidate id={} ready on {}", id, check_addr);
+
+            // PROXY-PATH check: must run BEFORE any route or system change is made
+            info!(
+                "[aether] verifying proxy-path via SOCKS5 CONNECT to 1.1.1.1:443 on port {}",
+                socks_port
+            );
+            if let Err(e) = tcp_probe_socks(socks_port).await {
+                warn!(
+                    "[aether] candidate id={} proxy-path check failed: {e:?}",
+                    id
+                );
+                let maybe_child = { self.children.lock().remove(&id) };
+                if let Some(mut ch) = maybe_child {
+                    let _ = ch.kill().await;
+                    let _ = ch.wait().await;
+                }
+                let _ = std::fs::remove_file(self.data_dir.join("aether-masque-lastconn.toml"));
+                let _ = std::fs::remove_file(self.data_dir.join("aether-lastconn.toml"));
+                return Err(e);
+            }
+            info!(
+                "[aether] candidate id={} proxy-path verified successfully",
+                id
+            );
+
+            // Extract winning peer from lastconn if available
+            let discovered_endpoint = extract_lastconn_peer(&self.data_dir);
+            let final_endpoint = discovered_endpoint.or_else(|| endpoint.map(|s| s.to_string()));
+
             Ok(CandidateHandle {
                 id,
                 socks_port,
                 http_port: Some(http_port),
-                endpoint: endpoint.map(|s| s.to_string()),
+                endpoint: final_endpoint,
             })
         })
     }
@@ -238,42 +292,37 @@ impl TunnelBackend for RealAetherBackend {
     ) -> Pin<Box<dyn Future<Output = Result<PathTrace, BackendError>> + Send + 'a>> {
         Box::pin(async move {
             info!(
-                "[verify] performing TCP check to 1.1.1.1:443 via candidate id={} (socks port {})",
-                handle.id, handle.socks_port
-            );
-
-            // 1. Rigorous TCP check to 1.1.1.1:443 through the candidate tunnel
-            tcp_probe_socks(handle.socks_port).await?;
-
-            info!(
-                "[verify] TCP check to 1.1.1.1:443 succeeded for candidate id={}",
+                "[verify] TUN-path check: connecting to 1.1.1.1:443 through system tunnel (cand id={})",
                 handle.id
             );
 
-            // 2. Query trace in background to populate egress info without blocking connect timeline
-            let socks_port = handle.socks_port;
-            let cand_id = handle.id;
-            tokio::spawn(async move {
-                let proxy_url = format!("socks5h://127.0.0.1:{socks_port}");
-                let target_url = "https://1.1.1.1/cdn-cgi/trace";
-                if let Ok(proxy_agent) = ureq::Proxy::new(&proxy_url) {
-                    let agent = ureq::builder()
-                        .proxy(proxy_agent)
-                        .timeout(Duration::from_secs(8))
-                        .build();
-                    let res = tokio::task::spawn_blocking(move || {
-                        agent.get(target_url).call().ok()?.into_string().ok()
-                    })
-                    .await;
-                    if let Ok(Some(body)) = res {
-                        info!(
-                            "[verify/trace-bg] cand {} trace: {}",
-                            cand_id,
-                            body.lines().take(4).collect::<Vec<_>>().join(", ")
-                        );
-                    }
+            // Plain unmarked TCP connect to 1.1.1.1:443 through the system tunnel (1500 ms timeout)
+            let tun_probe = tokio::time::timeout(
+                Duration::from_millis(1500),
+                tokio::net::TcpStream::connect("1.1.1.1:443"),
+            )
+            .await;
+
+            match tun_probe {
+                Ok(Ok(_stream)) => {
+                    info!(
+                        "[verify] TUN-path TCP check to 1.1.1.1:443 succeeded for cand id={}",
+                        handle.id
+                    );
                 }
-            });
+                _ => {
+                    #[cfg(target_os = "linux")]
+                    if unsafe { libc::geteuid() == 0 } {
+                        return Err(BackendError::VerificationFailed(
+                            "TUN-path TCP check to 1.1.1.1:443 failed".into(),
+                        ));
+                    }
+                    info!(
+                        "[verify] unprivileged scope: proxy-path verified for cand id={}",
+                        handle.id
+                    );
+                }
+            }
 
             Ok(PathTrace {
                 ip: String::new(),
@@ -404,6 +453,7 @@ impl TunnelBackend for RealAetherBackend {
                         warn!("[aether] escalating to SIGKILL for pid={pid}");
                         let _ = child.kill().await;
                     }
+                    let _ = child.wait().await;
                 }
             }
             Ok(())

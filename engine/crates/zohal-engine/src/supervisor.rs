@@ -175,9 +175,10 @@ impl Supervisor {
             });
 
             match self.try_rung(&rung_config, &fp).await {
-                Ok((cand, trace)) => {
+                Ok((cand, _trace)) => {
                     info!("[supervisor] rung {} succeeded!", rung_config.rung_number);
                     let _ = self.cache.record_winning_rung(&fp, rung_config.rung_number);
+                    let cand_port = cand.socks_port;
                     self.active_candidate = Some(cand);
 
                     let now = SystemTime::now()
@@ -188,12 +189,52 @@ impl Supervisor {
                     self.update_state(|s| {
                         s.phase = Phase::Connected;
                         s.stage = Stage::None;
-                        s.exit_ip = Some(trace.ip);
-                        s.exit_loc = Some(trace.loc);
-                        s.colo = Some(trace.colo);
+                        s.exit_ip = None;
+                        s.exit_loc = None;
+                        s.colo = None;
                         s.since_unix = Some(now);
                         s.fail_streak = 0;
                     });
+
+                    // Fetch trace in background to populate real exit IP and location without blocking connect
+                    let state_tx_clone = self.state_tx.clone();
+                    tokio::spawn(async move {
+                        let proxy_url = format!("socks5h://127.0.0.1:{cand_port}");
+                        let target_url = "https://1.1.1.1/cdn-cgi/trace";
+                        if let Ok(proxy_agent) = ureq::Proxy::new(&proxy_url) {
+                            let agent = ureq::builder()
+                                .proxy(proxy_agent)
+                                .timeout(Duration::from_secs(8))
+                                .build();
+                            let res = tokio::task::spawn_blocking(move || {
+                                agent.get(target_url).call().ok()?.into_string().ok()
+                            })
+                            .await;
+                            if let Ok(Some(body)) = res {
+                                let mut ip = None;
+                                let mut loc = None;
+                                let mut colo = None;
+                                for line in body.lines() {
+                                    if let Some((k, v)) = line.split_once('=') {
+                                        match k.trim() {
+                                            "ip" => ip = Some(v.trim().to_string()),
+                                            "loc" => loc = Some(v.trim().to_string()),
+                                            "colo" => colo = Some(v.trim().to_string()),
+                                            _ => {}
+                                        }
+                                    }
+                                }
+                                state_tx_clone.send_modify(|s| {
+                                    if s.phase == Phase::Connected {
+                                        s.exit_ip = ip;
+                                        s.exit_loc = loc;
+                                        s.colo = colo;
+                                    }
+                                });
+                            }
+                        }
+                    });
+
                     success = true;
                     break;
                 }
@@ -303,5 +344,73 @@ impl Supervisor {
             s.since_unix = None;
         });
         info!("[supervisor] tear_down completed");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_backend::FakeAetherBackend;
+    use std::sync::atomic::Ordering;
+    use tempfile::tempdir;
+
+    #[tokio::test]
+    async fn test_verify_failure_triggers_undo_and_next_rung() {
+        let dir = tempdir().unwrap();
+        let journal = Arc::new(Journal::new(dir.path()).unwrap());
+        let cache = Arc::new(CacheManager::new(dir.path(), "salt").unwrap());
+        let log_ring = LogRingBuffer::new();
+        let settings = Arc::new(parking_lot::RwLock::new(Settings::default()));
+        let backend = Arc::new(FakeAetherBackend::new());
+
+        // Make verify fail exactly once (for rung 1)
+        backend.fail_verify_times.store(1, Ordering::SeqCst);
+
+        let (mut sup, state_rx, desired_tx) = Supervisor::new(
+            DesiredState::default(),
+            backend.clone(),
+            journal.clone(),
+            cache,
+            log_ring,
+            settings,
+        );
+
+        desired_tx
+            .send(DesiredState {
+                intent: DesiredIntent::Up,
+                epoch: 1,
+            })
+            .unwrap();
+
+        let sup_task = tokio::spawn(async move {
+            sup.run_reconcile_loop().await;
+        });
+
+        // Wait until it hits rung 1 (fail verify) and proceeds to rung 2 (pass verify)
+        let mut connected = false;
+        for _ in 0..30 {
+            tokio::time::sleep(Duration::from_millis(30)).await;
+            if state_rx.borrow().phase == Phase::Connected {
+                connected = true;
+                break;
+            }
+        }
+        assert!(connected, "Expected Phase::Connected");
+
+        let st = state_rx.borrow().clone();
+        assert!(
+            st.rung >= 2,
+            "Expected rung >= 2 due to verify failure on rung 1, got {}",
+            st.rung
+        );
+
+        desired_tx
+            .send(DesiredState {
+                intent: DesiredIntent::Down,
+                epoch: 2,
+            })
+            .unwrap();
+        tokio::time::sleep(Duration::from_millis(50)).await;
+        sup_task.abort();
     }
 }

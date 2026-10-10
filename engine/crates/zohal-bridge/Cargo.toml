@@ -7,6 +7,12 @@ license = "AGPL-3.0-only"
 
 [dependencies]
 zohal-proto = { workspace = true }
+zohal-engine = { workspace = true }
 tokio = { workspace = true }
 interprocess = { workspace = true }
 tracing = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+parking_lot = { workspace = true }
+zbus = { workspace = true }

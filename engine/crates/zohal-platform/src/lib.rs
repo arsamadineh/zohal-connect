@@ -4,6 +4,7 @@ pub mod prober;
 pub mod linux;
 
 pub mod proxy_only;
+pub mod windows;
 
 use zohal_proto::types::Scope;
 

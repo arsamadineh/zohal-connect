@@ -2809,8 +2809,14 @@ name = "zohal-bridge"
 version = "0.1.0"
 dependencies = [
  "interprocess",
+ "parking_lot",
+ "serde",
+ "serde_json",
+ "thiserror",
  "tokio",
  "tracing",
+ "zbus",
+ "zohal-engine",
  "zohal-proto",
 ]
 

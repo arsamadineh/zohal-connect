@@ -1,4 +1,4 @@
-# ZOHAL CONNECT: MASTER BUILD SPECIFICATION
+/boost# ZOHAL CONNECT: MASTER BUILD SPECIFICATION
 
 Spec version 1.0, written 2026-10-08. Audience: an autonomous coding agent (Antigravity or equivalent).
 Language of this file: English. Language of the product: Persian only (RTL).
@@ -397,7 +397,6 @@ Clock skew check: if TLS handshakes fail on every rung and the system clock diff
 - Property test with the fake-Aether harness: random sequences of 10,000 `set_desired` toggles at random intervals from 0 to 300 ms, with random injected failures. After quiescence assert: final phase matches final desired; zero leaked processes; zero leaked journal entries; zero leaked system changes; no state transition outside the table in 7.2; memory stable.
 - The engine must never panic. Panics in child tasks are caught, logged, and converted to `E400` with a restart.
 
-
 ---
 
 ## 8. PLATFORM SPECIFICATIONS
@@ -538,7 +537,6 @@ For `.ir` DNS: when the platform supports per-domain DNS routing (Linux with `re
 
 ### 9.6 Logging and privacy
 In-memory ring buffer of 2,000 events for the log screen. No logs on disk unless `diagnostic_log` is on (then rotate at 2 MB, keep 2 files, masked). Destinations are never logged.
-
 
 ---
 
@@ -681,4 +679,270 @@ Drawn with one `CustomPainter` inside a `RepaintBoundary`. Concept: a planet squ
 ### 12.7 Taste Skill ban list, adapted (all enforced)
 No emoji. No em or en dashes in copy. No gradients, mesh, glow, blur, glass, or drop shadows. No pills, no circular buttons, no rounded anything. No decorative status dots (a state is shown by the control itself). No three-equal-card rows. No fake charts or dashboards: the only graphic is the control; if a speed sparkline is added it must plot real counter data, 60 samples, hairline stroke (optional, off by default is acceptable; if included keep it in the stats row only). No stock imagery, no illustrations beyond the brand mark. No version badges or "BETA" tags on the main screen. No scroll cues. No hand-rolled decorative icons: use `Icons.*_sharp` (list: power_settings_new, settings, route (alt_route), apps, article (logs), info, close, arrow_back_ios_new mirrored by RTL, add, delete_outline, check, warning_amber, content_copy, shield).
 Hierarchy discipline for the main screen (analog of "hero discipline"): it fits one viewport at 360 x 640 dp with no scrolling; the connect control is visible without interaction; title at most two lines; one primary action.
+
+---
+
+## 13. SCREENS AND FLOWS
+
+All screens: RTL, Persian, sharp, tokens only, no scrolling on the main screen. Navigation uses a plain `Navigator` with custom page routes (no router package).
+
+### 13.1 Main screen (Android and desktop share the layout)
+Vertical stack at 360 x 640:
+1. Header 56 dp: wordmark "زحل" (title weight 700) at the reading-start side with a 14 dp square mark; settings icon button at the reading-end side; 1 dp hairline under it.
+2. Flexible space.
+3. Connect control (12.5) centered at about 38% of the height.
+4. State label (title) and sub-label (body, secondary) 16 dp below the control. Sub-label: idle shows the hint (tap to connect); connecting shows the current stage name; connected shows the duration `۰۰:۱۲:۳۴`; failed shows the error title.
+5. When connected: a stats row, two equal columns (label caption, value row_title): "دریافت" and "ارسال", values with units, real counters at 1 Hz.
+6. Bottom group, anchored, rows of 56 dp separated by hairlines:
+   - Row "روش اتصال": value on the end side shows the current method; when Auto and connected it shows "خودکار" with the resolved transport in secondary text. Tap opens the Mode sheet.
+   - Row "مسیریابی": value "هوشمند" or "سفارشی". Tap opens the Routing screen.
+   - Row "نشانی خروجی" (only when connected, animated height): value in an LTR isolate; trailing copy icon copies the Latin-digit string and shows a flat toast "کپی شد".
+7. Safe-area padding 16 dp. Android edge-to-edge.
+
+Desktop: window default 400 x 680 dp, minimum 360 x 600, maximum 480 x 900, resizable, centered, remembers position and size, native title bar with title "Zohal", DPI aware. The layout is the same column, centered. Closing the window hides to tray when `minimize_to_tray` (tray menu: "اتصال" or "قطع", "نمایش زحل", "خروج"; if connected, exit asks via a dialog: "خروج از برنامه؟ اتصال فعال میماند." with actions "خروج از برنامه" and "قطع و خروج").
+
+### 13.2 Mode sheet (روش اتصال)
+Bottom sheet on Android; on desktop a slide-over panel from the reading-end side inside the window (same component). Five options as rows with square radio markers (outlined square, filled square when selected, 120 ms), each with title and one-line description (14.2). An expandable "پیشرفته" section: scan profile, noise profile, IP version, fragment, ECH. Selecting a mode while connected applies by a clean reconnect with a toast; never half-applies.
+
+### 13.3 Routing screen (مسیریابی)
+- Toggle "مسیریابی هوشمند" with its description; toggle "شبکه محلی مستقیم".
+- Section "مستقیم" and section "مسدود": rule lists (type label in secondary text, value in an LTR isolate), swipe or delete icon to remove, "افزودن قانون" opens a flat form (type selector as a segmented sharp control, value field with live validation, add/cancel).
+- Android only: section "برنامهها" with mode (همه، فقط انتخابشدهها، همه به جز انتخابشدهها) and an app list with label and a square checkbox, search field.
+- Windows Plan B: the domain-direct add option is disabled with the explanation text.
+
+### 13.4 Settings screen (تنظیمات)
+Grouped rows (group title in caption secondary): اتصال (اتصال خودکار هنگام باز شدن، بازیابی آخرین وضعیت، اتصال خودکار هنگام روشن شدن سیستم، قفل ایمنی، دامنه اتصال [desktop only: کل سیستم / پراکسی سیستم]), سیستم (اجرای همراه سیستم [desktop], کوچک شدن به ناحیه اعلان [desktop], تنظیمات VPN سیستم [Android]), شبکه (سرورهای DNS), پیشرفته (گزارش تشخیصی، ثبت دوباره دستگاه، گزارشها), درباره. Toggles are the custom sharp switch.
+
+### 13.5 Logs screen (گزارشها)
+Real-time list from the in-memory ring buffer: time (Persian digits), level text, code, message; filter by level; actions: copy all, export diagnostics. Monospace is not used; use Vazirmatn with LTR isolates for technical tokens.
+
+### 13.6 About screen (درباره)
+Name block, version (Persian digits), engine version, the AGPL-3.0 notice, "کد منبع" (opens the repo URL from a build-time constant), "مجوزهای متنباز" (renders `THIRD_PARTY_LICENSES`), credit line "بر پایه Aether". No marketing.
+
+### 13.7 Onboarding (4 steps, at most 25 seconds, skippable only where stated)
+1. **معرفی:** single sentence (14.7), one button "ادامه". Wordmark and the connect control in idle (non-interactive).
+2. **دسترسیها:**
+   - Android: VPN permission (system dialog via `VpnService.prepare`), notifications (13+), optional battery exemption ("بعداً" allowed). Each row shows a state (square marker) and a button.
+   - Desktop: shows the service status. If the service is installed and running, a confirmed row. If not (tarball or failed install), a button "نصب سرویس" that runs the elevated install (UAC on Windows via the installer helper, `pkexec` on Linux). Without the service the scope is set to SystemProxy and the user is told.
+3. **روش اتصال:** radio list (same component as the Mode sheet, three options only: خودکار (recommended), MASQUE HTTP/3, MASQUE HTTP/2). Default Auto.
+4. **اولین اتصال:** registers the device identity and performs a real first connection with live stages on the connect control; success shows "آماده است" then continues to the main screen already connected; failure shows the error and "تلاش دوباره" or "رد کردن" (skip to the main screen).
+Onboarding completion is stored; never shown again. A settings entry does not re-run it.
+
+### 13.8 Installers
+Windows wizard pages (Inno Setup, `RightToLeft`, Persian text): welcome (14.8), license (AGPL-3.0 text), install directory, components ("سرویس زحل (الزامی)", optional "اجرای زحل همراه ویندوز"), ready, progress, finish with "اجرای زحل". The UAC prompt appears at start; the first page explains why admin rights are needed (14.8).
+Linux: `.deb`/`.rpm` install silently with the service; the terminal postinst message is short and in English plus Persian.
+
+---
+
+## 14. PERSIAN COPY (use these strings exactly; extend only using this glossary)
+
+### 14.1 Glossary (use consistently)
+connect = اتصال; disconnect = قطع اتصال; method = روش اتصال; routing = مسیریابی; smart = هوشمند; custom = سفارشی; direct = مستقیم; block = مسدود; rule = قانون; app/apps = برنامه / برنامهها; settings = تنظیمات; logs = گزارشها; about = درباره; gateway = دروازه; tunnel = تونل; kill switch = قفل ایمنی; download = دریافت; upload = ارسال; duration = مدت اتصال; exit address = نشانی خروجی; exit location = محل خروج; service = سرویس; permission = دسترسی / مجوز; retry = تلاش دوباره; copy = کپی; add = افزودن; remove = حذف; cancel = لغو; confirm = تأیید; later = بعداً; continue = ادامه; close = بستن.
+
+### 14.2 Names (proper nouns remain Latin in LTR isolates; descriptions are Persian)
+- خودکار: «بهترین روش را خودکار پیدا میکند و در صورت قطع، روش دیگری را امتحان میکند.»
+- MASQUE (HTTP/3): «سریعترین روش؛ مناسب بیشتر شبکهها.»
+- MASQUE (HTTP/2): «برای شبکههایی که UDP را مسدود یا کند میکنند.»
+- WireGuard: «سبک و بسیار سریع؛ مناسب شبکههای کممحدودیت.»
+- Gool: «دو لایه رمزنگاری؛ آخرین راه برای شبکههای سختگیر.»
+- Scope: «کل سیستم (TUN)» and «پراکسی سیستم».
+
+### 14.3 States and stages
+idle «قطع است»; preparing «آمادهسازی»; connecting «در حال اتصال»; connected «متصل است»; reconnecting «اتصال دوباره»; disconnecting «در حال قطع»; failed «اتصال برقرار نشد».
+Hints: «برای اتصال لمس کنید» (touch devices), «برای اتصال کلیک کنید» (desktop), «برای لغو دوباره بزنید».
+Stages: «آمادهسازی»، «یافتن دروازه»، «ساخت تونل»، «بررسی مسیر».
+Labels: «دریافت»، «ارسال»، «مدت اتصال»، «نشانی خروجی»، «محل خروج»، «روش اتصال»، «مسیریابی».
+Toasts: «کپی شد»، «ذخیره شد»، «روش اتصال تغییر کرد؛ اتصال دوباره برقرار میشود».
+
+### 14.4 Dialogs
+- Cancel connecting (only if the inline path cannot be used, such as a notification action): title «لغو اتصال؟»، body «اتصال هنوز برقرار نشده است. اگر لغو کنید، فرایند از ابتدا شروع میشود.»، actions «ادامه اتصال» and «لغو».
+- Exit while connected: title «خروج از برنامه؟»، body «اتصال فعال میماند.»، actions «خروج از برنامه» and «قطع و خروج».
+- Reset identity: title «ثبت دوباره دستگاه؟»، body «دستگاه با حساب جدیدی ثبت میشود. این کار چند ثانیه طول میکشد.»، actions «تأیید» and «لغو».
+
+### 14.5 Numerals and formatting (single helper in `core/persian.dart`, unit-tested)
+- Digits 0 to 9 map to ۰ to ۹. Decimal separator «٫». Thousands separator «٬». Percent «٪».
+- Duration `HH:MM:SS` with Persian digits (hours grow beyond two digits if needed).
+- Bytes: «کیلوبایت»، «مگابایت»، «گیگابایت» with one decimal. Rates: «مگابیت/ث»، «کیلوبیت/ث». Pick the unit so the number is between 1 and 999.
+- IPv4 uses Persian digits inside an LTR isolate (U+2066 ... U+2069). IPv6, hexadecimal tokens and versions with letters stay Latin inside an LTR isolate. Clipboard copies use Latin digits.
+- A test must fail the build if any UI string contains an ASCII digit outside an explicit allow-list (technical tokens).
+
+### 14.6 Errors (code, title, hint)
+| Code | Title | Hint |
+|---|---|---|
+| E100 | اینترنت در دسترس نیست | اتصال شبکه دستگاه را بررسی کنید. |
+| E110 | ساعت دستگاه نادرست است | تاریخ و ساعت را روی حالت خودکار بگذارید. |
+| E120 | هیچ روشی موفق نبود | چند دقیقه بعد دوباره امتحان کنید یا روش اتصال را دستی انتخاب کنید. |
+| E130 | حساب دستگاه تازهسازی شد | اتصال دوباره برقرار میشود. |
+| E140 | ثبت دستگاه ممکن نشد | شبکه دیگری را امتحان کنید؛ ثبت فقط یک بار لازم است. |
+| E200 | سرویس زحل در دسترس نیست | سرویس را راهاندازی کنید یا برنامه را دوباره نصب کنید. |
+| E210 | ساخت رابط شبکه ناموفق بود | آنتیویروس یا دیواره آتش ممکن است مانع شده باشد. |
+| E220 | مجوز لازم داده نشد | مجوز VPN را در تنظیمات تأیید کنید. |
+| E230 | اتصال توسط برنامه دیگری قطع شد | برای اتصال دوباره بزنید. |
+| E250 | نسخه برنامه و سرویس هماهنگ نیست | برنامه را بهروزرسانی یا دوباره نصب کنید. |
+| E300 | تنظیمات سیستم توسط برنامه دیگری تغییر کرد یا اتصال دیگری فعال است | برنامههای تغییر دهنده پراکسی یا VPN را بررسی کنید. |
+| E400 | هسته اتصال متوقف شد | بهطور خودکار دوباره راهاندازی میشود. |
+| E900 | خطای ناشناخته | گزارش را کپی کنید و دوباره امتحان کنید. |
+Extra strings: Windows Plan B domain-direct disabled: «قانونهای دامنهای در این حالت روی ویندوز پشتیبانی نمیشود؛ قانونهای شبکه و درگاه فعال هستند.» Kill switch off after loss: «اتصال قطع شد؛ اینترنت مستقیم فعال است.»
+
+### 14.7 Settings and onboarding copy
+- قفل ایمنی: «اگر اتصال ناگهان قطع شود، تا اتصال دوباره یا قطع دستی، ترافیک بدون تونل خارج نمیشود.»
+- مسیریابی هوشمند: «سایتهای داخلی و شبکه محلی بدون تونل باز میشوند.»
+- اتصال خودکار هنگام باز شدن: «با باز شدن برنامه، اتصال بهطور خودکار برقرار میشود.»
+- بازیابی آخرین وضعیت: «اگر آخرین بار متصل بودهاید، دوباره متصل میشود.»
+- Onboarding step 1 body: «اتصال سریع و بیدردسر به اینترنت آزاد.»
+- Step 2 Android rows: «اجازه VPN: برای عبور ترافیک کل دستگاه از تونل.»، «اعلان: برای نمایش وضعیت اتصال.»، «بهینهسازی باتری: برای اینکه اتصال در پسزمینه قطع نشود.»
+- Step 2 desktop rows: «سرویس زحل نصب است.» / «سرویس زحل نصب نیست.» with button «نصب سرویس».
+- Step 3 body: «پیشنهاد ما خودکار است. بعداً هم میتوانید عوض کنید.»
+- Step 4: «در حال ثبت دستگاه و آزمایش مسیر» then «آماده است».
+- About: «قندشکن زحل»، «این نرمافزار آزاد است و تحت مجوز AGPL-3.0 منتشر میشود.»، «کد منبع»، «مجوزهای متنباز»، «بر پایه Aether».
+- Buttons: «ادامه»، «بعداً»، «تأیید»، «لغو»، «بستن»، «تلاش دوباره»، «کپی»، «افزودن»، «حذف».
+- Android notification: title «زحل», text «متصل است · ۰۰:۱۲:۳۴», action «قطع».
+
+### 14.8 Installer copy (Windows)
+Welcome: «به زحل خوش آمدید». Admin explanation: «برای نصب سرویس شبکه و رابط مجازی به دسترسی مدیر نیاز است. زحل فقط تنظیمات خودش را تغییر میدهد.» Finish: «اجرای زحل». Component labels: «سرویس زحل (الزامی)»، «اجرای زحل همراه ویندوز».
+
+Rule types (Persian labels): دامنه (و زیردامنهها)، دامنه دقیق، شامل کلمه، عبارت منظم، نشانی IP یا شبکه، درگاه. Store all strings in `l10n/strings_fa.dart` and mirror them in `docs/STRINGS_FA.md`.
+
+### 14.9 RTL implementation rules
+Force `Directionality(textDirection: TextDirection.rtl)` and locale `fa_IR` at the app root; add `GlobalMaterialLocalizations`, `GlobalWidgetsLocalizations`, `GlobalCupertinoLocalizations`. Use `EdgeInsetsDirectional`, `AlignmentDirectional`, `PositionedDirectional`. Mirror directional icons (back arrow). Wrap Latin tokens (IPs, protocol names, codes) in LTR isolates. Never hard-code left/right. A widget test renders every screen and asserts RTL ordering.
+
+---
+
+## 15. PERFORMANCE AND OPTIMIZATION
+
+### 15.1 Budgets (report measured values in `docs/GATES.md`)
+- UI cold start to first frame: desktop under 600 ms, Android under 900 ms (mid-range device).
+- UI idle CPU near 0%; RAM: desktop UI under 130 MB; `zohald` under 40 MB while connected.
+- Binary sizes: `zohald` (stripped) 8 MB or less (report actual; justify if over). Android arm64 APK 28 MB or less after R8 and tree-shaking. Windows installed size 80 MB or less.
+- Connect and disconnect targets in 7.4.
+- Throughput through TUN on loopback dummy upstream at least 200 Mbit/s; end-to-end with Aether report only (depends on the network).
+- Frame rate: no dropped frames during connect/disconnect/sheet animations on a 60 Hz profile run (`flutter run --profile`, performance overlay evidence).
+
+### 15.2 Flutter optimizations (all required)
+`const` constructors everywhere possible; Riverpod `select` for narrow rebuilds; one `RepaintBoundary` around the connect control and one around each scrolling list; `ListView.builder`; no heavy work in `build`; stats and animation subscriptions paused when hidden; initialize in this order: `runApp` immediately, then connect the bridge asynchronously (never block the first frame; show the last persisted snapshot, then reconcile); precache nothing large; release build flags `--release --obfuscate --split-debug-info=build/symbols --tree-shake-icons`; Android `--split-per-abi`.
+
+### 15.3 Font subsetting
+Fetch Vazirmatn from its official repository or npm package `@fontsource-variable/vazirmatn` (verify the OFL license file and include it in `THIRD_PARTY_LICENSES`). Subset with `pyftsubset` (fonttools via pip) keeping the variable `wght` axis range 300 to 700 and these Unicode ranges: U+0020-007E, U+00A0, U+0600-06FF, U+0750-077F, U+200C-200F, U+2026, U+2066-2069, U+06F0-06F9, U+066A-066C, U+FB50-FDFF, U+FE70-FEFF. Script: `tools/subset-font.sh`. Target under 300 KB. Declare one family in `pubspec.yaml`.
+
+### 15.4 Rust optimizations
+`[profile.release]` with `lto = "fat"`, `codegen-units = 1`, `strip = true`, `panic = "abort"` for `zohald` (the supervisor restarts it) and `unwind` where JNI requires it. Tokio with minimal features and a small worker pool. No `reqwest`. No unnecessary clones of buffers. Do not alter Aether's own build profile. Run `cargo bloat` and `cargo udeps` in CI.
+
+---
+
+## 16. BUILD, PACKAGING, CI
+
+- `tools/fetch-aether.*` downloads the pinned release, verifies SHA256 against `third_party/aether.lock`, and unpacks per platform. Never download at app runtime.
+- `ci.yml` jobs: `engine-linux` (fmt, clippy, tests, cargo deny/audit, netns e2e if the runner allows), `engine-windows`, `app-linux` (analyze, tests, goldens, build), `app-windows`, `app-android` (build APKs, emulator API 34 test of E8), all on pull request.
+- `release.yml` on tag: builds `Zohal-Setup-<ver>.exe`, `zohal_<ver>_amd64.deb`, `zohal-<ver>.x86_64.rpm` (and arm64 variants), `zohal-<ver>-linux.tar.gz`, `zohal-<ver>-<abi>.apk` (+ a universal APK), `SHA256SUMS.txt`, and an SBOM. Signing: Android release keystore from CI secrets (document generating one in `packaging/android/signing.md`); Windows Authenticode signing optional via secret (document SmartScreen behavior if unsigned).
+- Reproducibility: committed lockfiles, pinned toolchains (`rust-toolchain.toml`, Flutter version recorded).
+- The About screen's version and the AGPL source link come from build-time constants.
+
+---
+
+## 17. PHASES, TASKS AND GATES (execute in order; update `docs/PROGRESS.md`)
+
+**Phase 0: Study and experiments.** Section 3.2. Gate: described there.
+
+**Phase 1: Engine core (Linux, fake Aether).**
+Tasks: `zohal-proto` types and settings schema with validation; `zohal-engine` supervisor with reconcile loop; fake-Aether harness (a small Rust or script binary that emulates delays, failures, readiness, crashes, hangs); ladder and rung memory; cache with atomic IO and corruption recovery; journal and undo; IPC server and client; log ring buffer; error taxonomy.
+Gate: all unit tests green; property test of 7.9 passes with 10,000 toggles x 20 seeds; zero leaked processes/journal entries; clippy/fmt clean; fuzz test of the IPC parser runs 5 minutes without panic.
+
+**Phase 2: Linux platform with real Aether.**
+Tasks: Aether supervisor (real binary, full flag set, stdin closed, log capture, readiness, kill escalation); tun2proxy integration with counters; policy routing, DNS, IPv6 handling; ports and candidates probing; health monitor, network and sleep events; system proxy scope via `zohald user` (GNOME and KDE); `zohald` CLI (`service`, `user`, `install`, `uninstall`, `cleanup`, `status`); systemd unit; nfpm packaging.
+Gate: netns e2e script proves: connect, traffic only via tunnel, LAN excluded, DNS no leak, IPv6 no leak, disconnect leaves zero rules/routes/devices (`ip rule`, `ip route`, `ip link` diff before/after), `kill -9 zohald` mid-connect and mid-connected followed by restart restores a clean state, 1,000 connect/disconnect cycles with no leak, measured connect times recorded.
+
+**Phase 3: Flutter UI complete (on Linux, against the real engine).**
+Tasks: tokens/theme/motion/components; connect control painter; all screens in section 13; Persian helper and strings; bridge wiring and Riverpod providers; onboarding; tray, single instance, window memory; accent color reading; goldens (light and dark, all screens, 360 x 640 and 400 x 680); RTL and digits tests; contrast tests; performance profile run.
+Gate: `flutter analyze` zero issues; widget and golden tests green; digit lint test green; manual-equivalent integration test drives connect, spam toggling (200 taps in 10 s with the real engine and fake Aether), cancel confirmation, settings changes, routing rule add/remove; frame timing evidence; the pre-flight checklist (section 19.1) filled with evidence.
+
+**Phase 4: Windows.**
+Tasks: Windows platform module (adapter, addresses, routes, DNS, firewall guard, power and network events, job object); service host, installer; Plan A patch or Plan B; system proxy scope with snapshot/restore; CI jobs on `windows-latest`; Inno Setup script with Persian wizard.
+Gate: CI builds the installer and runs everything runnable (unit tests, adapter creation test if the runner allows, installer silent install/uninstall test with a cleanliness check of service, adapter, registry, firewall rules). Manual items go to `docs/QA_MANUAL.md` with `NOT RUN` in `docs/GATES.md`.
+
+**Phase 5: Android.**
+Tasks: Kotlin service, notification, tile, boot receiver, shortcut; JNI bridge; engine hosting in `:vpn`; Aether from `jniLibs` (E8); TUN fd to the front end; per-app split; permission flows in onboarding; network callback; emulator instrumentation test (service starts, binary executes, IPC works, desired toggle cycle with fake Aether).
+Gate: APKs build for all ABIs; emulator test green; size budget recorded; manual device items in `docs/QA_MANUAL.md`.
+
+**Phase 6: Hardening and release.**
+Tasks: 24-hour simulated soak (engine with fake Aether injecting random failures, memory and fd counts stable, no growth); security review against section 10 (checklist in `docs/ARCHITECTURE.md`); dependency audit; documentation; release workflow dry run; final audit (section 19).
+Gate: all earlier gates re-run green; `docs/GATES.md` complete; `docs/KNOWN_LIMITS.md` honest; `README.md` (Persian user guide plus short English developer section) written.
+
+---
+
+## 18. DOCUMENTATION DELIVERABLES
+`README.md`, `docs/ARCHITECTURE.md` (diagram, threat model, state machine, IPC schema, journal format), `docs/AETHER_NOTES.md`, `docs/DECISIONS.md`, `docs/DEPENDENCIES.md`, `docs/GATES.md`, `docs/KNOWN_LIMITS.md`, `docs/BLOCKERS.md` (may be empty), `docs/QA_MANUAL.md`, `docs/STRINGS_FA.md`, `NOTICE.md`, `THIRD_PARTY_LICENSES/`.
+
+`docs/QA_MANUAL.md` must contain exact, numbered, copy-paste-able manual checks for: Windows 10 and 11 install/uninstall cleanliness; connect, spam toggle, cancel confirmation; sleep/wake; Wi-Fi to hotspot switch; coexistence with another VPN and with WSL2/Docker; DNS leak test; IPv6 leak test; system proxy restore after a forced kill; Linux on Ubuntu LTS and Fedora with GNOME and KDE; Android on one low-end and one recent device: VPN consent, notification, battery exemption, always-on VPN and lockdown, tile, boot auto-connect, app split, revoke by another VPN app, airplane mode toggle. Each check lists expected result and where to find evidence.
+
+---
+
+## 19. FINAL AUDIT
+
+### 19.1 Pre-flight checklist (every box must honestly pass; paste evidence in `docs/GATES.md`)
+- [ ] No placeholder, TODO, mock, or unused code in the repo (grep evidence).
+- [ ] No radius greater than 0 anywhere in app code (grep for `BorderRadius.circular`, `StadiumBorder`, `CircleBorder`, `ClipRRect`, `ClipOval`).
+- [ ] No gradients, shadows, blur (grep `BoxShadow`, `LinearGradient`, `BackdropFilter`, `elevation` non-zero).
+- [ ] No ASCII digits in UI strings; digit test passes.
+- [ ] No em/en dashes and no emoji in any string or doc (grep).
+- [ ] All screens verified in light and dark, RTL, at 360 x 640 and 400 x 680; goldens committed.
+- [ ] Contrast test passes for every token pair in both themes.
+- [ ] Main screen needs no scrolling at 360 x 640.
+- [ ] Every animation interruptible; reduced-motion path implemented.
+- [ ] Spam test (7.9) passed; cancel confirmation behaves as 12.6.
+- [ ] Journal cleanup proven after `kill -9` (Linux) and forced stop (Windows/Android where runnable).
+- [ ] No fixed ports; ports probed per session.
+- [ ] Aether never prompts; stdin closed; every flag explicit.
+- [ ] Aether binary hash verified at engine start.
+- [ ] No network calls other than those allowed in R11.
+- [ ] Licenses and NOTICE complete; AGPL source link in About.
+- [ ] Measured timings and sizes recorded vs. budgets.
+- [ ] Every `[VERIFY]` resolved or listed as UNRESOLVED with fallback.
+
+### 19.2 Final report format (the last message you send; at most 60 lines)
+1. What was built per platform (one line each).
+2. Evidence summary: gates passed (with numbers), gates NOT RUN (with reasons).
+3. Measured connect times (warm and cold), sizes, memory.
+4. Known limits (copy the top items from `docs/KNOWN_LIMITS.md`).
+5. What the human must do: `docs/QA_MANUAL.md` steps, signing keys to create, how to install each artifact.
+Do not claim "zero bugs". State what was verified and what was not.
+
+---
+
+## APPENDIX A: ZOHAL SETTING TO AETHER FLAGS (fix against the real `--help` at the pinned tag; the table in the repo must match reality)
+
+Always pass explicitly (no reliance on defaults): transport flag, listener binds, scan mode, noise profile, config paths inside the engine data directory, and an explicit `--quick-reconnect` decision. Environment: `AETHER_LOG_LEVEL=info`, `AETHER_PERF_PROFILE=high` (desktop) or `medium` (Android), `AETHER_REPROVISION` left at default (re-register on rejection).
+
+| Zohal setting | Aether flags `[VERIFY each]` |
+|---|---|
+| Masque3 | `--masque --h3` (or `--masque`, h3 default) |
+| Masque2 | `--masque --h2` |
+| WireGuard | `--wg` (alias `--warp`) |
+| Gool (v2.3.0) | `--gool` ; classic fallback `--gool-classic` |
+| SOCKS listener | `--bind <127.0.0.1:P>` or `AETHER_SOCKS` |
+| HTTP listener (proxy scope) | `--http-proxy 127.0.0.1:Q` |
+| scan profile | `--scan turbo|balanced|thorough|stealth|ironclad` |
+| noise profile | `--noize off|light|balanced|aggressive|firewall|gfw` (firewall and gfw MASQUE only) |
+| ip version | `-4`, `-6`, or dual (check help for the exact dual form) |
+| cached gateway | `--quick-reconnect` ; specific gateway `--peer <ip:port>` |
+| fragment | `--fragment` (h2 only) |
+| ECH | `--ech auto` |
+| smart/user routing | `--routes <path>` (Zohal writes the file); or `--route-direct`/`--route-block` |
+| DNS inside tunnel | `--dns <list>` |
+| Linux loop prevention | `--mark <M>` |
+| Windows loop prevention | env `ZOHAL_BIND_IFINDEX` (only if the patch exists) |
+| Byte counters | `--stats` (or tun2proxy counters; prefer the latter) |
+| identity/config paths | `--config`, `--wg-config`, `--masque-config` |
+| version | `--version` |
+
+Routing file format written by Zohal:
+```
+[block]
+<entries>
+[direct]
+private
+ir
+<entries>
+```
+
+---
 

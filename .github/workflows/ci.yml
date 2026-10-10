@@ -1,0 +1,101 @@
+name: Zohal CI
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  engine-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - name: Check Rust Formatting
+        run: cargo fmt --all -- --check
+        working-directory: engine
+
+      - name: Run Clippy
+        run: cargo clippy --all-targets -- -D warnings
+        working-directory: engine
+
+      - name: Run Engine Tests
+        run: cargo test --all
+        working-directory: engine
+
+      - name: Run Property Tests (10k toggles)
+        run: cargo test -p zohal-engine --test torture_test -- --nocapture
+        working-directory: engine
+
+  engine-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check Windows Platform Crates
+        run: cargo check -p zohal-platform -p zohal-proto -p zohal-bridge
+        working-directory: engine
+
+      - name: Test Windows Platform
+        run: cargo test -p zohal-platform
+        working-directory: engine
+
+  app-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Dependencies
+        run: flutter pub get
+        working-directory: app
+
+      - name: Format Check
+        run: dart format --set-exit-if-changed .
+        working-directory: app
+
+      - name: Flutter Analyze
+        run: flutter analyze
+        working-directory: app
+
+      - name: Run Unit & Widget Tests
+        run: flutter test
+        working-directory: app
+
+  app-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Install Dependencies
+        run: flutter pub get
+        working-directory: app
+
+      - name: Build Android APK
+        run: flutter build apk --split-per-abi --debug
+        working-directory: app

@@ -1,0 +1,62 @@
+name: Zohal Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build zohald Release Binary
+        run: cargo build --release -p zohald
+        working-directory: engine
+
+      - name: Install nfpm
+        run: go install github.com/goreleaser/nfpm/v2/cmd/nfpm@latest
+
+      - name: Package .deb and .rpm
+        run: |
+          mkdir -p dist/linux
+          nfpm pkg --packager deb --target dist/linux/zohal_${GITHUB_REF_NAME}_amd64.deb -f packaging/linux/nfpm.yaml
+          nfpm pkg --packager rpm --target dist/linux/zohal-${GITHUB_REF_NAME}.x86_64.rpm -f packaging/linux/nfpm.yaml
+
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-packages
+          path: dist/linux/*
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Build APKs
+        run: |
+          flutter pub get
+          flutter build apk --release --split-per-abi
+        working-directory: app
+
+      - name: Upload Android Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apks
+          path: app/build/app/outputs/flutter-apk/*.apk

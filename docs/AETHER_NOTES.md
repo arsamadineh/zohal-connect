@@ -24,7 +24,7 @@ Full asset checksums are committed in `third_party/aether.lock`.
 ## 2. Upstream Real CLI `--help` Output (T0.2)
 
 ```text
-Aether — a censorship circumvention client. It finds a way out of a filtered
+Aether: a censorship circumvention client. It finds a way out of a filtered
 network, opens an encrypted tunnel, and serves it as a local SOCKS5 proxy.
 
 Usage:

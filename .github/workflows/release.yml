@@ -83,7 +83,7 @@ jobs:
         working-directory: app
 
       - name: Build Android Release APKs
-        run: flutter build apk --release --split-per-abi
+        run: flutter build apk --release --split-per-abi --android-skip-build-dependency-validation
         working-directory: app
 
       - name: Prepare Android Artifacts

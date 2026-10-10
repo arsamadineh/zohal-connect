@@ -22,21 +22,21 @@ import 'vpn_channel.dart';
 // Riverpod Providers
 final engineStateProvider =
     StateNotifierProvider<EngineStateNotifier, EngineState>((ref) {
-      final bridge = ref.watch(bridgeClientProvider);
-      return EngineStateNotifier(bridge);
-    });
+  final bridge = ref.watch(bridgeClientProvider);
+  return EngineStateNotifier(bridge);
+});
 
 final engineStatsProvider =
     StateNotifierProvider<EngineStatsNotifier, EngineStats>((ref) {
-      final bridge = ref.watch(bridgeClientProvider);
-      return EngineStatsNotifier(bridge);
-    });
+  final bridge = ref.watch(bridgeClientProvider);
+  return EngineStatsNotifier(bridge);
+});
 
 final zohalSettingsProvider =
     StateNotifierProvider<ZohalSettingsNotifier, ZohalSettings>((ref) {
-      final bridge = ref.watch(bridgeClientProvider);
-      return ZohalSettingsNotifier(bridge);
-    });
+  final bridge = ref.watch(bridgeClientProvider);
+  return ZohalSettingsNotifier(bridge);
+});
 
 final systemAccentProvider = StateProvider<Color?>((ref) => null);
 
@@ -197,16 +197,13 @@ class ZohalBridgeClient {
     });
 
     // Publish the current native state once so the UI never starts blank.
-    channel
-        .currentState()
-        .then((phase) {
-          _stateController.add(
-            EngineState.fromVpnMap({'phase': phase, 'epoch': _epoch}),
-          );
-        })
-        .catchError((Object e) {
-          ZohalLogger().debug('VPN current state unavailable: $e');
-        });
+    channel.currentState().then((phase) {
+      _stateController.add(
+        EngineState.fromVpnMap({'phase': phase, 'epoch': _epoch}),
+      );
+    }).catchError((Object e) {
+      ZohalLogger().debug('VPN current state unavailable: $e');
+    });
   }
 
   Future<void> _androidSetDesired(bool up) async {
@@ -367,13 +364,16 @@ class ZohalBridgeClient {
           ZohalLogger().info(
             'Requesting root privileges via pkexec for TUN engine',
           );
-          await Process.start('pkexec', [
-            'env',
-            '-i',
-            'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin',
-            runBin,
-            'service',
-          ], mode: ProcessStartMode.detached);
+          await Process.start(
+              'pkexec',
+              [
+                'env',
+                '-i',
+                'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin',
+                runBin,
+                'service',
+              ],
+              mode: ProcessStartMode.detached);
           for (var i = 0; i < 15; i++) {
             await Future<void>.delayed(const Duration(milliseconds: 200));
             for (final sysPath in _systemSocketPaths) {
@@ -430,16 +430,16 @@ class ZohalBridgeClient {
         .transform<String>(utf8.decoder)
         .transform<String>(const LineSplitter())
         .listen(
-          _handleLine,
-          onError: (Object e) {
-            ZohalLogger().warn('IPC socket error: $e');
-            _disconnect();
-          },
-          onDone: () {
-            ZohalLogger().warn('IPC socket closed by engine');
-            _disconnect();
-          },
-        );
+      _handleLine,
+      onError: (Object e) {
+        ZohalLogger().warn('IPC socket error: $e');
+        _disconnect();
+      },
+      onDone: () {
+        ZohalLogger().warn('IPC socket closed by engine');
+        _disconnect();
+      },
+    );
   }
 
   void _handleLine(String line) {

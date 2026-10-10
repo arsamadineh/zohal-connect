@@ -245,12 +245,12 @@ class EngineStats {
       txBps: ((stats['tx_bps'] ?? stats['txBps']) as num?)?.toInt() ?? 0,
       rxTotal:
           ((stats['rx_total'] ?? stats['rxTotal'] ?? stats['rx_bytes']) as num?)
-              ?.toInt() ??
-          0,
+                  ?.toInt() ??
+              0,
       txTotal:
           ((stats['tx_total'] ?? stats['txTotal'] ?? stats['tx_bytes']) as num?)
-              ?.toInt() ??
-          0,
+                  ?.toInt() ??
+              0,
     );
   }
 }

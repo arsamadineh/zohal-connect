@@ -46,3 +46,9 @@ This document records deliberate design and technical decisions made for Zohal C
 - **Context**: Versions after v0.1.3 replaced the WARP trace verification with a raw TCP check on desktop and accepted failed Android HTTP probes as `connected/direct`. The desktop SOCKS probe also assumed every SOCKS5 success reply had a ten-byte IPv4 address field.
 - **Decision**: Require the Cloudflare trace through the candidate SOCKS proxy to report `warp=on` or `warp=plus` before declaring connected on desktop or Android. Parse variable-length SOCKS5 reply addresses, clear all stale Aether last-connection files after failed candidates, and retain the v0.1.3 IPv4/API-fragment startup fallback.
 - **Status**: Accepted.
+
+## 008: Android Upgradeable Package Versioning
+- **Date**: 2026-10-10
+- **Context**: The v0.1.7 APKs still declared `versionCode = 1` and `versionName = "1.0.0"` in Gradle. Android package installation and upgrades can reject an APK whose version code is not newer than the installed package.
+- **Decision**: Set the v0.1.8 Android package to `versionCode = 8` and `versionName = "0.1.8"`, aligned with Flutter `0.1.8+8`. Future releases must increment both values.
+- **Status**: Accepted.

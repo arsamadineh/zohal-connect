@@ -12,8 +12,10 @@ android {
         applicationId = "app.zohal.connect"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0.0"
+        // A constant versionCode made later APKs fail to upgrade over an
+        // installed build.
+        versionCode = 8
+        versionName = "0.1.8"
 
         ndk {
             abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a", "x86_64"))

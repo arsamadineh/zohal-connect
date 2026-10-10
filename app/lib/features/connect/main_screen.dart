@@ -227,7 +227,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                         tooltip: StringsFa.settings,
                         onPressed: () {
                           Navigator.of(context).push(
-                            ZohalMotion.createPageRoute(const SettingsScreen()),
+                            ZohalMotion.createPageRoute<void>(
+                              const SettingsScreen(),
+                            ),
                           );
                         },
                       ),
@@ -373,7 +375,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                           ],
                         ),
                         onTap: () {
-                          SharpSheet.show(
+                          SharpSheet.show<void>(
                             context: context,
                             title: StringsFa.connectionMethod,
                             child: const ModeSheet(),
@@ -408,7 +410,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                         ),
                         onTap: () {
                           Navigator.of(context).push(
-                            ZohalMotion.createPageRoute(const RoutingScreen()),
+                            ZohalMotion.createPageRoute<void>(
+                              const RoutingScreen(),
+                            ),
                           );
                         },
                       ),

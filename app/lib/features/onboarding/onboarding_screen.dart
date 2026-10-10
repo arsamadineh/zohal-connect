@@ -34,8 +34,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   }
 
   void _finishOnboarding() {
-    Navigator.of(context)
-        .pushReplacement(ZohalMotion.createPageRoute(const MainScreen()));
+    Navigator.of(context).pushReplacement(
+      ZohalMotion.createPageRoute<void>(const MainScreen()),
+    );
   }
 
   @override

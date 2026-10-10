@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/bridge.dart';
-import '../../core/settings.dart';
 import '../../design/components/sharp_button.dart';
 import '../../design/components/sharp_row.dart';
 import '../../design/components/sharp_switch.dart';
@@ -234,8 +233,8 @@ class SettingsScreen extends ConsumerWidget {
                 color: textSecondary,
               ),
               onTap: () {
-                Navigator.of(context)
-                    .push(ZohalMotion.createPageRoute(const LogsScreen()));
+                Navigator.of(context).push(
+                    ZohalMotion.createPageRoute<void>(const LogsScreen()));
               },
             ),
             SharpRow(
@@ -258,8 +257,8 @@ class SettingsScreen extends ConsumerWidget {
                 color: textSecondary,
               ),
               onTap: () {
-                Navigator.of(context)
-                    .push(ZohalMotion.createPageRoute(const AboutScreen()));
+                Navigator.of(context).push(
+                    ZohalMotion.createPageRoute<void>(const AboutScreen()));
               },
               showDivider: false,
             ),

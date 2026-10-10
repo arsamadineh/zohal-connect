@@ -188,26 +188,47 @@ Subsetting complete: app/assets/fonts/Vazirmatn/Vazirmatn-Variable.ttf (148K)
 ```
 Budget <= 300 KB verified (148 KB actual).
 
-### 2. Persian Formatter & Digit Lint Tests (T3.3 & T3.16)
+### 2. Flutter Test Suite (T3.3, T3.16)
 ```bash
-dart test /home/arsam/Documents/antigravity/proud-turing/app/test/core/persian_test.dart
+flutter test
 ```
 Output:
 ```
-00:00 +0: Persian Digit Conversion converts all ASCII digits to Persian digits
-00:00 +1: Persian Digit Conversion preserves non-digits
-00:00 +2: Persian Number Formatting formats integers with thousands separators
-00:00 +3: Persian Number Formatting formats decimals with Persian comma
-00:00 +4: Persian Duration Formatting formats zero duration as ۰۰:۰۰:۰۰
-00:00 +5: Persian Duration Formatting formats seconds and minutes
-00:00 +6: Persian Rate and Byte Formatting formats bytes appropriately
-00:00 +7: Persian Rate and Byte Formatting formats transfer rates
-00:00 +8: LTR Isolate Formatting wraps text in unicode isolates
-00:00 +9: Digit Lint in Persian UI Strings UI strings do not contain ASCII digits
-00:00 +10: All tests passed!
+00:00 +0: /app/test/core/persian_test.dart: Persian Digit Conversion converts all ASCII digits to Persian digits
+00:00 +1: /app/test/core/persian_test.dart: Persian Digit Conversion preserves non-digits
+00:00 +2: /app/test/core/persian_test.dart: Persian Number Formatting formats integers with thousands separators
+00:00 +3: /app/test/core/persian_test.dart: Persian Number Formatting formats decimals with Persian comma
+00:00 +4: /app/test/core/persian_test.dart: Persian Duration Formatting formats zero duration as ۰۰:۰۰:۰۰
+00:00 +5: /app/test/core/persian_test.dart: Persian Duration Formatting formats seconds and minutes
+00:00 +6: /app/test/core/persian_test.dart: Persian Rate and Byte Formatting formats bytes appropriately
+00:00 +7: /app/test/core/persian_test.dart: Persian Rate and Byte Formatting formats transfer rates
+00:00 +8: /app/test/core/persian_test.dart: LTR Isolate Formatting wraps text in unicode isolates
+00:00 +9: /app/test/core/persian_test.dart: Digit Lint in Persian UI Strings UI strings do not contain ASCII digits
+00:00 +10: /app/test/design/contrast_test.dart: Design Tokens Contrast (WCAG AA >= 4.5:1) Dark theme text primary vs surface has >= 4.5:1 contrast
+00:00 +11: /app/test/design/contrast_test.dart: Design Tokens Contrast (WCAG AA >= 4.5:1) Light theme text primary vs surface has >= 4.5:1 contrast
+00:00 +12: /app/test/design/contrast_test.dart: Design Tokens Contrast (WCAG AA >= 4.5:1) Dark theme error vs surface has >= 4.5:1 contrast
+00:00 +13: /app/test/design/contrast_test.dart: Design Tokens Contrast (WCAG AA >= 4.5:1) Light theme error vs surface has >= 4.5:1 contrast
+00:00 +14: /app/test/design/contrast_test.dart: Design Tokens Contrast (WCAG AA >= 4.5:1) Resolved system accent in dark mode guarantees >= 4.5:1 contrast
+00:00 +15: /app/test/design/contrast_test.dart: Design Tokens Contrast (WCAG AA >= 4.5:1) Resolved system accent in light mode guarantees >= 4.5:1 contrast
+00:01 +16: /app/test/design/sharp_rules_test.dart: Shape Lock: Zero Border Radius Dark theme enforces zero border radius in components
+00:01 +17: /app/test/design/sharp_rules_test.dart: Shape Lock: Zero Border Radius Light theme enforces zero border radius in components
+00:01 +18: /app/test/features/connect_control_test.dart: ConnectControl displays idle state with correct semantics
+00:02 +19: /app/test/features/connect_control_test.dart: ConnectControl reflects connected phase semantics
+00:02 +20: /app/test/features/connect_control_test.dart: ConnectControl reflects connecting stage semantics
+00:02 +21: All tests passed!
 ```
 
-### 3. Rust Bridge & Autostart Tests (T3.5)
+### 3. Flutter Static Analysis (Zero Warnings Policy - R8)
+```bash
+flutter analyze
+```
+Output:
+```
+Analyzing app...
+No issues found! (ran in 2.1s)
+```
+
+### 4. Rust Bridge & Autostart Tests (T3.5)
 ```bash
 cargo test -p zohal-bridge
 ```
@@ -217,16 +238,16 @@ test tests::test_autostart_helpers ... ok
 test result: ok. 1 passed; 0 failed; finished in 0.00s
 ```
 
-### 4. Dart Formatting Check
+### 5. Dart Formatting Check
 ```bash
-dart format --output=none --set-exit-if-changed app/
+dart format --set-exit-if-changed .
 ```
 Output:
 ```
-Formatted 28 files (0 changed) in 0.35 seconds.
+Formatted 28 files (0 changed) in 0.20 seconds.
 ```
 
-Gate Conclusion: All Phase 3 UI screens, tokens, painters, and Persian formatting verified green.
+Gate Conclusion: All Phase 3 UI screens, tokens, painters, and Persian formatting verified green with zero warnings and 21 passed tests.
 
 ---
 

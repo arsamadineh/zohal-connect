@@ -1,8 +1,6 @@
 // features/routing/routing_screen.dart
 // Smart and custom routing configuration screen for Zohal Connect per ZOHAL_SPEC Section 13.3.
 
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -11,7 +9,6 @@ import '../../core/persian.dart';
 import '../../core/settings.dart';
 import '../../design/components/sharp_button.dart';
 import '../../design/components/sharp_row.dart';
-import '../../design/components/sharp_sheet.dart';
 import '../../design/components/sharp_switch.dart';
 import '../../design/components/sharp_toast.dart';
 import '../../design/tokens.dart';
@@ -90,8 +87,8 @@ class _RoutingScreenState extends ConsumerState<RoutingScreen> {
                   ),
                   const SizedBox(height: 8.0),
                   DropdownButtonFormField<RuleKind>(
-                    value: selectedKind,
-                    items: [
+                    initialValue: selectedKind,
+                    items: const [
                       DropdownMenuItem(
                         value: RuleKind.domain,
                         child: Text(StringsFa.ruleTypeDomain),

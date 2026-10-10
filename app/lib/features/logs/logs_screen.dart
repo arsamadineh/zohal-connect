@@ -33,7 +33,6 @@ class _LogsScreenState extends State<LogsScreen> {
     final textSecondary =
         isDark ? ZohalTokens.darkTextSecondary : ZohalTokens.lightTextSecondary;
     final errorColor = isDark ? ZohalTokens.darkError : ZohalTokens.lightError;
-    final accent = theme.colorScheme.primary;
 
     final entries = ZohalLogger().getEntries(
       minLevel: _filterErrorsOnly ? LogLevel.error : null,
@@ -145,8 +144,8 @@ class _LogsScreenState extends State<LogsScreen> {
                                 ),
                                 decoration: BoxDecoration(
                                   color: isError
-                                      ? errorColor.withOpacity(0.15)
-                                      : textSecondary.withOpacity(0.15),
+                                      ? errorColor.withValues(alpha: 0.15)
+                                      : textSecondary.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.zero,
                                 ),
                                 child: Text(

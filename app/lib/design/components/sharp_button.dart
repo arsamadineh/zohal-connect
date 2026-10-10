@@ -96,9 +96,8 @@ class _SharpButtonState extends State<SharpButton>
       border = null;
     }
 
-    final effectiveTextColor = widget.onPressed == null
-        ? textColor.withValues(alpha: 0.4)
-        : textColor;
+    final effectiveTextColor =
+        widget.onPressed == null ? textColor.withValues(alpha: 0.4) : textColor;
 
     return Semantics(
       button: true,

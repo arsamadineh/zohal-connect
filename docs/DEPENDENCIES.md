@@ -7,7 +7,8 @@ This document records pinned versions and dates of all external tooling, binarie
 | Aether | v2.3.0 | 2026-10-10 | GitHub Release | `6175b67df370ab856bcee07fe85b524031903956` (see `third_party/aether.lock`) |
 | Rust toolchain | stable (1.98+) | 2026-10-10 | rustup / distro | Required by Aether v2.3.0 and engine crates |
 | Dart SDK | 3.13.5 | 2026-10-10 | pacman / distro | `cachyos-extra-v3/dart 3.13.5-1.1` |
-| Flutter SDK | 3.24.5 (stable) | 2026-10-10 | Google Storage | `flutter_linux_3.24.5-stable.tar.xz` |
+| Flutter SDK | 3.47.7 (stable) | 2026-10-10 | Google Storage | `abaf9c5237` (Dart 3.13.5) |
+| intl | 0.20.3 | 2026-10-10 | pub.dev | pinned localization dependency |
 | Vazirmatn Font | 33.003 (Variable) | 2026-10-10 | GitHub Release | OFL-1.1 license, subsetted to 148 KB |
 | tokio | 1.43 | 2026-10-10 | crates.io | async runtime |
 | tun2proxy | 0.8.4 | 2026-10-10 | crates.io | pure-Rust TUN to SOCKS5 gateway |

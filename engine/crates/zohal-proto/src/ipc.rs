@@ -13,6 +13,7 @@ pub enum ClientMessage {
     Subscribe { stats: bool },
     Unsubscribe,
     GetSettings,
+    GetLogs,
     PatchSettings { settings: Box<Settings> },
     ProbeNow,
     ExportDiagnostics,

@@ -1,6 +1,7 @@
 // core/logger.dart
 // In-app log ring buffer (2000 events) for Zohal Connect according to ZOHAL_SPEC Section 9.6.
 
+import 'dart:async';
 import 'dart:collection';
 
 import 'persian.dart';
@@ -53,18 +54,53 @@ class ZohalLogger {
 
   static const int maxEntries = 2000;
   final DoubleLinkedQueue<LogEntry> _queue = DoubleLinkedQueue<LogEntry>();
+  final StreamController<LogEntry> _controller =
+      StreamController<LogEntry>.broadcast(sync: true);
+
+  Stream<LogEntry> get stream => _controller.stream;
 
   void log(LogLevel level, String message, {String? code}) {
+    logAt(DateTime.now(), level, message, code: code);
+  }
+
+  void logAt(
+    DateTime timestamp,
+    LogLevel level,
+    String message, {
+    String? code,
+  }) {
     if (_queue.length >= maxEntries) {
       _queue.removeFirst();
     }
-    _queue.addLast(
-      LogEntry(
-        timestamp: DateTime.now(),
-        level: level,
-        code: code,
-        message: message,
-      ),
+    final entry = LogEntry(
+      timestamp: timestamp,
+      level: level,
+      code: code,
+      message: message,
+    );
+    _queue.addLast(entry);
+    _controller.add(entry);
+  }
+
+  void fromNative({
+    required String level,
+    required String message,
+    String? code,
+    int? timestampSeconds,
+  }) {
+    final parsedLevel = switch (level.toLowerCase()) {
+      'error' || 'err' || 'fatal' => LogLevel.error,
+      'warn' || 'warning' => LogLevel.warn,
+      'debug' || 'trace' => LogLevel.debug,
+      _ => LogLevel.info,
+    };
+    logAt(
+      timestampSeconds == null
+          ? DateTime.now()
+          : DateTime.fromMillisecondsSinceEpoch(timestampSeconds * 1000),
+      parsedLevel,
+      message,
+      code: code,
     );
   }
 
@@ -91,5 +127,9 @@ class ZohalLogger {
       buffer.writeln(entry.toExportString());
     }
     return buffer.toString();
+  }
+
+  void dispose() {
+    _controller.close();
   }
 }

@@ -149,27 +149,6 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
 
-            if (!Platform.isAndroid && !Platform.isIOS)
-              SharpRow(
-                title: StringsFa.settingsScope,
-                trailing: Text(
-                  settings.scope == 'Tun'
-                      ? StringsFa.scopeTun
-                      : StringsFa.scopeProxy,
-                  style: TextStyle(
-                    fontFamily: ZohalTokens.fontFamily,
-                    fontSize: 13.0,
-                    fontWeight: FontWeight.w500,
-                    color: textSecondary,
-                  ),
-                ),
-                onTap: () {
-                  final next = settings.scope == 'Tun' ? 'SystemProxy' : 'Tun';
-                  notifier.updateSettings(settings.copyWith(scope: next));
-                  SharpToast.show(context, StringsFa.toastSaved);
-                },
-              ),
-
             // 2. System Group
             buildSectionHeader(StringsFa.settingsGroupSystem),
             if (!Platform.isAndroid && !Platform.isIOS) ...[

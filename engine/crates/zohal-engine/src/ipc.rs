@@ -131,6 +131,19 @@ async fn handle_client(
     let mut state_watch = state_rx.clone();
     let mut stats_interval = tokio::time::interval(Duration::from_secs(1));
     stats_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+    let mut last_log_seq = 0u64;
+
+    for entry in log_ring.get_recent_logs(200) {
+        last_log_seq = last_log_seq.max(entry.seq);
+        let msg = ServerMessage::Log {
+            ts: entry.ts,
+            level: entry.level,
+            code: entry.code,
+            msg: entry.msg,
+        };
+        writer_half.write_all(msg.to_line()?.as_bytes()).await?;
+    }
+    writer_half.flush().await?;
 
     let mut last_rx_bytes = 0u64;
     let mut last_tx_bytes = 0u64;
@@ -182,6 +195,20 @@ async fn handle_client(
                         let resp = ServerMessage::Settings {
                             settings: Box::new(current_settings),
                         };
+                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    }
+                    ClientMessage::GetLogs => {
+                        for entry in log_ring.get_recent_logs(200) {
+                            last_log_seq = last_log_seq.max(entry.seq);
+                            let log = ServerMessage::Log {
+                                ts: entry.ts,
+                                level: entry.level,
+                                code: entry.code,
+                                msg: entry.msg,
+                            };
+                            writer_half.write_all(log.to_line()?.as_bytes()).await?;
+                        }
+                        let resp = ServerMessage::Pong;
                         writer_half.write_all(resp.to_line()?.as_bytes()).await?;
                     }
                     ClientMessage::PatchSettings {
@@ -262,6 +289,18 @@ async fn handle_client(
             }
 
             _ = stats_interval.tick() => {
+                for entry in log_ring.get_logs_since(last_log_seq, 64) {
+                    last_log_seq = entry.seq;
+                    let log = ServerMessage::Log {
+                        ts: entry.ts,
+                        level: entry.level,
+                        code: entry.code,
+                        msg: entry.msg,
+                    };
+                    if let Ok(l) = log.to_line() {
+                        let _ = writer_half.write_all(l.as_bytes()).await;
+                    }
+                }
                 let st = state_watch.borrow().clone();
                 if st.phase == zohal_proto::types::Phase::Connected {
                     let rx_path = "/sys/class/net/zohal0/statistics/rx_bytes";

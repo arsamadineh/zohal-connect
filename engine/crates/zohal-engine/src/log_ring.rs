@@ -1,5 +1,6 @@
 use parking_lot::RwLock;
 use std::collections::VecDeque;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use zohal_proto::error::ErrorCode;
 use zohal_proto::settings::Settings;
@@ -11,6 +12,8 @@ const DIAGNOSTIC_LOG_LIMIT: usize = 500;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct LogEntry {
+    #[serde(default)]
+    pub seq: u64,
     pub ts: i64,
     pub level: String,
     pub code: Option<ErrorCode>,
@@ -29,6 +32,7 @@ pub struct StateTransition {
 pub struct LogRingBuffer {
     logs: Arc<RwLock<VecDeque<LogEntry>>>,
     transitions: Arc<RwLock<VecDeque<StateTransition>>>,
+    next_seq: Arc<AtomicU64>,
 }
 
 impl Default for LogRingBuffer {
@@ -42,6 +46,7 @@ impl LogRingBuffer {
         Self {
             logs: Arc::new(RwLock::new(VecDeque::with_capacity(MAX_LOG_ENTRIES))),
             transitions: Arc::new(RwLock::new(VecDeque::with_capacity(MAX_TRANSITION_ENTRIES))),
+            next_seq: Arc::new(AtomicU64::new(1)),
         }
     }
 
@@ -53,6 +58,7 @@ impl LogRingBuffer {
         msg: impl Into<String>,
     ) {
         let entry = LogEntry {
+            seq: self.next_seq.fetch_add(1, Ordering::Relaxed),
             ts,
             level: level.into(),
             code,
@@ -85,6 +91,15 @@ impl LogRingBuffer {
         let lock = self.logs.read();
         let skip = lock.len().saturating_sub(limit);
         lock.iter().skip(skip).cloned().collect()
+    }
+
+    pub fn get_logs_since(&self, seq: u64, limit: usize) -> Vec<LogEntry> {
+        let lock = self.logs.read();
+        lock.iter()
+            .filter(|entry| entry.seq > seq)
+            .take(limit)
+            .cloned()
+            .collect()
     }
 
     pub fn get_transitions(&self) -> Vec<StateTransition> {

@@ -126,7 +126,7 @@ class ZohalSettings {
     ],
     this.fragment = false,
     this.ech = false,
-    this.diagnosticLog = false,
+    this.diagnosticLog = true,
   });
 
   ZohalSettings copyWith({
@@ -245,7 +245,7 @@ class ZohalSettings {
           const ['1.1.1.1', '1.0.0.1'],
       fragment: json['advanced.fragment'] as bool? ?? false,
       ech: json['advanced.ech'] as bool? ?? false,
-      diagnosticLog: json['diagnostic_log'] as bool? ?? false,
+      diagnosticLog: json['diagnostic_log'] as bool? ?? true,
     );
   }
 }

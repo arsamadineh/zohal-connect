@@ -3,6 +3,7 @@
 // AGPL-3.0 notice, source code link, third-party licenses, credit to Aether.
 
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/persian.dart';
@@ -13,8 +14,7 @@ import '../../l10n/strings_fa.dart';
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
-  static const String appVersion = '1.0.0';
-  static const String engineVersion = '1.0.0';
+  static final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
   static const String repoUrl =
       'https://github.com/zohal-connect/zohal-connect';
 
@@ -92,27 +92,32 @@ class AboutScreen extends StatelessWidget {
             Container(height: 1.0, color: hairline),
 
             // Version Rows
-            SharpRow(
-              title: StringsFa.aboutVersion,
-              trailing: Text(
-                Persian.toPersianDigits(appVersion),
-                style: TextStyle(
+            FutureBuilder<PackageInfo>(
+              future: _packageInfo,
+              builder: (context, snapshot) {
+                final info = snapshot.data;
+                final version = info == null
+                    ? '—'
+                    : '${info.version}+${info.buildNumber}';
+                final displayedVersion = Persian.toPersianDigits(version);
+                final rowStyle = TextStyle(
                   fontFamily: ZohalTokens.fontFamily,
                   fontSize: 14.0,
                   color: textPrimary,
-                ),
-              ),
-            ),
-            SharpRow(
-              title: StringsFa.aboutEngineVersion,
-              trailing: Text(
-                Persian.toPersianDigits(engineVersion),
-                style: TextStyle(
-                  fontFamily: ZohalTokens.fontFamily,
-                  fontSize: 14.0,
-                  color: textPrimary,
-                ),
-              ),
+                );
+                return Column(
+                  children: [
+                    SharpRow(
+                      title: StringsFa.aboutVersion,
+                      trailing: Text(displayedVersion, style: rowStyle),
+                    ),
+                    SharpRow(
+                      title: StringsFa.aboutEngineVersion,
+                      trailing: Text(displayedVersion, style: rowStyle),
+                    ),
+                  ],
+                );
+              },
             ),
 
             // AGPL Notice
@@ -155,11 +160,13 @@ class AboutScreen extends StatelessWidget {
                 size: 12.0,
                 color: textSecondary,
               ),
-              onTap: () {
+              onTap: () async {
+                final info = await _packageInfo;
+                if (!context.mounted) return;
                 showLicensePage(
                   context: context,
                   applicationName: StringsFa.appName,
-                  applicationVersion: Persian.toPersianDigits(appVersion),
+                  applicationVersion: Persian.toPersianDigits(info.version),
                 );
               },
             ),

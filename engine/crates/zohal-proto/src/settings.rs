@@ -242,7 +242,7 @@ impl Default for Settings {
             routing: RoutingSettings::default(),
             dns: DnsSettings::default(),
             advanced: AdvancedSettings::default(),
-            diagnostic_log: false,
+            diagnostic_log: true,
         }
     }
 }

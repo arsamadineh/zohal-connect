@@ -18,6 +18,7 @@ class MainActivity : FlutterActivity() {
         const val METHOD_CHANNEL = "app.zohal.connect/vpn"
         const val EVENT_CHANNEL = "app.zohal.connect/vpn_state"
         const val EVENT_CHANNEL_STATS = "app.zohal.connect/vpn_stats"
+        const val EVENT_CHANNEL_LOGS = "app.zohal.connect/vpn_logs"
         const val REQUEST_VPN_PREPARE = 4101
     }
 
@@ -26,6 +27,8 @@ class MainActivity : FlutterActivity() {
     private var stateReceiver: BroadcastReceiver? = null
     private var statsSink: EventChannel.EventSink? = null
     private var statsReceiver: BroadcastReceiver? = null
+    private var logSink: EventChannel.EventSink? = null
+    private var logReceiver: BroadcastReceiver? = null
 
     @Suppress("DEPRECATION")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -209,6 +212,44 @@ class MainActivity : FlutterActivity() {
                 }
                 statsReceiver = null
                 statsSink = null
+            }
+        })
+
+        EventChannel(
+            flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL_LOGS
+        ).setStreamHandler(object : EventChannel.StreamHandler {
+            override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                logSink = events
+                val filter = IntentFilter(ZohalVpnService.BROADCAST_LOG)
+                val receiver = object : BroadcastReceiver() {
+                    override fun onReceive(context: Context?, intent: Intent?) {
+                        if (intent == null) return
+                        val map = HashMap<String, Any?>()
+                        map["level"] = intent.getStringExtra("level") ?: "info"
+                        map["message"] = intent.getStringExtra("message") ?: ""
+                        intent.getStringExtra("code")?.let { map["code"] = it }
+                        map["ts"] = intent.getLongExtra("ts", 0)
+                        try {
+                            logSink?.success(map)
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
+                logReceiver = receiver
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
+                } else {
+                    registerReceiver(receiver, filter)
+                }
+            }
+
+            override fun onCancel(arguments: Any?) {
+                try {
+                    logReceiver?.let { unregisterReceiver(it) }
+                } catch (_: Exception) {
+                }
+                logReceiver = null
+                logSink = null
             }
         })
     }

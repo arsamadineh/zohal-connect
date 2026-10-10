@@ -87,8 +87,6 @@ class StringsFa {
   static const String modeGoolDesc =
       'دو لایه رمزنگاری؛ آخرین راه برای شبکه‌های سخت‌گیر.';
 
-  static const String scopeTun = 'کل سیستم (TUN)';
-  static const String scopeProxy = 'پراکسی سیستم';
 
   // Rule Types
   static const String ruleTypeDomain = 'دامنه (و زیر‌دامنه‌ها)';
@@ -150,7 +148,6 @@ class StringsFa {
   static const String settingsAutoBoot = 'اتصال خودکار هنگام روشن شدن سیستم';
   static const String settingsKillSwitchDesc =
       'در صورت قطع تونل، ارتباط اینترنت تا اتصال مجدد مسدود می‌ماند.';
-  static const String settingsScope = 'دامنه اتصال';
 
   static const String settingsGroupSystem = 'سیستم';
   static const String settingsStartWithSystem = 'اجرای همراه سیستم';
@@ -174,7 +171,7 @@ class StringsFa {
 
   // Logs
   static const String logsFilterAll = 'همه';
-  static const String logsFilterErrors = 'خطاها';
+  static const String logsFilterErrors = 'هشدارها و خطاها';
   static const String logsEmpty = 'هیچ گزارشی ثبت نشده است.';
 
   // About

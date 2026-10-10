@@ -2,6 +2,8 @@
 // Logs screen for Zohal Connect according to ZOHAL_SPEC Section 13.5.
 // Real-time log list from in-memory ring buffer with filtering and diagnostic export.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -21,6 +23,21 @@ class LogsScreen extends StatefulWidget {
 
 class _LogsScreenState extends State<LogsScreen> {
   bool _filterErrorsOnly = false;
+  StreamSubscription<LogEntry>? _logSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _logSubscription = ZohalLogger().stream.listen((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _logSubscription?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +52,7 @@ class _LogsScreenState extends State<LogsScreen> {
     final errorColor = isDark ? ZohalTokens.darkError : ZohalTokens.lightError;
 
     final entries = ZohalLogger().getEntries(
-      minLevel: _filterErrorsOnly ? LogLevel.error : null,
+      minLevel: _filterErrorsOnly ? LogLevel.warn : null,
     );
 
     return Scaffold(
@@ -122,6 +139,7 @@ class _LogsScreenState extends State<LogsScreen> {
                       itemBuilder: (context, index) {
                         final entry = entries[index];
                         final isError = entry.level == LogLevel.error;
+                        final isWarning = entry.level == LogLevel.warn;
 
                         return Padding(
                           padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -145,7 +163,11 @@ class _LogsScreenState extends State<LogsScreen> {
                                 decoration: BoxDecoration(
                                   color: isError
                                       ? errorColor.withValues(alpha: 0.15)
-                                      : textSecondary.withValues(alpha: 0.15),
+                                      : isWarning
+                                          ? Colors.amber.withValues(alpha: 0.15)
+                                          : textSecondary.withValues(
+                                              alpha: 0.15,
+                                            ),
                                   borderRadius: BorderRadius.zero,
                                 ),
                                 child: Text(
@@ -154,7 +176,11 @@ class _LogsScreenState extends State<LogsScreen> {
                                     fontFamily: ZohalTokens.fontFamily,
                                     fontSize: 11.0,
                                     fontWeight: FontWeight.w600,
-                                    color: isError ? errorColor : textSecondary,
+                                    color: isError
+                                        ? errorColor
+                                        : isWarning
+                                            ? Colors.amber.shade800
+                                            : textSecondary,
                                   ),
                                 ),
                               ),
@@ -165,7 +191,11 @@ class _LogsScreenState extends State<LogsScreen> {
                                   style: TextStyle(
                                     fontFamily: ZohalTokens.fontFamily,
                                     fontSize: 13.0,
-                                    color: isError ? errorColor : textPrimary,
+                                    color: isError
+                                        ? errorColor
+                                        : isWarning
+                                            ? Colors.amber.shade800
+                                            : textPrimary,
                                   ),
                                 ),
                               ),

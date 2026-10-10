@@ -145,6 +145,7 @@ class ZohalBridgeClient {
   Timer? _reconnectTimer;
   ZohalSettings _lastSettings = const ZohalSettings();
   StreamSubscription<VpnNativeState>? _vpnSub;
+  StreamSubscription<Map<String, dynamic>>? _vpnLogSub;
   bool _spawnAttempted = false;
 
   ZohalBridgeClient() {
@@ -185,6 +186,14 @@ class ZohalBridgeClient {
 
     channel.statsStream.listen((stats) {
       _statsController.add(EngineStats.fromJson(stats));
+    });
+    _vpnLogSub = channel.logsStream.listen((log) {
+      ZohalLogger().fromNative(
+        level: log['level']?.toString() ?? 'info',
+        message: log['message']?.toString() ?? '',
+        code: log['code']?.toString(),
+        timestampSeconds: (log['ts'] as num?)?.toInt(),
+      );
     });
 
     // Publish the current native state once so the UI never starts blank.
@@ -454,11 +463,14 @@ class ZohalBridgeClient {
         case 'log':
           final msg = json['msg'] as String? ?? '';
           final code = json['code'] as String?;
-          if (code != null) {
-            ZohalLogger().info('[$code] $msg');
-          } else {
-            ZohalLogger().info(msg);
-          }
+          final level = json['level']?.toString() ??
+              (code == null ? 'info' : 'warn');
+          ZohalLogger().fromNative(
+            level: level,
+            message: msg,
+            code: code,
+            timestampSeconds: (json['ts'] as num?)?.toInt(),
+          );
           break;
       }
     } catch (e) {
@@ -523,6 +535,7 @@ class ZohalBridgeClient {
   void dispose() {
     _reconnectTimer?.cancel();
     _vpnSub?.cancel();
+    _vpnLogSub?.cancel();
     _socket?.destroy();
     _stateController.close();
     _statsController.close();

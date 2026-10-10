@@ -55,6 +55,14 @@ impl Supervisor {
         (sup, state_rx, desired_tx)
     }
 
+    fn record_log(&self, level: &str, code: Option<ErrorCode>, message: impl Into<String>) {
+        let ts = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or(Duration::ZERO)
+            .as_secs() as i64;
+        self.log_ring.push_log(ts, level, code, message);
+    }
+
     fn update_state<F>(&mut self, mutate: F)
     where
         F: FnOnce(&mut EngineState),
@@ -74,6 +82,15 @@ impl Supervisor {
                 &format!("{prev_phase:?}"),
                 &format!("{new_phase:?}"),
                 curr.error,
+            );
+            self.record_log(
+                if curr.error.is_some() {
+                    "ERROR"
+                } else {
+                    "INFO"
+                },
+                curr.error,
+                format!("State changed: {prev_phase:?} -> {new_phase:?}"),
             );
         }
 
@@ -158,6 +175,11 @@ impl Supervisor {
         while let Some(rung) = ladder.next_rung() {
             if start_time.elapsed() >= TOTAL_LADDER_TIMEOUT {
                 warn!("[supervisor] total ladder timeout exceeded");
+                self.record_log(
+                    "WARN",
+                    Some(ErrorCode::E120),
+                    "Total ladder timeout exceeded",
+                );
                 break;
             }
 
@@ -177,6 +199,11 @@ impl Supervisor {
             match self.try_rung(&rung_config, &fp).await {
                 Ok((cand, _trace)) => {
                     info!("[supervisor] rung {} succeeded!", rung_config.rung_number);
+                    self.record_log(
+                        "INFO",
+                        None,
+                        format!("Rung {} succeeded", rung_config.rung_number),
+                    );
                     let _ = self.cache.record_winning_rung(&fp, rung_config.rung_number);
                     let cand_port = cand.socks_port;
                     self.active_candidate = Some(cand);
@@ -243,12 +270,22 @@ impl Supervisor {
                         "[supervisor] rung {} failed: {err:?}",
                         rung_config.rung_number
                     );
+                    self.record_log(
+                        "WARN",
+                        None,
+                        format!("Rung {} failed: {err:?}", rung_config.rung_number),
+                    );
                 }
             }
         }
 
         if !success {
             error!("[supervisor] all rungs exhausted, entering Failed phase");
+            self.record_log(
+                "ERROR",
+                Some(ErrorCode::E120),
+                "All connection methods failed",
+            );
             self.update_state(|s| {
                 s.phase = Phase::Failed;
                 s.stage = Stage::None;

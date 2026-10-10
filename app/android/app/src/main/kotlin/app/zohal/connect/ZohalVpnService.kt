@@ -24,6 +24,7 @@ class ZohalVpnService : VpnService() {
         const val ACTION_QUERY = "app.zohal.connect.ACTION_QUERY"
         const val BROADCAST_STATE = "app.zohal.connect.VPN_STATE"
         const val BROADCAST_STATS = "app.zohal.connect.VPN_STATS"
+        const val BROADCAST_LOG = "app.zohal.connect.VPN_LOG"
         const val PREFS = "zohal_vpn_state"
         const val SETTINGS_PREFS = "zohal_settings"
         const val MTU = 1280
@@ -120,6 +121,7 @@ class ZohalVpnService : VpnService() {
 
         if (!aetherBin.exists()) {
             Log.e(TAG, "libaether.so missing in ${applicationInfo.nativeLibraryDir}")
+            broadcastLog("error", "libaether.so missing in ${applicationInfo.nativeLibraryDir}")
             fail("E400")
             return
         }
@@ -250,6 +252,7 @@ class ZohalVpnService : VpnService() {
                 .start()
         } catch (e: Exception) {
             Log.e(TAG, "spawn failed: ${e.message}")
+            broadcastLog("error", "Aether spawn failed: ${e.message}")
             return null
         }
         aetherProcess = process
@@ -258,6 +261,13 @@ class ZohalVpnService : VpnService() {
             try {
                 process.inputStream.bufferedReader().forEachLine { line ->
                     Log.i("ZohalAether", line)
+                    val lower = line.lowercase()
+                    val level = when {
+                        lower.contains("error") || lower.contains("failed") -> "error"
+                        lower.contains("warn") || lower.contains("timeout") -> "warn"
+                        else -> "info"
+                    }
+                    broadcastLog(level, "Aether: $line")
                     synchronized(logRing) {
                         logRing.addLast(line)
                         if (logRing.size > 50) logRing.removeFirst()
@@ -289,6 +299,7 @@ class ZohalVpnService : VpnService() {
         }
         if (!ready) {
             Log.w(TAG, "rung timed out waiting for SOCKS on $socksPort")
+            broadcastLog("warn", "Connection method timed out waiting for SOCKS")
             killProcess(process)
             return null
         }
@@ -297,6 +308,7 @@ class ZohalVpnService : VpnService() {
         val trace = verifyThroughSocks(socksPort)
         if (trace == null) {
             Log.w(TAG, "rung verify failed on $socksPort")
+            broadcastLog("warn", "Connection method failed path verification")
             killProcess(process)
             return null
         }
@@ -309,6 +321,7 @@ class ZohalVpnService : VpnService() {
         }
         if (!TunBridge.loaded) {
             Log.e(TAG, "libzohal_tun.so not loaded; cannot forward packets")
+            broadcastLog("error", "VPN data bridge is unavailable")
             tearDownDataPath()
             killProcess(process)
             return null
@@ -316,6 +329,7 @@ class ZohalVpnService : VpnService() {
         val fd = vpnInterface?.fd ?: -1
         if (fd < 0 || TunBridge.startTun(fd, socksPort, MTU) != 0) {
             Log.e(TAG, "startTun failed on fd=$fd")
+            broadcastLog("error", "VPN tunnel could not be started")
             tearDownDataPath()
             killProcess(process)
             return null
@@ -353,6 +367,7 @@ class ZohalVpnService : VpnService() {
                 ?.get(1)?.trim()
             if (warp != "on" && warp != "plus") {
                 Log.w(TAG, "verify probe returned no active WARP path")
+                broadcastLog("warn", "Verify probe returned no active WARP path")
                 return null
             }
             var ip = "unknown"
@@ -369,6 +384,7 @@ class ZohalVpnService : VpnService() {
             Pair(ip, loc)
         } catch (e: Exception) {
             Log.w(TAG, "verify probe failed: ${e.message}")
+            broadcastLog("warn", "Verify probe failed: ${e.message}")
             null
         }
     }
@@ -442,6 +458,7 @@ class ZohalVpnService : VpnService() {
             if (stopRequested.get()) break
             if (aetherProcess?.isAlive == false) {
                 Log.w(TAG, "aether exited; reconnecting")
+                broadcastLog("warn", "Aether exited; reconnecting")
                 return false
             }
             val ok = verifyThroughSocks(session.socksPort) != null
@@ -451,6 +468,7 @@ class ZohalVpnService : VpnService() {
                 failures++
                 if (failures >= 2) {
                     Log.w(TAG, "tunnel lost; reconnecting")
+                    broadcastLog("warn", "Tunnel lost; reconnecting")
                     return false
                 }
             }
@@ -501,6 +519,7 @@ class ZohalVpnService : VpnService() {
     }
 
     private fun fail(code: String) {
+        broadcastLog("error", "Connection failed ($code)", code)
         broadcast("failed", "none", code)
         startForegroundWith(errorTitle(code))
         stopTicker()
@@ -587,6 +606,7 @@ class ZohalVpnService : VpnService() {
             }
         } catch (e: Exception) {
             Log.e(TAG, "startForeground failed: ${e.message}")
+            broadcastLog("error", "Unable to update foreground notification: ${e.message}")
         }
     }
 
@@ -609,6 +629,7 @@ class ZohalVpnService : VpnService() {
             cm.registerNetworkCallback(request, callback)
         } catch (e: Exception) {
             Log.w(TAG, "network callback unavailable: ${e.message}")
+            broadcastLog("warn", "Network callback unavailable: ${e.message}")
         }
     }
 
@@ -625,6 +646,7 @@ class ZohalVpnService : VpnService() {
             if (verifyThroughSocks(port) == null) {
                 if (!lastProbeOk) {
                     Log.w(TAG, "network changed and probe failed; cycling")
+                    broadcastLog("warn", "Network changed and probe failed; cycling")
                     aetherProcess?.let { killProcess(it) }
                 }
                 lastProbeOk = false
@@ -671,6 +693,20 @@ class ZohalVpnService : VpnService() {
             sendBroadcast(intent)
         } catch (e: Exception) {
             Log.w(TAG, "broadcast failed: ${e.message}")
+        }
+    }
+
+    private fun broadcastLog(level: String, message: String, code: String? = null) {
+        val intent = Intent(BROADCAST_LOG).apply {
+            setPackage(packageName)
+            putExtra("level", level)
+            putExtra("message", message)
+            putExtra("ts", System.currentTimeMillis() / 1000)
+            code?.let { putExtra("code", it) }
+        }
+        try {
+            sendBroadcast(intent)
+        } catch (_: Exception) {
         }
     }
 
@@ -736,6 +772,7 @@ class ZohalVpnService : VpnService() {
 
     override fun onRevoke() {
         Log.w(TAG, "VPN revoked by system or another app (E230)")
+        broadcastLog("error", "VPN revoked by system or another app", "E230")
         broadcast("failed", "none", "E230")
         stopRequested.set(true)
         stopAll("failed")

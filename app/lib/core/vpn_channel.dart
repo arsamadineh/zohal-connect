@@ -49,11 +49,15 @@ class VpnChannel {
   static const EventChannel _statsEvents = EventChannel(
     'app.zohal.connect/vpn_stats',
   );
+  static const EventChannel _logEvents = EventChannel(
+    'app.zohal.connect/vpn_logs',
+  );
 
   static bool get isSupported => Platform.isAndroid;
 
   Stream<VpnNativeState>? _stateStream;
   Stream<Map<String, dynamic>>? _statsStream;
+  Stream<Map<String, dynamic>>? _logsStream;
 
   Stream<VpnNativeState> get stateStream {
     _stateStream ??= _events.receiveBroadcastStream().map((event) {
@@ -69,6 +73,14 @@ class VpnChannel {
       return <String, dynamic>{};
     });
     return _statsStream!;
+  }
+
+  Stream<Map<String, dynamic>> get logsStream {
+    _logsStream ??= _logEvents.receiveBroadcastStream().map((event) {
+      if (event is Map) return Map<String, dynamic>.from(event);
+      return <String, dynamic>{};
+    });
+    return _logsStream!;
   }
 
   Future<bool> prepare() async {

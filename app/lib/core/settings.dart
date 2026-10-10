@@ -104,7 +104,7 @@ class ZohalSettings {
   const ZohalSettings({
     this.connectionMode = ConnectionMode.auto,
     this.ipVersion = IpVersion.auto,
-    this.scanProfile = ScanProfile.auto,
+    this.scanProfile = ScanProfile.turbo,
     this.noiseProfile = NoiseProfile.auto,
     this.scope = 'Tun',
     this.killSwitch = true,

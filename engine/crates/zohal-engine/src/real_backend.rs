@@ -202,9 +202,15 @@ impl TunnelBackend for RealAetherBackend {
             cmd.arg("-4");
             cmd.arg("--api-fragment");
 
-            // Obfuscation and scan modes
-            let scan_mode = format!("{:?}", rung.scan).to_lowercase();
-            cmd.arg("--scan").arg(&scan_mode);
+            // Security policy: Aether may use only turbo discovery or its
+            // verified-endpoint scanner. Never pass balanced/thorough/etc.
+            // from settings or a stale ladder configuration.
+            let scan_mode = if endpoint.is_some() || rung.use_cache {
+                "verified"
+            } else {
+                "turbo"
+            };
+            cmd.arg("--scan").arg(scan_mode);
 
             let noize_mode = format!("{:?}", rung.noize).to_lowercase();
             cmd.arg("--noize").arg(&noize_mode);
@@ -225,8 +231,6 @@ impl TunnelBackend for RealAetherBackend {
 
             if let Some(peer) = endpoint {
                 cmd.arg("--peer").arg(peer);
-            } else if rung.use_cache {
-                cmd.arg("--quick-reconnect");
             }
 
             // Stdin closed & pre_exec PDEATHSIG

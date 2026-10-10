@@ -230,7 +230,7 @@ impl Default for Settings {
         Self {
             connection_mode: ConnectionMode::Auto,
             ip_version: IpVersion::Auto,
-            scan_profile: ScanProfile::Auto,
+            scan_profile: ScanProfile::Turbo,
             noize_profile: NoizeProfile::Auto,
             scope: Scope::Tun,
             kill_switch: true,

@@ -52,3 +52,9 @@ This document records deliberate design and technical decisions made for Zohal C
 - **Context**: The v0.1.7 APKs still declared `versionCode = 1` and `versionName = "1.0.0"` in Gradle. Android package installation and upgrades can reject an APK whose version code is not newer than the installed package.
 - **Decision**: Set the v0.1.8 Android package to `versionCode = 8` and `versionName = "0.1.8"`, aligned with Flutter `0.1.8+8`. Future releases must increment both values.
 - **Status**: Accepted.
+
+## 009: Strict Aether Scan Policy
+- **Date**: 2026-10-10
+- **Context**: Aether logs showed fallback rungs using `balanced` and `thorough`, while cached reconnects used a shortcut that did not make the endpoint-verification policy explicit. This caused slow, inconsistent behavior and allowed parameters outside the required policy.
+- **Decision**: Zohal may start Aether only with `--scan turbo` for fresh discovery or `--scan verified` for cached/measured endpoints. The desktop backend enforces this at command construction regardless of stale settings or ladder data; Android uses the same ladder policy. The `--quick-reconnect` bypass is removed so cached candidates go through Aether's verified-endpoint scanner. All candidates still require SOCKS proxy-path and `warp=on|plus` verification before routing is changed.
+- **Status**: Accepted.

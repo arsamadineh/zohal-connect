@@ -174,37 +174,37 @@ class ZohalVpnService : VpnService() {
         val stage: String = "findGateway",
     )
 
-    private fun buildLadder(mode: String, useCache: Boolean): List<Rung> {
-        val h2fast = listOf("--masque", "--h2", "--fragment", "--scan", "turbo",
-            "--noize", "firewall") + if (useCache) listOf("--quick-reconnect") else emptyList()
-        val h3fast = listOf("--masque", "--h3", "--scan", "turbo",
-            "--noize", "firewall") + if (useCache) listOf("--quick-reconnect") else emptyList()
+    private fun buildLadder(mode: String, _useCache: Boolean): List<Rung> {
+        val h2fast = listOf("--masque", "--h2", "--fragment", "--scan", "verified",
+            "--noize", "firewall")
+        val h3fast = listOf("--masque", "--h3", "--scan", "verified",
+            "--noize", "firewall")
         val auto = listOf(
             Rung(h2fast, 6),
             Rung(h3fast, 6),
-            Rung(listOf("--masque", "--h2", "--fragment", "--scan", "balanced", "--noize", "firewall"), 10),
-            Rung(listOf("--masque", "--h3", "--scan", "balanced", "--noize", "firewall"), 10),
-            Rung(listOf("--gool", "--scan", "thorough", "--noize", "aggressive"), 15),
-            Rung(listOf("--wg", "--scan", "thorough", "--noize", "balanced"), 20),
+            Rung(listOf("--masque", "--h2", "--fragment", "--scan", "turbo", "--noize", "firewall"), 10),
+            Rung(listOf("--masque", "--h3", "--scan", "turbo", "--noize", "firewall"), 10),
+            Rung(listOf("--gool", "--scan", "turbo", "--noize", "aggressive"), 15),
+            Rung(listOf("--wg", "--scan", "turbo", "--noize", "balanced"), 20),
         )
         return when (mode) {
             "masque-h3" -> listOf(
                 Rung(h3fast, 6),
-                Rung(listOf("--masque", "--h3", "--scan", "balanced", "--noize", "firewall"), 12),
-                Rung(listOf("--masque", "--h3", "--scan", "thorough", "--noize", "firewall"), 18),
+                Rung(listOf("--masque", "--h3", "--scan", "turbo", "--noize", "firewall"), 12),
+                Rung(listOf("--masque", "--h3", "--scan", "turbo", "--noize", "firewall"), 18),
             )
             "masque-h2" -> listOf(
                 Rung(h2fast, 6),
-                Rung(listOf("--masque", "--h2", "--fragment", "--scan", "balanced", "--noize", "firewall"), 12),
-                Rung(listOf("--masque", "--h2", "--fragment", "--scan", "thorough", "--noize", "firewall"), 18),
+                Rung(listOf("--masque", "--h2", "--fragment", "--scan", "turbo", "--noize", "firewall"), 12),
+                Rung(listOf("--masque", "--h2", "--fragment", "--scan", "turbo", "--noize", "firewall"), 18),
             )
             "wireguard" -> listOf(
-                Rung(listOf("--wg", "--scan", "balanced", "--noize", "balanced"), 12),
-                Rung(listOf("--wg", "--scan", "thorough", "--noize", "balanced"), 20),
+                Rung(listOf("--wg", "--scan", "turbo", "--noize", "balanced"), 12),
+                Rung(listOf("--wg", "--scan", "turbo", "--noize", "balanced"), 20),
             )
             "gool" -> listOf(
-                Rung(listOf("--gool", "--scan", "thorough", "--noize", "aggressive"), 15),
-                Rung(listOf("--gool-classic", "--scan", "thorough", "--noize", "aggressive"), 15),
+                Rung(listOf("--gool", "--scan", "turbo", "--noize", "aggressive"), 15),
+                Rung(listOf("--gool-classic", "--scan", "turbo", "--noize", "aggressive"), 15),
             )
             else -> auto
         }

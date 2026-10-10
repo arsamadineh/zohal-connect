@@ -29,7 +29,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 1,
                     transport: Transport::Masque2,
-                    scan: ScanProfile::Turbo,
+                    scan: ScanProfile::Verified,
                     noize: NoizeProfile::Firewall,
                     use_cache: true,
                     h2_proven_only: true,
@@ -39,7 +39,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 2,
                     transport: Transport::Masque3,
-                    scan: ScanProfile::Turbo,
+                    scan: ScanProfile::Verified,
                     noize: NoizeProfile::Firewall,
                     use_cache: true,
                     h2_proven_only: false,
@@ -49,7 +49,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 3,
                     transport: Transport::Masque2,
-                    scan: ScanProfile::Balanced,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Gfw,
                     use_cache: false,
                     h2_proven_only: false,
@@ -59,7 +59,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 4,
                     transport: Transport::Masque3,
-                    scan: ScanProfile::Balanced,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Gfw,
                     use_cache: false,
                     h2_proven_only: false,
@@ -69,7 +69,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 5,
                     transport: Transport::WireGuard,
-                    scan: ScanProfile::Balanced,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Balanced,
                     use_cache: false,
                     h2_proven_only: false,
@@ -79,7 +79,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 6,
                     transport: Transport::GoolMasque,
-                    scan: ScanProfile::Thorough,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Aggressive,
                     use_cache: false,
                     h2_proven_only: false,
@@ -91,7 +91,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 1,
                     transport: Transport::Masque3,
-                    scan: ScanProfile::Turbo,
+                    scan: ScanProfile::Verified,
                     noize: NoizeProfile::Firewall,
                     use_cache: true,
                     h2_proven_only: false,
@@ -101,7 +101,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 2,
                     transport: Transport::Masque3,
-                    scan: ScanProfile::Balanced,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Gfw,
                     use_cache: false,
                     h2_proven_only: false,
@@ -111,7 +111,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 3,
                     transport: Transport::Masque3,
-                    scan: ScanProfile::Thorough,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Gfw,
                     use_cache: false,
                     h2_proven_only: false,
@@ -123,7 +123,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 1,
                     transport: Transport::Masque2,
-                    scan: ScanProfile::Turbo,
+                    scan: ScanProfile::Verified,
                     noize: NoizeProfile::Firewall,
                     use_cache: true,
                     h2_proven_only: true,
@@ -133,7 +133,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 2,
                     transport: Transport::Masque2,
-                    scan: ScanProfile::Balanced,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Gfw,
                     use_cache: false,
                     h2_proven_only: false,
@@ -143,7 +143,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 3,
                     transport: Transport::Masque2,
-                    scan: ScanProfile::Balanced,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Gfw,
                     use_cache: false,
                     h2_proven_only: false,
@@ -153,7 +153,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 4,
                     transport: Transport::Masque2,
-                    scan: ScanProfile::Thorough,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Gfw,
                     use_cache: false,
                     h2_proven_only: false,
@@ -165,7 +165,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 1,
                     transport: Transport::WireGuard,
-                    scan: ScanProfile::Balanced,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Balanced,
                     use_cache: false,
                     h2_proven_only: false,
@@ -175,7 +175,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 2,
                     transport: Transport::WireGuard,
-                    scan: ScanProfile::Thorough,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Aggressive,
                     use_cache: false,
                     h2_proven_only: false,
@@ -187,7 +187,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 1,
                     transport: Transport::GoolMasque,
-                    scan: ScanProfile::Thorough,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Aggressive,
                     use_cache: false,
                     h2_proven_only: false,
@@ -197,7 +197,7 @@ impl Ladder {
                 RungConfig {
                     rung_number: 2,
                     transport: Transport::GoolClassic,
-                    scan: ScanProfile::Thorough,
+                    scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Aggressive,
                     use_cache: false,
                     h2_proven_only: false,
@@ -275,5 +275,27 @@ mod tests {
     fn test_winning_rung_priority() {
         let ladder = Ladder::build(ConnectionMode::Auto, false, Some(4));
         assert_eq!(ladder.rungs[0].rung_number, 4);
+    }
+
+    #[test]
+    fn test_every_rung_uses_only_allowed_scan_policy() {
+        for mode in [
+            ConnectionMode::Auto,
+            ConnectionMode::Masque3,
+            ConnectionMode::Masque2,
+            ConnectionMode::WireGuard,
+            ConnectionMode::Gool,
+        ] {
+            let ladder = Ladder::build(mode, false, None);
+            for rung in ladder.rungs {
+                assert!(matches!(
+                    rung.scan,
+                    ScanProfile::Turbo | ScanProfile::Verified
+                ));
+                if rung.use_cache {
+                    assert_eq!(rung.scan, ScanProfile::Verified);
+                }
+            }
+        }
     }
 }

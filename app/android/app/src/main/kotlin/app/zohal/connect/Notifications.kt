@@ -53,7 +53,7 @@ object Notifications {
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle("زحل")
             .setContentText(statusText)
-            .setSmallIcon(android.R.drawable.stat_sys_vpn)
+            .setSmallIcon(R.drawable.ic_tile)
             .setOngoing(true)
             .setContentIntent(openPendingIntent)
             .addAction(android.R.drawable.ic_menu_close_clear_cancel, "قطع", disconnectPendingIntent)

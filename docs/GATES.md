@@ -373,3 +373,8 @@ All tests passed! (21/21)
 - Release run `38020870515`: `build-linux` success, `build-android` success, `publish-release` success.
 - Published assets: `zohal_0.1.2_amd64.deb`, `zohal-0.1.2.x86_64.rpm`, `zohal-v0.1.2-linux-x86_64.tar.gz`, `zohal-v0.1.2-{arm64-v8a,armeabi-v7a,x86_64}.apk` + universal, `SHA256SUMS.txt`.
 - CI run on main: `engine-linux`, `app-linux`, `app-android` green (AppImage job removed per deferral).
+
+### 8. v0.1.6 Full-Green Evidence (RUN in GitHub Actions)
+- CI run `38038904707`: `engine-linux`, `app-linux`, `app-android` all success. Fixed `fetch_update` deprecation (new stable clippy) with a CAS loop in `test_backend.rs`; verified locally with fmt, clippy `-D warnings`, workspace tests, `dart format`, `flutter analyze`, `flutter test --no-pub` (22/22).
+- Release run `38039503227`: `build-linux`, `build-android`, `publish-release` all success.
+- Published assets (9): `Zohal-0.1.6-x86_64.AppImage`, `zohal_0.1.6_amd64.deb`, `zohal-0.1.6.x86_64.rpm`, `zohal-v0.1.6-linux-x86_64.tar.gz`, per-ABI + universal APKs, `SHA256SUMS.txt`.

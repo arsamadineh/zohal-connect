@@ -247,6 +247,43 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 ),
                 Container(height: 1.0, color: hairline),
 
+                // Mode Banner (TUN vs Proxy)
+                Container(
+                  width: double.infinity,
+                  color: isDark
+                      ? const Color(0xFF1E1E1E)
+                      : const Color(0xFFF2F2F2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 6.0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        engineState.scope == ConnectionScope.tun
+                            ? Icons.security_sharp
+                            : Icons.language_sharp,
+                        size: 14.0,
+                        color: textSecondary,
+                      ),
+                      const SizedBox(width: 6.0),
+                      Text(
+                        engineState.scope == ConnectionScope.tun
+                            ? StringsFa.scopeTun
+                            : StringsFa.scopeProxy,
+                        style: TextStyle(
+                          fontFamily: ZohalTokens.fontFamily,
+                          fontSize: 12.0,
+                          fontWeight: FontWeight.w500,
+                          color: textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(height: 1.0, color: hairline),
+
                 // 2. Body Area (Connect Control + Labels)
                 Expanded(
                   child: Column(

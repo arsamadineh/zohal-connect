@@ -23,6 +23,7 @@ class ZohalVpnService : VpnService() {
         const val ACTION_DISCONNECT = "app.zohal.connect.ACTION_DISCONNECT"
         const val ACTION_QUERY = "app.zohal.connect.ACTION_QUERY"
         const val BROADCAST_STATE = "app.zohal.connect.VPN_STATE"
+        const val BROADCAST_STATS = "app.zohal.connect.VPN_STATS"
         const val PREFS = "zohal_vpn_state"
         const val SETTINGS_PREFS = "zohal_settings"
         const val MTU = 1280
@@ -229,8 +230,6 @@ class ZohalVpnService : VpnService() {
         cmd.addAll(listOf("--masque-config", File(configDir, "aether-masque.toml").absolutePath))
         cmd.addAll(listOf("--wg-config", File(configDir, "aether-wg.toml").absolutePath))
         cmd.addAll(listOf("--dns", config.dns.joinToString(",")))
-        cmd.add("-4")
-        cmd.add("--api-fragment")
         if (config.fragment && !cmd.contains("--fragment")) cmd.add("--fragment")
         if (config.ech) cmd.addAll(listOf("--ech", "auto"))
         Log.i(TAG, "spawning aether rung ${rung.args.take(3)} on $socksPort")
@@ -520,11 +519,14 @@ class ZohalVpnService : VpnService() {
                     break
                 }
                 val now = System.currentTimeMillis()
-                val curRx = android.net.TrafficStats.getUidRxBytes(android.os.Process.myUid())
-                val curTx = android.net.TrafficStats.getUidTxBytes(android.os.Process.myUid())
+                val rawRx = android.net.TrafficStats.getUidRxBytes(android.os.Process.myUid())
+                val rawTx = android.net.TrafficStats.getUidTxBytes(android.os.Process.myUid())
+                val curRx = if (rawRx < 0) 0L else rawRx
+                val curTx = if (rawTx < 0) 0L else rawTx
+
                 val dtSec = (now - lastTime) / 1000.0
-                val rxBps = if (dtSec > 0.1 && curRx >= lastRx) (((curRx - lastRx) * 8) / dtSec).toLong() else 0L
-                val txBps = if (dtSec > 0.1 && curTx >= lastTx) (((curTx - lastTx) * 8) / dtSec).toLong() else 0L
+                val rxBps = if (dtSec > 0.1 && curRx >= lastRx && lastRx > 0) (((curRx - lastRx) * 8) / dtSec).toLong() else 0L
+                val txBps = if (dtSec > 0.1 && curTx >= lastTx && lastTx > 0) (((curTx - lastTx) * 8) / dtSec).toLong() else 0L
                 lastRx = curRx
                 lastTx = curTx
                 lastTime = now
@@ -543,15 +545,8 @@ class ZohalVpnService : VpnService() {
     }
 
     private fun broadcastStats(rxBps: Long, txBps: Long, rxTotal: Long, txTotal: Long) {
-        val intent = Intent(BROADCAST_STATE).apply {
+        val intent = Intent(BROADCAST_STATS).apply {
             setPackage(packageName)
-            putExtra("phase", "connected")
-            putExtra("stage", "none")
-            currentSession?.let {
-                putExtra("exitIp", it.exitIp)
-                putExtra("exitLoc", it.exitLoc)
-                putExtra("sinceUnix", it.sinceUnix)
-            }
             putExtra("rxBps", rxBps)
             putExtra("txBps", txBps)
             putExtra("rxTotal", rxTotal)
@@ -702,7 +697,7 @@ class ZohalVpnService : VpnService() {
             "E100" -> "اینترنت در دسترس نیست"
             "E110" -> "ساعت دستگاه نادرست است"
             "E120" -> "هیچ روشی موفق نبود"
-            "E130" -> "حساب دستگاه تازهسازی شد"
+            "E130" -> "حساب دستگاه تازه‌سازی شد"
             "E140" -> "ثبت دستگاه ممکن نشد"
             "E220" -> "مجوز لازم داده نشد"
             "E230" -> "اتصال توسط برنامه دیگری قطع شد"

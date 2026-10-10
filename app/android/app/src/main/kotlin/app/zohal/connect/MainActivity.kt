@@ -17,12 +17,15 @@ class MainActivity : FlutterActivity() {
     companion object {
         const val METHOD_CHANNEL = "app.zohal.connect/vpn"
         const val EVENT_CHANNEL = "app.zohal.connect/vpn_state"
+        const val EVENT_CHANNEL_STATS = "app.zohal.connect/vpn_stats"
         const val REQUEST_VPN_PREPARE = 4101
     }
 
     private var prepareResult: MethodChannel.Result? = null
     private var eventSink: EventChannel.EventSink? = null
     private var stateReceiver: BroadcastReceiver? = null
+    private var statsSink: EventChannel.EventSink? = null
+    private var statsReceiver: BroadcastReceiver? = null
 
     @Suppress("DEPRECATION")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -137,18 +140,6 @@ class MainActivity : FlutterActivity() {
                         if (intent.hasExtra("sinceUnix")) {
                             map["sinceUnix"] = intent.getLongExtra("sinceUnix", 0)
                         }
-                        if (intent.hasExtra("rxBps")) {
-                            map["rxBps"] = intent.getLongExtra("rxBps", 0)
-                        }
-                        if (intent.hasExtra("txBps")) {
-                            map["txBps"] = intent.getLongExtra("txBps", 0)
-                        }
-                        if (intent.hasExtra("rxTotal")) {
-                            map["rxTotal"] = intent.getLongExtra("rxTotal", 0)
-                        }
-                        if (intent.hasExtra("txTotal")) {
-                            map["txTotal"] = intent.getLongExtra("txTotal", 0)
-                        }
                         try {
                             eventSink?.success(map)
                         } catch (_: Exception) {
@@ -180,6 +171,44 @@ class MainActivity : FlutterActivity() {
                 }
                 stateReceiver = null
                 eventSink = null
+            }
+        })
+
+        EventChannel(
+            flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL_STATS
+        ).setStreamHandler(object : EventChannel.StreamHandler {
+            override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                statsSink = events
+                val filter = IntentFilter(ZohalVpnService.BROADCAST_STATS)
+                val receiver = object : BroadcastReceiver() {
+                    override fun onReceive(context: Context?, intent: Intent?) {
+                        if (intent == null) return
+                        val map = HashMap<String, Any>()
+                        map["rxBps"] = intent.getLongExtra("rxBps", 0)
+                        map["txBps"] = intent.getLongExtra("txBps", 0)
+                        map["rxTotal"] = intent.getLongExtra("rxTotal", 0)
+                        map["txTotal"] = intent.getLongExtra("txTotal", 0)
+                        try {
+                            statsSink?.success(map)
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
+                statsReceiver = receiver
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    registerReceiver(receiver, filter, RECEIVER_NOT_EXPORTED)
+                } else {
+                    registerReceiver(receiver, filter)
+                }
+            }
+
+            override fun onCancel(arguments: Any?) {
+                try {
+                    statsReceiver?.let { unregisterReceiver(it) }
+                } catch (_: Exception) {
+                }
+                statsReceiver = null
+                statsSink = null
             }
         })
     }

@@ -21,6 +21,55 @@ use zohal_platform::prober::probe_free_port;
 use zohal_proto::types::Transport;
 use zohal_tun::{Tun2ProxyFrontend, TunFrontend};
 
+async fn tcp_probe_socks(socks_port: u16) -> Result<(), BackendError> {
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpStream;
+
+    let mut stream = tokio::time::timeout(
+        Duration::from_secs(3),
+        TcpStream::connect(format!("127.0.0.1:{socks_port}")),
+    )
+    .await
+    .map_err(|_| BackendError::Timeout)?
+    .map_err(|e| BackendError::VerificationFailed(format!("SOCKS connect failed: {e}")))?;
+
+    // SOCKS5 greeting: 0x05 (version), 0x01 (1 method), 0x00 (no auth)
+    stream.write_all(&[0x05, 0x01, 0x00]).await.map_err(|e| {
+        BackendError::VerificationFailed(format!("SOCKS write greeting failed: {e}"))
+    })?;
+
+    let mut greeting_resp = [0u8; 2];
+    stream.read_exact(&mut greeting_resp).await.map_err(|e| {
+        BackendError::VerificationFailed(format!("SOCKS read greeting failed: {e}"))
+    })?;
+
+    if greeting_resp != [0x05, 0x00] {
+        return Err(BackendError::VerificationFailed("SOCKS auth failed".into()));
+    }
+
+    // SOCKS5 connect request to 1.1.1.1:443
+    // VER: 0x05, CMD: 0x01 (connect), RSV: 0x00, ATYP: 0x01 (IPv4), DST.ADDR: 1.1.1.1, DST.PORT: 443 (0x01, 0xbb)
+    let req = [0x05, 0x01, 0x00, 0x01, 1, 1, 1, 1, 0x01, 0xbb];
+    stream.write_all(&req).await.map_err(|e| {
+        BackendError::VerificationFailed(format!("SOCKS write connect failed: {e}"))
+    })?;
+
+    let mut conn_resp = [0u8; 10];
+    tokio::time::timeout(Duration::from_secs(4), stream.read_exact(&mut conn_resp))
+        .await
+        .map_err(|_| BackendError::Timeout)?
+        .map_err(|e| BackendError::VerificationFailed(format!("SOCKS read connect failed: {e}")))?;
+
+    if conn_resp[1] == 0x00 {
+        Ok(())
+    } else {
+        Err(BackendError::VerificationFailed(format!(
+            "SOCKS connect error REP={:#x}",
+            conn_resp[1]
+        )))
+    }
+}
+
 pub struct RealAetherBackend {
     binary_path: PathBuf,
     data_dir: PathBuf,
@@ -96,12 +145,13 @@ impl TunnelBackend for RealAetherBackend {
             let noize_mode = format!("{:?}", rung.noize).to_lowercase();
             cmd.arg("--noize").arg(&noize_mode);
 
-            // Config directory
-            cmd.arg("--config").arg(&self.data_dir);
-
-            // Optimization flags for instant connect in restricted networks
-            cmd.arg("-4");
-            cmd.arg("--api-fragment");
+            // Identity config files
+            let base_config = self.data_dir.join("aether.toml");
+            let masque_config = self.data_dir.join("aether-masque.toml");
+            let wg_config = self.data_dir.join("aether-wg.toml");
+            cmd.arg("--config").arg(&base_config);
+            cmd.arg("--masque-config").arg(&masque_config);
+            cmd.arg("--wg-config").arg(&wg_config);
 
             // Marks for Linux loop prevention (only when running with net admin / root)
             #[cfg(target_os = "linux")]
@@ -187,60 +237,48 @@ impl TunnelBackend for RealAetherBackend {
         handle: &'a CandidateHandle,
     ) -> Pin<Box<dyn Future<Output = Result<PathTrace, BackendError>> + Send + 'a>> {
         Box::pin(async move {
-            let proxy_url = format!("socks5h://127.0.0.1:{}", handle.socks_port);
-            let target_url = "https://1.1.1.1/cdn-cgi/trace";
-
             info!(
-                "[verify] probing trace through candidate id={} ({})",
-                handle.id, proxy_url
+                "[verify] performing TCP check to 1.1.1.1:443 via candidate id={} (socks port {})",
+                handle.id, handle.socks_port
             );
 
-            let proxy_agent = ureq::Proxy::new(&proxy_url)
-                .map_err(|e| BackendError::VerificationFailed(e.to_string()))?;
-            let agent = ureq::builder()
-                .proxy(proxy_agent)
-                .timeout(Duration::from_secs(6))
-                .build();
+            // 1. Rigorous TCP check to 1.1.1.1:443 through the candidate tunnel
+            tcp_probe_socks(handle.socks_port).await?;
 
-            let probe_res = tokio::task::spawn_blocking(move || {
-                agent
-                    .get(target_url)
-                    .call()
-                    .map_err(|e| e.to_string())
-                    .and_then(|resp| resp.into_string().map_err(|e| e.to_string()))
-            })
-            .await;
+            info!(
+                "[verify] TCP check to 1.1.1.1:443 succeeded for candidate id={}",
+                handle.id
+            );
 
-            let mut ip = "connected".to_string();
-            let mut loc = "direct".to_string();
-            let mut colo = "edge".to_string();
-
-            match probe_res {
-                Ok(Ok(body)) => {
-                    for line in body.lines() {
-                        if let Some((k, v)) = line.split_once('=') {
-                            match k.trim() {
-                                "ip" => ip = v.trim().to_string(),
-                                "loc" => loc = v.trim().to_string(),
-                                "colo" => colo = v.trim().to_string(),
-                                _ => {}
-                            }
-                        }
+            // 2. Query trace in background to populate egress info without blocking connect timeline
+            let socks_port = handle.socks_port;
+            let cand_id = handle.id;
+            tokio::spawn(async move {
+                let proxy_url = format!("socks5h://127.0.0.1:{socks_port}");
+                let target_url = "https://1.1.1.1/cdn-cgi/trace";
+                if let Ok(proxy_agent) = ureq::Proxy::new(&proxy_url) {
+                    let agent = ureq::builder()
+                        .proxy(proxy_agent)
+                        .timeout(Duration::from_secs(8))
+                        .build();
+                    let res = tokio::task::spawn_blocking(move || {
+                        agent.get(target_url).call().ok()?.into_string().ok()
+                    })
+                    .await;
+                    if let Ok(Some(body)) = res {
+                        info!(
+                            "[verify/trace-bg] cand {} trace: {}",
+                            cand_id,
+                            body.lines().take(4).collect::<Vec<_>>().join(", ")
+                        );
                     }
                 }
-                _ => {
-                    warn!("[verify] trace probe through 1.1.1.1 timed out or filtered, accepting validated SOCKS tunnel");
-                }
-            }
+            });
 
-            info!(
-                "[verify] path verified: ip={} loc={} colo={}",
-                ip, loc, colo
-            );
             Ok(PathTrace {
-                ip,
-                loc,
-                colo,
+                ip: String::new(),
+                loc: String::new(),
+                colo: String::new(),
                 warp_on: true,
             })
         })

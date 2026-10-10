@@ -93,5 +93,47 @@ void main() {
         );
       }
     });
+
+    test('Zero Missing ZWNJs in Persian UI Copy', () {
+      final invalidGluedPatterns = [
+        RegExp(r'میشود'),
+        RegExp(r'نمیشود'),
+        RegExp(r'میکند'),
+        RegExp(r'نمیکند'),
+        RegExp(r'برنامهها'),
+        RegExp(r'شبکهها'),
+        RegExp(r'روشها'),
+        RegExp(r'دستگاهها'),
+        RegExp(r'آمادهسازی'),
+        RegExp(r'راهاندازی'),
+        RegExp(r'ثبتشده'),
+        RegExp(r'تازهسازی'),
+      ];
+
+      final sampleCopy = [
+        StringsFa.modeAutoDesc,
+        StringsFa.toastModeChanged,
+        StringsFa.dialogCancelConnectBody,
+        StringsFa.dialogResetIdentityBody,
+        StringsFa.routingLanDesc,
+        StringsFa.aboutAgplNotice,
+        StringsFa.onboardingIntro,
+        StringsFa.statePreparing,
+        StringsFa.stagePrepare,
+        StringsFa.appPlural,
+        StringsFa.logs,
+      ];
+
+      for (final copy in sampleCopy) {
+        for (final pattern in invalidGluedPatterns) {
+          expect(
+            pattern.hasMatch(copy),
+            isFalse,
+            reason:
+                'Copy "$copy" has missing ZWNJ matching pattern ${pattern.pattern}',
+          );
+        }
+      }
+    });
   });
 }

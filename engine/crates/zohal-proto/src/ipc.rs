@@ -31,6 +31,9 @@ pub enum ServerMessage {
     State {
         state: Box<EngineState>,
     },
+    Settings {
+        settings: Box<Settings>,
+    },
     Stats {
         stats: TrafficStats,
     },

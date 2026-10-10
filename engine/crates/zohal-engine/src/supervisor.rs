@@ -224,25 +224,30 @@ impl Supervisor {
     ) -> Result<(CandidateHandle, PathTrace), BackendError> {
         let deadline = rung.deadline;
 
+        let t0 = Instant::now();
         let start_fut = self.backend.start_candidate(rung, None);
         let cand = tokio::time::timeout(deadline, start_fut)
             .await
             .map_err(|_| BackendError::Timeout)??;
+        let t_gateway = t0.elapsed();
 
         self.update_state(|s| {
             s.stage = Stage::BuildTunnel;
             s.gateway = cand.endpoint.clone();
         });
 
+        let t1 = Instant::now();
         if let Err(e) = self.backend.apply_system_tunnel(&cand, &self.journal).await {
             let _ = self.backend.stop_candidate(cand).await;
             return Err(e);
         }
+        let t_build = t1.elapsed();
 
         self.update_state(|s| {
             s.stage = Stage::VerifyPath;
         });
 
+        let t2 = Instant::now();
         let verify_fut = self.backend.verify_path(&cand);
         let trace = match tokio::time::timeout(Duration::from_secs(8), verify_fut).await {
             Ok(Ok(t)) => t,
@@ -257,6 +262,17 @@ impl Supervisor {
                 return Err(BackendError::Timeout);
             }
         };
+        let t_verify = t2.elapsed();
+        let t_total = t0.elapsed();
+
+        info!(
+            "[timeline] rung {}: find_gateway={}ms build_tunnel={}ms verify_path={}ms total={}ms",
+            rung.rung_number,
+            t_gateway.as_millis(),
+            t_build.as_millis(),
+            t_verify.as_millis(),
+            t_total.as_millis()
+        );
 
         Ok((cand, trace))
     }

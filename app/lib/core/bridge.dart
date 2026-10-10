@@ -176,22 +176,17 @@ class ZohalBridgeClient {
             'epoch': _epoch,
           }),
         );
-        if (native.rxBps != null || native.txBps != null) {
-          _statsController.add(
-            EngineStats(
-              rxBps: native.rxBps ?? 0,
-              txBps: native.txBps ?? 0,
-              rxTotal: native.rxTotal ?? 0,
-              txTotal: native.txTotal ?? 0,
-            ),
-          );
-        }
       },
       onError: (Object e) {
         ZohalLogger().warn('VPN state channel error: $e');
         _connected = false;
       },
     );
+
+    channel.statsStream.listen((stats) {
+      _statsController.add(EngineStats.fromJson(stats));
+    });
+
     // Publish the current native state once so the UI never starts blank.
     channel.currentState().then((phase) {
       _stateController.add(
@@ -235,7 +230,41 @@ class ZohalBridgeClient {
   ];
 
   static String _userSocketPath() {
+    final xdg = Platform.environment['XDG_RUNTIME_DIR'];
+    if (xdg != null && xdg.isNotEmpty) {
+      return '$xdg/zohal/user_engine.sock';
+    }
+    final home = Platform.environment['HOME'];
+    if (home != null && home.isNotEmpty) {
+      return '$home/.local/share/zohal/user_engine.sock';
+    }
     return '${Directory.systemTemp.path}/zohal_user/user_engine.sock';
+  }
+
+  Future<String?> _stageAppImageBinary(String srcBin) async {
+    try {
+      final stageDir = Directory('/tmp/zohal_stage');
+      if (!await stageDir.exists()) {
+        await stageDir.create(recursive: true);
+        await Process.run('chmod', ['755', stageDir.path]);
+      }
+      final targetBin = '${stageDir.path}/zohald';
+      final srcFile = File(srcBin);
+      if (await srcFile.exists()) {
+        await srcFile.copy(targetBin);
+        await Process.run('chmod', ['755', targetBin]);
+        final aetherSrc = '${srcFile.parent.path}/aether';
+        if (await File(aetherSrc).exists()) {
+          final aetherTarget = '${stageDir.path}/aether';
+          await File(aetherSrc).copy(aetherTarget);
+          await Process.run('chmod', ['755', aetherTarget]);
+        }
+        return targetBin;
+      }
+    } catch (e) {
+      ZohalLogger().warn('Staging binary outside FUSE mount failed: $e');
+    }
+    return null;
   }
 
   List<String> _zohaldCandidates() {
@@ -311,10 +340,18 @@ class ZohalBridgeClient {
       return false;
     }
 
-    // Ask for root privilege via pkexec on Linux for full TUN access.
-    // If granted, zohald service runs as root with kernel TUN.
-    // If cancelled or rejected, fallback to user proxy mode.
+    // Attempt root privilege via pkexec on Linux for kernel TUN mode.
+    // If running from AppImage (inside FUSE mount), stage binaries to /tmp/zohal_stage
+    // so pkexec/root has direct access outside FUSE restrictions.
     if (Platform.isLinux) {
+      String runBin = binPath;
+      if (File('/usr/lib/zohal/zohald').existsSync()) {
+        runBin = '/usr/lib/zohal/zohald';
+      } else if (Platform.environment['ZOHAL_APPDIR'] != null) {
+        final staged = await _stageAppImageBinary(binPath);
+        if (staged != null) runBin = staged;
+      }
+
       try {
         final whichPkexec = await Process.run('which', ['pkexec']);
         if (whichPkexec.exitCode == 0) {
@@ -322,7 +359,13 @@ class ZohalBridgeClient {
               .info('Requesting root privileges via pkexec for TUN engine');
           await Process.start(
             'pkexec',
-            [binPath, 'service'],
+            [
+              'env',
+              '-i',
+              'PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin',
+              runBin,
+              'service',
+            ],
             mode: ProcessStartMode.detached,
           );
           for (var i = 0; i < 15; i++) {
@@ -336,11 +379,11 @@ class ZohalBridgeClient {
           }
         }
       } catch (e) {
-        ZohalLogger().debug('pkexec attempt skipped: $e');
+        ZohalLogger().debug('pkexec attempt skipped or failed: $e');
       }
     }
 
-    // Fallback: spawn user proxy mode without root (100% works)
+    // Fallback: spawn unprivileged user proxy engine (100% works without root)
     ZohalLogger().info('Falling back to user proxy engine: $binPath user');
     try {
       await Process.start(

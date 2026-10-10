@@ -178,9 +178,9 @@ async fn handle_client(
                         writer_half.write_all(resp.to_line()?.as_bytes()).await?;
                     }
                     ClientMessage::GetSettings => {
-                        let resp = ServerMessage::Notice {
-                            code: ErrorCode::E100,
-                            params: HashMap::new(),
+                        let current_settings = settings.read().clone();
+                        let resp = ServerMessage::Settings {
+                            settings: Box::new(current_settings),
                         };
                         writer_half.write_all(resp.to_line()?.as_bytes()).await?;
                     }
@@ -203,6 +203,25 @@ async fn handle_client(
                         let resp = ServerMessage::Pong;
                         writer_half.write_all(resp.to_line()?.as_bytes()).await?;
                     }
+                    ClientMessage::Subscribe { stats: _ } => {
+                        let resp = ServerMessage::Pong;
+                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    }
+                    ClientMessage::Unsubscribe => {
+                        let resp = ServerMessage::Pong;
+                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    }
+                    ClientMessage::ProbeNow => {
+                        let resp = ServerMessage::Pong;
+                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    }
+                    ClientMessage::ResetIdentity => {
+                        let resp = ServerMessage::Notice {
+                            code: ErrorCode::E130,
+                            params: HashMap::new(),
+                        };
+                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    }
                     ClientMessage::ExportDiagnostics => {
                         let st = state_watch.borrow().clone();
                         let sett = settings.read().clone();
@@ -216,9 +235,12 @@ async fn handle_client(
                         let resp = ServerMessage::Diagnostics { data: diag };
                         writer_half.write_all(resp.to_line()?.as_bytes()).await?;
                     }
-                    _ => {
-                        let resp = ServerMessage::Pong;
-                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    ClientMessage::Hello { .. } => {
+                        let err = ServerMessage::Error {
+                            code: ErrorCode::E400,
+                            msg: "Handshake already completed".into(),
+                        };
+                        writer_half.write_all(err.to_line()?.as_bytes()).await?;
                     }
                 }
                 writer_half.flush().await?;

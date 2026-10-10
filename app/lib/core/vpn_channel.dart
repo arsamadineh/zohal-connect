@@ -17,10 +17,6 @@ class VpnNativeState {
   final String? exitIp;
   final String? exitLoc;
   final int? sinceUnix;
-  final int? rxBps;
-  final int? txBps;
-  final int? rxTotal;
-  final int? txTotal;
 
   const VpnNativeState({
     required this.phase,
@@ -29,10 +25,6 @@ class VpnNativeState {
     this.exitIp,
     this.exitLoc,
     this.sinceUnix,
-    this.rxBps,
-    this.txBps,
-    this.rxTotal,
-    this.txTotal,
   });
 
   factory VpnNativeState.fromMap(Map<dynamic, dynamic> map) {
@@ -43,10 +35,6 @@ class VpnNativeState {
       exitIp: map['exitIp'] as String?,
       exitLoc: map['exitLoc'] as String?,
       sinceUnix: (map['sinceUnix'] as num?)?.toInt(),
-      rxBps: (map['rxBps'] as num?)?.toInt(),
-      txBps: (map['txBps'] as num?)?.toInt(),
-      rxTotal: (map['rxTotal'] as num?)?.toInt(),
-      txTotal: (map['txTotal'] as num?)?.toInt(),
     );
   }
 }
@@ -58,10 +46,14 @@ class VpnChannel {
   static const EventChannel _events = EventChannel(
     'app.zohal.connect/vpn_state',
   );
+  static const EventChannel _statsEvents = EventChannel(
+    'app.zohal.connect/vpn_stats',
+  );
 
   static bool get isSupported => Platform.isAndroid;
 
   Stream<VpnNativeState>? _stateStream;
+  Stream<Map<String, dynamic>>? _statsStream;
 
   Stream<VpnNativeState> get stateStream {
     _stateStream ??= _events.receiveBroadcastStream().map((event) {
@@ -69,6 +61,14 @@ class VpnChannel {
       return const VpnNativeState(phase: 'idle');
     });
     return _stateStream!;
+  }
+
+  Stream<Map<String, dynamic>> get statsStream {
+    _statsStream ??= _statsEvents.receiveBroadcastStream().map((event) {
+      if (event is Map) return Map<String, dynamic>.from(event);
+      return <String, dynamic>{};
+    });
+    return _statsStream!;
   }
 
   Future<bool> prepare() async {

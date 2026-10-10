@@ -21,9 +21,9 @@ class StringsFa {
   static const String block = 'مسدود';
   static const String rule = 'قانون';
   static const String appSingular = 'برنامه';
-  static const String appPlural = 'برنامهها';
+  static const String appPlural = 'برنامه‌ها';
   static const String settings = 'تنظیمات';
-  static const String logs = 'گزارشها';
+  static const String logs = 'گزارش‌ها';
   static const String about = 'درباره';
   static const String gateway = 'دروازه';
   static const String tunnel = 'تونل';
@@ -49,7 +49,7 @@ class StringsFa {
 
   // States
   static const String stateIdle = 'قطع است';
-  static const String statePreparing = 'آمادهسازی';
+  static const String statePreparing = 'آماده‌سازی';
   static const String stateConnecting = 'در حال اتصال';
   static const String stateConnected = 'متصل است';
   static const String stateReconnecting = 'اتصال دوباره';
@@ -62,7 +62,7 @@ class StringsFa {
   static const String hintCancelConfirm = 'برای لغو دوباره بزنید';
 
   // Stages
-  static const String stagePrepare = 'آمادهسازی';
+  static const String stagePrepare = 'آماده‌سازی';
   static const String stageFindGateway = 'یافتن دروازه';
   static const String stageBuildTunnel = 'ساخت تونل';
   static const String stageVerifyPath = 'بررسی مسیر';
@@ -70,7 +70,7 @@ class StringsFa {
   // Modes & Transports
   static const String modeAutoTitle = 'خودکار';
   static const String modeAutoDesc =
-      'بهترین روش را خودکار پیدا میکند و در صورت قطع، روش دیگری را امتحان میکند.';
+      'بهترین روش را خودکار پیدا می‌کند و در صورت قطع، روش دیگری را امتحان می‌کند.';
 
   static const String modeMasque3Title = 'MASQUE (HTTP/3)';
   static const String modeMasque3Desc = 'سریع‌ترین روش؛ مناسب بیشتر شبکه‌ها.';
@@ -91,7 +91,7 @@ class StringsFa {
   static const String scopeProxy = 'پراکسی سیستم';
 
   // Rule Types
-  static const String ruleTypeDomain = 'دامنه (و زیردامنهها)';
+  static const String ruleTypeDomain = 'دامنه (و زیر‌دامنه‌ها)';
   static const String ruleTypeDomainExact = 'دامنه دقیق';
   static const String ruleTypeKeyword = 'شامل کلمه';
   static const String ruleTypeRegex = 'عبارت منظم';
@@ -102,46 +102,46 @@ class StringsFa {
   static const String toastCopied = 'کپی شد';
   static const String toastSaved = 'ذخیره شد';
   static const String toastModeChanged =
-      'روش اتصال تغییر کرد؛ اتصال دوباره برقرار میشود';
+      'روش اتصال تغییر کرد؛ اتصال دوباره برقرار می‌شود';
   static const String toastDirectInternet =
       'اتصال قطع شد؛ اینترنت مستقیم فعال است';
 
   // Dialogs
   static const String dialogCancelConnectTitle = 'لغو اتصال؟';
   static const String dialogCancelConnectBody =
-      'اتصال هنوز برقرار نشده است. اگر لغو کنید، فرایند از ابتدا شروع میشود.';
+      'اتصال هنوز برقرار نشده است. اگر لغو کنید، فرایند از ابتدا شروع می‌شود.';
   static const String dialogCancelConnectContinue = 'ادامه اتصال';
   static const String dialogCancelConnectCancel = 'لغو';
 
   static const String dialogExitTitle = 'خروج از برنامه؟';
-  static const String dialogExitBody = 'اتصال فعال میماند.';
+  static const String dialogExitBody = 'اتصال فعال می‌ماند.';
   static const String dialogExitLeave = 'خروج از برنامه';
   static const String dialogExitDisconnectLeave = 'قطع و خروج';
 
   static const String dialogResetIdentityTitle = 'ثبت دوباره دستگاه؟';
   static const String dialogResetIdentityBody =
-      'دستگاه با حساب جدیدی ثبت میشود. این کار چند ثانیه طول میکشد.';
+      'دستگاه با حساب جدیدی ثبت می‌شود. این کار چند ثانیه طول می‌کشد.';
   static const String dialogResetIdentityConfirm = 'تأیید';
   static const String dialogResetIdentityCancel = 'لغو';
 
   // Routing
   static const String routingSmartTitle = 'مسیریابی هوشمند';
   static const String routingSmartDesc =
-      'سایتهای ایرانی (.ir) و شبکه محلی بدون عبور از فیلترشکن باز میشوند.';
+      'سایت‌های ایرانی (.ir) و شبکه محلی بدون عبور از فیلترشکن باز می‌شوند.';
   static const String routingLanTitle = 'شبکه محلی مستقیم';
   static const String routingLanDesc =
-      'دستگاههای شبکه خانگی یا اداری مستقیم در دسترس باشند.';
+      'دستگاه‌های شبکه خانگی یا اداری مستقیم در دسترس باشند.';
   static const String routingDirectSection = 'مستقیم';
   static const String routingBlockSection = 'مسدود';
-  static const String routingAppsSection = 'برنامهها';
+  static const String routingAppsSection = 'برنامه‌ها';
   static const String routingAddRule = 'افزودن قانون';
   static const String routingRuleValue = 'مقدار قانون';
   static const String routingRuleType = 'نوع قانون';
-  static const String routingAppModeAll = 'همه برنامهها';
-  static const String routingAppModeOnly = 'فقط انتخابشدهها';
-  static const String routingAppModeExcept = 'همه به جز انتخابشدهها';
+  static const String routingAppModeAll = 'همه برنامه‌ها';
+  static const String routingAppModeOnly = 'فقط انتخاب‌شده‌ها';
+  static const String routingAppModeExcept = 'همه به جز انتخاب‌شده‌ها';
   static const String routingDomainDirectWindowsNotice =
-      'مسیریابی دامنهای در ویندوز پشتیبانی نمیشود؛ از نشانی IP استفاده کنید.';
+      'مسیریابی دامنه‌ای در ویندوز پشتیبانی نمی‌شود؛ از نشانی IP استفاده کنید.';
 
   // Settings
   static const String settingsGroupConnection = 'اتصال';
@@ -149,7 +149,7 @@ class StringsFa {
   static const String settingsRestoreState = 'بازیابی آخرین وضعیت';
   static const String settingsAutoBoot = 'اتصال خودکار هنگام روشن شدن سیستم';
   static const String settingsKillSwitchDesc =
-      'در صورت قطع تونل، ارتباط اینترنت تا اتصال مجدد مسدود میماند.';
+      'در صورت قطع تونل، ارتباط اینترنت تا اتصال مجدد مسدود می‌ماند.';
   static const String settingsScope = 'دامنه اتصال';
 
   static const String settingsGroupSystem = 'سیستم';
@@ -167,7 +167,7 @@ class StringsFa {
   static const String settingsResetIdentity = 'ثبت دوباره دستگاه';
   static const String settingsScanProfile = 'پروفایل اسکن';
   static const String settingsNoiseProfile = 'پروفایل اختلال (Noise)';
-  static const String settingsFragment = 'تکهتکهسازی بستهها (Fragment)';
+  static const String settingsFragment = 'تکه‌تکه‌سازی بسته‌ها (Fragment)';
   static const String settingsEch = 'رمزنگاری نام سرور (ECH)';
   static const String settingsExportDiagnostics = 'خروجی گزارش تشخیصی';
   static const String settingsCopyAll = 'کپی همه';
@@ -179,28 +179,28 @@ class StringsFa {
 
   // About
   static const String aboutSourceCode = 'کد منبع';
-  static const String aboutOpenSourceLicenses = 'مجوزهای متنباز';
+  static const String aboutOpenSourceLicenses = 'مجوزهای متن‌باز';
   static const String aboutCreditLine = 'بر پایه Aether';
   static const String aboutAgplNotice =
-      'این نرمافزار آزاد است و تحت مجوز AGPL-3.0 منتشر میشود.';
+      'این نرم‌افزار آزاد است و تحت مجوز AGPL-3.0 منتشر می‌شود.';
   static const String aboutVersion = 'نسخه';
   static const String aboutEngineVersion = 'نسخه موتور';
 
   // Onboarding
   static const String onboardingIntro =
-      'زحل ارتباط اینترنت را با گذر از موانع شبکه برقرار میکند.';
-  static const String onboardingPermissionsTitle = 'دسترسیها';
+      'زحل ارتباط اینترنت را با گذر از موانع شبکه برقرار می‌کند.';
+  static const String onboardingPermissionsTitle = 'دسترسی‌ها';
   static const String onboardingVpnPermission = 'مجوز ایجاد اتصال امن (VPN)';
   static const String onboardingNotificationPermission =
       'مجوز نمایش اعلان وضعیت اتصال';
   static const String onboardingBatteryPermission =
-      'معافیت از بهینهسازی باتری (جهت حفظ اتصال)';
+      'معافیت از بهینه‌سازی باتری (جهت حفظ اتصال)';
   static const String onboardingServiceRunning = 'سرویس زحل فعال است.';
   static const String onboardingServiceNotRunning =
       'سرویس زحل نصب نیست یا اجرا نشده است.';
   static const String onboardingInstallService = 'نصب سرویس';
   static const String onboardingModeRecommend =
-      'پیشنهاد ما خودکار است. بعداً هم میتوانید عوض کنید.';
+      'پیشنهاد ما خودکار است. بعداً هم می‌توانید عوض کنید.';
   static const String onboardingFirstConnectTesting =
       'در حال ثبت دستگاه و آزمایش مسیر';
   static const String onboardingFirstConnectReady = 'آماده است';
@@ -220,14 +220,14 @@ class StringsFa {
       'هیچ روشی موفق نبود',
       'چند دقیقه بعد دوباره امتحان کنید یا روش اتصال را دستی انتخاب کنید.',
     ),
-    'E130': ('حساب دستگاه تازهسازی شد', 'اتصال دوباره برقرار میشود.'),
+    'E130': ('حساب دستگاه تازه‌سازی شد', 'اتصال دوباره برقرار می‌شود.'),
     'E140': (
       'ثبت دستگاه ممکن نشد',
       'شبکه دیگری را امتحان کنید؛ ثبت فقط یک بار لازم است.',
     ),
     'E200': (
       'سرویس زحل در دسترس نیست',
-      'سرویس را راهاندازی کنید یا برنامه را دوباره نصب کنید.',
+      'سرویس را راه‌اندازی کنید یا برنامه را دوباره نصب کنید.',
     ),
     'E210': (
       'ساخت رابط شبکه ناموفق بود',
@@ -235,12 +235,12 @@ class StringsFa {
     ),
     'E220': ('مجوز لازم داده نشد', 'مجوز VPN را در تنظیمات تأیید کنید.'),
     'E230': ('اتصال توسط برنامه دیگر قطع شد', 'اتصال دیگری جایگزین زحل شد.'),
-    'E250': ('نسخه پروتکل ناسازگار است', 'برنامه و سرویس را بهروزرسانی کنید.'),
+    'E250': ('نسخه پروتکل ناسازگار است', 'برنامه و سرویس را به‌روزرسانی کنید.'),
     'E300': (
       'سامانه مشغول است',
       'اتصال دیگری روی این رایانه در حال استفاده است.',
     ),
-    'E400': ('خطای داخلی موتور', 'سامانه دوباره راهاندازی میشود.'),
+    'E400': ('خطای داخلی موتور', 'سامانه دوباره راه‌اندازی می‌شود.'),
   };
 
   static String getErrorTitle(String code) =>

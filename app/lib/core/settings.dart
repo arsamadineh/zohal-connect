@@ -5,7 +5,7 @@ enum ConnectionMode { auto, masque3, masque2, wireguard, gool }
 
 enum IpVersion { auto, v4, v6, dual }
 
-enum ScanProfile { auto, turbo, balanced, thorough, stealth, ironclad }
+enum ScanProfile { auto, turbo, balanced, thorough, verified, ironclad }
 
 enum NoiseProfile { auto, off, light, balanced, aggressive, firewall, gfw }
 

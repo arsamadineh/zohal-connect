@@ -21,3 +21,16 @@ This document records deliberate trade-offs, scope boundaries, and known technic
 ## 5. Non-systemd Linux Distributions
 - On Linux, the system TUN mode requires `systemd` (`Type=notify`, `zohald.service`, `sd-notify`).
 - Non-systemd distributions (e.g., Alpine, Void) are not supported for TUN mode in v1; user proxy scope (`zohald user`) may be used instead.
+
+## 6. AppImage TUN Scope Requires Root
+- The AppImage runs unprivileged, so system-wide TUN is unavailable inside it; the engine automatically uses the per-user system-proxy scope (GNOME/KDE) instead, which is fully working for proxy-aware traffic.
+- Full TUN on Linux needs the `.deb`/`.rpm` install with the `zohald.service` system service.
+
+## 7. Android Throughput Counters
+- Live byte counters are not yet wired through the Android JNI path (tun2proxy exposes no counters callback), so the stats row shows measured zeros on Android; connection state, duration, and exit address are real. Desktop counters are likewise pending wiring in `zohal-tun`.
+
+## 8. Android 16 KB Page Alignment
+- The JNI library is linked with `-Wl,-z,max-page-size=16384` under NDK r28+ in CI. Alignment is verified by the CI build and emulator install, not on the dev machine.
+
+## 9. Cross-Process State on Android
+- The `:vpn` process persists state to `SharedPreferences` for the UI process; `MainActivity` additionally sends `ACTION_QUERY` on every EventChannel subscribe so a reopened UI converges to live state within one broadcast round-trip.

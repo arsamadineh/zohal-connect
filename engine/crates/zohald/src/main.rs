@@ -75,6 +75,11 @@ async fn run_service() -> Result<(), Box<dyn std::error::Error>> {
                 "[journal/recovery] executing undo for action kind: {}",
                 action.kind
             );
+            if action.kind == "system_proxy" {
+                let prev = action.undo.get("prev").cloned();
+                let proxy = zohal_platform::proxy_only::DesktopSystemProxy::default();
+                let _ = proxy.disable_system_proxy(prev.as_ref());
+            }
             let _ = self.0.teardown_all();
             Ok(())
         }

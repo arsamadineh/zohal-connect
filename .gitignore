@@ -6,6 +6,9 @@ target/
 third_party/dist/
 third_party/aether-src/
 
+# Staged Android native libs (fetched/built at CI time, never committed)
+app/android/app/src/main/jniLibs/
+
 # Build artifacts and temp files
 dist/
 *.log

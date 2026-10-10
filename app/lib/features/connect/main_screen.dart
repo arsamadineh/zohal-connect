@@ -61,9 +61,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _handleConnectTap(EngineState state) {
+    final settings = ref.read(zohalSettingsProvider);
     if (state.phase == ConnectionPhase.idle ||
         state.phase == ConnectionPhase.failed) {
-      ref.read(engineStateProvider.notifier).setDesired(true);
+      ref
+          .read(engineStateProvider.notifier)
+          .setDesired(true, settings: settings);
     } else if (state.phase == ConnectionPhase.connecting ||
         state.phase == ConnectionPhase.preparing ||
         state.phase == ConnectionPhase.reconnecting) {
@@ -71,7 +74,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         // Second tap cancels
         _cancelArmTimer?.cancel();
         setState(() => _cancelConfirmationArmed = false);
-        ref.read(engineStateProvider.notifier).setDesired(false);
+        ref
+            .read(engineStateProvider.notifier)
+            .setDesired(false, settings: settings);
       } else {
         // First tap arms cancel confirmation for 3s
         setState(() => _cancelConfirmationArmed = true);
@@ -83,9 +88,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         });
       }
     } else if (state.phase == ConnectionPhase.connected) {
-      ref.read(engineStateProvider.notifier).setDesired(false);
+      ref
+          .read(engineStateProvider.notifier)
+          .setDesired(false, settings: settings);
     } else if (state.phase == ConnectionPhase.disconnecting) {
-      ref.read(engineStateProvider.notifier).setDesired(true);
+      ref
+          .read(engineStateProvider.notifier)
+          .setDesired(true, settings: settings);
     }
   }
 

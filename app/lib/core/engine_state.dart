@@ -134,6 +134,93 @@ class EngineState {
       killSwitchEngaged: json['kill_switch_engaged'] as bool? ?? true,
     );
   }
+
+  EngineState copyWith({
+    ConnectionPhase? phase,
+    ConnectionStage? stage,
+    bool? desiredUp,
+    int? epoch,
+    TransportKind? transport,
+    int? rung,
+    int? attempt,
+    String? Function()? gateway,
+    String? Function()? exitIp,
+    String? Function()? exitLoc,
+    String? Function()? colo,
+    int? Function()? sinceUnix,
+    String? Function()? errorCode,
+    int? failStreak,
+    ConnectionScope? scope,
+    bool? killSwitchEngaged,
+  }) {
+    return EngineState(
+      phase: phase ?? this.phase,
+      stage: stage ?? this.stage,
+      desiredUp: desiredUp ?? this.desiredUp,
+      epoch: epoch ?? this.epoch,
+      transport: transport ?? this.transport,
+      rung: rung ?? this.rung,
+      attempt: attempt ?? this.attempt,
+      gateway: gateway != null ? gateway() : this.gateway,
+      exitIp: exitIp != null ? exitIp() : this.exitIp,
+      exitLoc: exitLoc != null ? exitLoc() : this.exitLoc,
+      colo: colo != null ? colo() : this.colo,
+      sinceUnix: sinceUnix != null ? sinceUnix() : this.sinceUnix,
+      errorCode: errorCode != null ? errorCode() : this.errorCode,
+      failStreak: failStreak ?? this.failStreak,
+      scope: scope ?? this.scope,
+      killSwitchEngaged: killSwitchEngaged ?? this.killSwitchEngaged,
+    );
+  }
+
+  static ConnectionPhase _vpnPhase(String val) {
+    switch (val) {
+      case 'preparing':
+        return ConnectionPhase.preparing;
+      case 'connecting':
+        return ConnectionPhase.connecting;
+      case 'connected':
+        return ConnectionPhase.connected;
+      case 'reconnecting':
+        return ConnectionPhase.reconnecting;
+      case 'disconnecting':
+        return ConnectionPhase.disconnecting;
+      case 'failed':
+        return ConnectionPhase.failed;
+      default:
+        return ConnectionPhase.idle;
+    }
+  }
+
+  static ConnectionStage _vpnStage(String val) {
+    switch (val) {
+      case 'prepare':
+        return ConnectionStage.prepare;
+      case 'findGateway':
+        return ConnectionStage.findGateway;
+      case 'buildTunnel':
+        return ConnectionStage.buildTunnel;
+      case 'verifyPath':
+        return ConnectionStage.verifyPath;
+      default:
+        return ConnectionStage.none;
+    }
+  }
+
+  factory EngineState.fromVpnMap(Map<String, dynamic> map) {
+    return EngineState(
+      phase: _vpnPhase(map['phase'] as String? ?? 'idle'),
+      stage: _vpnStage(map['stage'] as String? ?? 'none'),
+      desiredUp: map['phase'] != 'idle' && map['phase'] != 'failed',
+      epoch: (map['epoch'] as num?)?.toInt() ?? 0,
+      exitIp: map['exitIp'] as String?,
+      exitLoc: map['exitLoc'] as String?,
+      sinceUnix: (map['sinceUnix'] as num?)?.toInt(),
+      errorCode: map['error'] as String?,
+      scope: ConnectionScope.tun,
+      killSwitchEngaged: true,
+    );
+  }
 }
 
 class EngineStats {

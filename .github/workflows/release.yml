@@ -16,6 +16,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
@@ -25,6 +36,18 @@ jobs:
       - name: Build zohald Release Binary
         run: cargo build --release -p zohald
         working-directory: engine
+
+      - name: Build Flutter Linux bundle
+        run: |
+          flutter pub get
+          flutter build linux --release
+        working-directory: app
+
+      - name: Build AppImage
+        run: |
+          TAG_NAME="${GITHUB_REF_NAME:-v0.1.0}"
+          VERSION="${TAG_NAME#v}"
+          bash tools/build-appimage.sh "$VERSION"
 
       - name: Install nfpm
         run: |
@@ -77,6 +100,25 @@ jobs:
         with:
           channel: 'stable'
           cache: true
+
+      - name: Install Rust toolchain with Android targets
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - name: Install Android NDK r28
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r28
+
+      - name: Fetch Aether Android binaries
+        run: |
+          bash tools/fetch-aether.sh android-arm64
+          bash tools/fetch-aether.sh android-armeabi-v7a
+          bash tools/fetch-aether.sh android-x86_64
 
       - name: Install Dependencies
         run: flutter pub get

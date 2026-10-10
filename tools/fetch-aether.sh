@@ -23,6 +23,10 @@ case "$PLATFORM" in
     ARCHIVE="aether-android-arm64.tar.gz"
     EXPECTED_SHA256="038748745244828ea41a808958f16a1c25053dc61db977c95ceb2d3a0b2f7970"
     ;;
+  android-armeabi-v7a)
+    ARCHIVE="aether-android-armv7.tar.gz"
+    EXPECTED_SHA256="9e9c59b188ff235053ae22b9f007f31de3e9bc71c8252ef73b0d626b85b64dae"
+    ;;
   android-x86_64)
     ARCHIVE="aether-android-x86_64.tar.gz"
     EXPECTED_SHA256="9acd35dc7bafd4bbf0f4bd8337cb26c4efe6ab0d84ec01d1a0a9fa68168b09c1"

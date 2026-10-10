@@ -91,3 +91,12 @@
 - [x] T6.4 Complete documentation deliverables (`README.md`, `ARCHITECTURE.md`, `QA_MANUAL.md`, etc.)
 - [x] T6.5 Release workflow dry run
 - [x] T6.6 Final audit against Section 19 pre-flight checklist
+
+## Phase 7: Android Connection Repair + Linux AppImage
+- [x] T7.1 Fix silent `setDesired` on Android (VpnChannel + ZohalVpnService ladder + Aether exec + TUN fd to JNI `zohal-android`)
+- [x] T7.2 Optimistic UI with 2 s engine-wins convergence; VPN permission row requests real consent
+- [x] T7.3 Correct Aether flags (`Verified` scan profile, explicit `--h3`)
+- [x] T7.4 jniLibs staging in Gradle + CI (NDK r28, cargo-ndk, 3 ABIs, gitignored artifacts)
+- [x] T7.5 AppImage builder (`tools/build-appimage.sh`), brand icon (`tools/gen-icon.py`), unprivileged proxy-scope fallback + journal restore
+- [x] T7.6 CI `appimage-linux` job + release AppImage step; QA manual extended
+- [x] Phase 7 Gate: clippy/fmt/flutter analyze/tests green; APK + AppImage builds NOT RUN locally (GitHub Actions per operator instruction)

@@ -59,10 +59,12 @@ impl TunnelBackend for RealAetherBackend {
             cmd.stdout(Stdio::piped());
             cmd.stderr(Stdio::piped());
 
-            // Add verified Aether flags
+            // Add verified Aether flags (exact names from docs/AETHER_NOTES.md:
+            // --masque/--h3/--h2/--wg/--gool/--gool-classic, --scan, --noize)
             match rung.transport {
                 Transport::Masque3 => {
                     cmd.arg("--masque");
+                    cmd.arg("--h3");
                 }
                 Transport::Masque2 => {
                     cmd.arg("--masque");
@@ -249,6 +251,29 @@ impl TunnelBackend for RealAetherBackend {
                 handle.id
             );
 
+            // Unprivileged fallback (AppImage/tarball without the system
+            // service): no TUN without root, so apply the per-user system
+            // proxy scope instead. Still a real working path: all desktop
+            // traffic honoring the system proxy goes through Aether.
+            #[cfg(target_os = "linux")]
+            if unsafe { libc::geteuid() } != 0 {
+                info!("[platform] unprivileged user scope: applying system proxy");
+                let proxy = zohal_platform::proxy_only::DesktopSystemProxy::default();
+                let prev = proxy
+                    .enable_system_proxy(
+                        handle.http_port.unwrap_or(handle.socks_port),
+                        handle.socks_port,
+                    )
+                    .map_err(BackendError::SystemConfig)?;
+                let undo = serde_json::json!({"action": "proxy_restore", "prev": prev});
+                let _ = journal.record_action(
+                    "system_proxy",
+                    serde_json::json!({"socks": handle.socks_port}),
+                    undo,
+                );
+                return Ok(());
+            }
+
             // 1. Start tun2proxy on zohal0
             self.tun_frontend
                 .lock()
@@ -294,6 +319,17 @@ impl TunnelBackend for RealAetherBackend {
         Box::pin(async move {
             info!("[platform] tearing down system tunnel");
             let _ = self.tun_frontend.lock().stop();
+            // Restore an unprivileged user-scope system proxy if one was applied.
+            #[cfg(target_os = "linux")]
+            if let Ok(actions) = journal.read_actions() {
+                for action in actions.iter().rev() {
+                    if action.kind == "system_proxy" {
+                        let prev = action.undo.get("prev").cloned();
+                        let proxy = zohal_platform::proxy_only::DesktopSystemProxy::default();
+                        let _ = proxy.disable_system_proxy(prev.as_ref());
+                    }
+                }
+            }
             let _ = self.platform.teardown_all();
             let _ = journal.clear();
             Ok(())

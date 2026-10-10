@@ -328,3 +328,40 @@ All clippy and formatting checks passed with 0 warnings.
 - [x] Complete documentation: `README.md`, `ARCHITECTURE.md`, `QA_MANUAL.md`, `KNOWN_LIMITS.md`, `DEPENDENCIES.md` (T6.4)
 
 Gate Conclusion: Master specification completely implemented and verified.
+
+## Phase 7 Gate: Android Connection Repair + Linux AppImage (2026-10-10)
+
+### 1. Rust: fmt, clippy, tests (RUN)
+```bash
+cargo fmt --all
+cargo clippy --all-targets -- -D warnings
+cargo test --workspace
+```
+Output:
+```
+Finished dev profile [unoptimized + debuginfo] target(s) in 0.54s   (clippy, 0 warnings)
+test result: ok (zohal_proto 5, zohal_engine 8, torture 1, platform 4, bridge 1; total 19 passed, 0 failed)
+```
+New crate `zohal-android` (cdylib `zohal_tun`, JNI `startTun`/`stopTun` over tun2proxy `tun_fd`) passes clippy with `-D warnings`.
+
+### 2. Flutter: format, analyze, tests (RUN)
+```bash
+dart format --set-exit-if-changed lib/
+flutter analyze --no-pub
+flutter test
+```
+Output:
+```
+Formatted 25 files (0 changed)
+No issues found!
+All tests passed! (21/21)
+```
+
+### 3. Android APK build (NOT RUN: builds run in GitHub Actions per operator instruction)
+- CI job `app-android` now installs NDK r28, Rust Android targets, cargo-ndk, fetches Aether android-arm64/armeabi-v7a/x86_64, stages `jniLibs`, and builds `--split-per-abi` APKs. Kotlin rewritten (service ladder, TUN fd to JNI, permission flow). Verify in Actions artifacts + emulator.
+
+### 4. Linux AppImage build (NOT RUN: builds run in GitHub Actions per operator instruction)
+- New CI job `appimage-linux` and release `build-linux` AppImage step run `tools/build-appimage.sh`. `tools/gen-icon.py` output verified locally as a valid 256x256 PNG (signature + IHDR checked).
+
+### 5. Device/manual verification (NOT RUN: no devices on this machine)
+- Added QA steps below; `docs/QA_MANUAL.md` extended with Android connect-flow checks and AppImage checks.

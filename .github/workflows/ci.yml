@@ -77,6 +77,25 @@ jobs:
           channel: 'stable'
           cache: true
 
+      - name: Install Rust toolchain with Android targets
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk
+
+      - name: Install Android NDK r28
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r28
+
+      - name: Fetch Aether Android binaries
+        run: |
+          bash tools/fetch-aether.sh android-arm64
+          bash tools/fetch-aether.sh android-armeabi-v7a
+          bash tools/fetch-aether.sh android-x86_64
+
       - name: Install Dependencies
         run: flutter pub get
         working-directory: app
@@ -84,3 +103,54 @@ jobs:
       - name: Build Android APK
         run: flutter build apk --split-per-abi --debug --android-skip-build-dependency-validation
         working-directory: app
+
+  appimage-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev liblzma-dev
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Fetch Aether Linux binary
+        run: bash tools/fetch-aether.sh linux-x86_64
+
+      - name: Install Dependencies
+        run: flutter pub get
+        working-directory: app
+
+      - name: Build Flutter Linux bundle
+        run: flutter build linux --release
+        working-directory: app
+
+      - name: Build zohald
+        run: cargo build --release -p zohald
+        working-directory: engine
+
+      - name: Build AppImage
+        run: bash tools/build-appimage.sh "0.0.0-ci"
+
+      - name: Smoke test AppImage (version + help surface)
+        run: |
+          chmod +x dist/linux/Zohal-0.0.0-ci-x86_64.AppImage
+          ./dist/linux/Zohal-0.0.0-ci-x86_64.AppImage --appimage-extract \
+            zohal.desktop usr/bin/zohal usr/bin/zohald usr/bin/aether \
+            > /dev/null
+          ls squashfs-root/usr/bin/
+
+      - name: Upload AppImage
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-appimage-ci
+          path: dist/linux/*.AppImage

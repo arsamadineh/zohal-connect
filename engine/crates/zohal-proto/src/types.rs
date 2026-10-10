@@ -72,7 +72,7 @@ pub enum ScanProfile {
     Turbo,
     Balanced,
     Thorough,
-    Stealth,
+    Verified,
     Ironclad,
 }
 

@@ -26,6 +26,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _currentStep = 0;
+  bool _vpnGranted = false;
 
   void _nextStep() {
     setState(() {
@@ -133,11 +134,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     if (Platform.isAndroid) ...[
                       SharpRow(
                         title: StringsFa.onboardingVpnPermission,
-                        trailing: Icon(
-                          Icons.check_sharp,
-                          size: 20.0,
-                          color: accent,
-                        ),
+                        trailing: _vpnGranted
+                            ? Icon(
+                                Icons.check_sharp,
+                                size: 20.0,
+                                color: accent,
+                              )
+                            : const SizedBox(width: 20.0, height: 20.0),
+                        onTap: () async {
+                          final granted = await ref
+                              .read(bridgeClientProvider)
+                              .ensureVpnPermission();
+                          if (mounted) {
+                            setState(() => _vpnGranted = granted);
+                          }
+                        },
                       ),
                       SharpRow(
                         title: StringsFa.onboardingNotificationPermission,
@@ -255,7 +266,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       onPressed: () {
                         _nextStep();
                         // Trigger initial registration & probe
-                        ref.read(engineStateProvider.notifier).setDesired(true);
+                        ref.read(engineStateProvider.notifier).setDesired(
+                              true,
+                              settings: ref.read(zohalSettingsProvider),
+                            );
                       },
                     ),
                   ],
@@ -303,7 +317,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                               onPressed: () {
                                 ref
                                     .read(engineStateProvider.notifier)
-                                    .setDesired(true);
+                                    .setDesired(
+                                      true,
+                                      settings: ref.read(zohalSettingsProvider),
+                                    );
                               },
                             ),
                           ),

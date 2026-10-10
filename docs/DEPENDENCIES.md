@@ -22,3 +22,6 @@ This document records pinned versions and dates of all external tooling, binarie
 | tray_manager | 0.2.3 | 2026-10-10 | pub.dev | system tray integration |
 | dynamic_color | 1.7.0 | 2026-10-10 | pub.dev | Android Material You dynamic coloring |
 | fonttools | 4.66.1 | 2026-10-10 | pacman | font subsetting tool |
+| cargo-ndk | latest at CI time | 2026-10-10 | crates.io (CI install) | builds `zohal-android` cdylib for 3 Android ABIs |
+| Android NDK | r28 (via nttld/setup-ndk@v1) | 2026-10-10 | Google (CI install) | 16 KB page alignment for `libzohal_tun.so` |
+| appimagetool | continuous | 2026-10-10 | GitHub Release (CI download) | assembles `Zohal-<ver>-x86_64.AppImage` |

@@ -95,18 +95,26 @@ impl TunnelBackend for FakeAetherBackend {
         _handle: &'a CandidateHandle,
     ) -> Pin<Box<dyn Future<Output = Result<PathTrace, BackendError>> + Send + 'a>> {
         Box::pin(async move {
-            if self.fail_verify.load(Ordering::Relaxed)
-                || self
-                    .fail_verify_times
-                    .fetch_update(Ordering::SeqCst, Ordering::SeqCst, |x| {
-                        if x > 0 {
-                            Some(x - 1)
-                        } else {
-                            None
+            let should_fail = self.fail_verify.load(Ordering::Relaxed) || {
+                let mut cur = self.fail_verify_times.load(Ordering::SeqCst);
+                let mut decremented = false;
+                while cur > 0 {
+                    match self.fail_verify_times.compare_exchange_weak(
+                        cur,
+                        cur - 1,
+                        Ordering::SeqCst,
+                        Ordering::SeqCst,
+                    ) {
+                        Ok(_) => {
+                            decremented = true;
+                            break;
                         }
-                    })
-                    .is_ok()
-            {
+                        Err(actual) => cur = actual,
+                    }
+                }
+                decremented
+            };
+            if should_fail {
                 return Err(BackendError::VerificationFailed(
                     "Simulated trace failure".into(),
                 ));

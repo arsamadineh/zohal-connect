@@ -100,3 +100,4 @@
 - [x] T7.5 AppImage builder (`tools/build-appimage.sh`), brand icon (`tools/gen-icon.py`), unprivileged proxy-scope fallback + journal restore
 - [x] T7.6 CI `appimage-linux` job + release AppImage step; QA manual extended
 - [x] Phase 7 Gate: clippy/fmt/flutter analyze/tests green; APK + AppImage builds NOT RUN locally (GitHub Actions per operator instruction)
+- [x] T7.7 Release v0.1.1: AppImage deferred per operator (unwired from CI/release); `.deb`/`.rpm`/`.tar.gz` now ship the UI bundle; desktop `Exec` fixed

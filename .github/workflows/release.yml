@@ -43,12 +43,6 @@ jobs:
           flutter build linux --release
         working-directory: app
 
-      - name: Build AppImage
-        run: |
-          TAG_NAME="${GITHUB_REF_NAME:-v0.1.0}"
-          VERSION="${TAG_NAME#v}"
-          bash tools/build-appimage.sh "$VERSION"
-
       - name: Install nfpm
         run: |
           curl -sfL https://github.com/goreleaser/nfpm/releases/download/v2.41.3/nfpm_2.41.3_Linux_x86_64.tar.gz | sudo tar -xz -C /usr/local/bin nfpm
@@ -73,6 +67,10 @@ jobs:
           cp third_party/dist/linux-x86_64/aether "$PKG_DIR/"
           cp packaging/linux/zohald.service "$PKG_DIR/"
           cp packaging/linux/zohal.desktop "$PKG_DIR/"
+          cp packaging/linux/zohal.png "$PKG_DIR/"
+          cp app/build/linux/x64/release/bundle/zohal "$PKG_DIR/"
+          cp -r app/build/linux/x64/release/bundle/lib "$PKG_DIR/"
+          cp -r app/build/linux/x64/release/bundle/data "$PKG_DIR/"
           cp README.md "$PKG_DIR/"
           tar -czf "dist/linux/${PKG_NAME}.tar.gz" -C dist/linux "$PKG_NAME"
           rm -rf "$PKG_DIR"

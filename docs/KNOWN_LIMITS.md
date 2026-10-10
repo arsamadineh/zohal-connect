@@ -34,3 +34,6 @@ This document records deliberate trade-offs, scope boundaries, and known technic
 
 ## 9. Cross-Process State on Android
 - The `:vpn` process persists state to `SharedPreferences` for the UI process; `MainActivity` additionally sends `ACTION_QUERY` on every EventChannel subscribe so a reopened UI converges to live state within one broadcast round-trip.
+
+## 10. AppImage Deferred
+- The AppImage builder (`tools/build-appimage.sh`) is implemented but its CI assembly is deferred: appimagetool validation is still being worked through. Linux portable delivery is the `.tar.gz` (now includes the UI bundle, `zohald`, `aether`, service file, desktop entry, and icon) plus `.deb`/`.rpm` (now include the UI under `/opt/zohal`).

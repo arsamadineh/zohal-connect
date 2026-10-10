@@ -365,3 +365,6 @@ All tests passed! (21/21)
 
 ### 5. Device/manual verification (NOT RUN: no devices on this machine)
 - Added QA steps below; `docs/QA_MANUAL.md` extended with Android connect-flow checks and AppImage checks.
+
+### 6. Release v0.1.1 Scope Note (2026-10-10, operator decision)
+- AppImage unwired from CI/release (deferred, see KNOWN_LIMITS 10). Release ships Android per-ABI APKs, `.deb`, `.rpm`, and `.tar.gz` (tarball and system packages now include the Flutter UI bundle; desktop `Exec` corrected to `/opt/zohal/zohal`).

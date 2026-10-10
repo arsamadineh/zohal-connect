@@ -15,7 +15,14 @@ contents:
     dst: "/usr/lib/zohal/zohald"
     file_info:
       mode: 0755
-  - src: "../../third_party/dist/linux-x86_64/aether"
+  - src: "../../app/build/linux/x64/release/bundle/zohal"
+    dst: "/opt/zohal/zohal"
+    file_info:
+      mode: 0755
+  - src: "../../app/build/linux/x64/release/bundle/lib"
+    dst: "/opt/zohal/lib"
+  - src: "../../app/build/linux/x64/release/bundle/data"
+    dst: "/opt/zohal/data"  - src: "../../third_party/dist/linux-x86_64/aether"
     dst: "/usr/lib/zohal/aether"
     file_info:
       mode: 0755

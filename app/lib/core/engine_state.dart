@@ -237,11 +237,14 @@ class EngineStats {
   });
 
   factory EngineStats.fromJson(Map<String, dynamic> json) {
+    final stats = json['stats'] is Map<String, dynamic>
+        ? json['stats'] as Map<String, dynamic>
+        : json;
     return EngineStats(
-      rxBps: (json['rx_bps'] as num?)?.toInt() ?? 0,
-      txBps: (json['tx_bps'] as num?)?.toInt() ?? 0,
-      rxTotal: (json['rx_total'] as num?)?.toInt() ?? 0,
-      txTotal: (json['tx_total'] as num?)?.toInt() ?? 0,
+      rxBps: (stats['rx_bps'] as num?)?.toInt() ?? 0,
+      txBps: (stats['tx_bps'] as num?)?.toInt() ?? 0,
+      rxTotal: ((stats['rx_total'] ?? stats['rx_bytes']) as num?)?.toInt() ?? 0,
+      txTotal: ((stats['tx_total'] ?? stats['tx_bytes']) as num?)?.toInt() ?? 0,
     );
   }
 }

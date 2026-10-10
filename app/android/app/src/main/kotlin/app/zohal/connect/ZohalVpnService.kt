@@ -172,36 +172,36 @@ class ZohalVpnService : VpnService() {
     )
 
     private fun buildLadder(mode: String, useCache: Boolean): List<Rung> {
-        val h3cache = listOf("--masque", "--h3", "--scan", "turbo",
+        val h2fast = listOf("--masque", "--h2", "--fragment", "--scan", "turbo",
             "--noize", "firewall") + if (useCache) listOf("--quick-reconnect") else emptyList()
-        val h2cache = listOf("--masque", "--h2", "--scan", "turbo",
+        val h3fast = listOf("--masque", "--h3", "--scan", "turbo",
             "--noize", "firewall") + if (useCache) listOf("--quick-reconnect") else emptyList()
         val auto = listOf(
-            Rung(h3cache, 8),
-            Rung(h2cache, 8),
-            Rung(listOf("--masque", "--h3", "--scan", "balanced", "--noize", "firewall"), 15),
-            Rung(listOf("--masque", "--h2", "--scan", "balanced", "--noize", "firewall"), 15),
-            Rung(listOf("--gool", "--scan", "thorough", "--noize", "aggressive"), 20),
-            Rung(listOf("--wg", "--scan", "thorough", "--noize", "balanced"), 25),
+            Rung(h2fast, 6),
+            Rung(h3fast, 6),
+            Rung(listOf("--masque", "--h2", "--fragment", "--scan", "balanced", "--noize", "firewall"), 10),
+            Rung(listOf("--masque", "--h3", "--scan", "balanced", "--noize", "firewall"), 10),
+            Rung(listOf("--gool", "--scan", "thorough", "--noize", "aggressive"), 15),
+            Rung(listOf("--wg", "--scan", "thorough", "--noize", "balanced"), 20),
         )
         return when (mode) {
             "masque-h3" -> listOf(
-                Rung(h3cache, 8),
-                Rung(listOf("--masque", "--h3", "--scan", "balanced", "--noize", "firewall"), 15),
-                Rung(listOf("--masque", "--h3", "--scan", "thorough", "--noize", "firewall"), 20),
+                Rung(h3fast, 6),
+                Rung(listOf("--masque", "--h3", "--scan", "balanced", "--noize", "firewall"), 12),
+                Rung(listOf("--masque", "--h3", "--scan", "thorough", "--noize", "firewall"), 18),
             )
             "masque-h2" -> listOf(
-                Rung(h2cache, 8),
-                Rung(listOf("--masque", "--h2", "--scan", "balanced", "--noize", "firewall"), 15),
-                Rung(listOf("--masque", "--h2", "--scan", "thorough", "--noize", "firewall"), 20),
+                Rung(h2fast, 6),
+                Rung(listOf("--masque", "--h2", "--fragment", "--scan", "balanced", "--noize", "firewall"), 12),
+                Rung(listOf("--masque", "--h2", "--fragment", "--scan", "thorough", "--noize", "firewall"), 18),
             )
             "wireguard" -> listOf(
-                Rung(listOf("--wg", "--scan", "balanced", "--noize", "balanced"), 15),
-                Rung(listOf("--wg", "--scan", "thorough", "--noize", "balanced"), 25),
+                Rung(listOf("--wg", "--scan", "balanced", "--noize", "balanced"), 12),
+                Rung(listOf("--wg", "--scan", "thorough", "--noize", "balanced"), 20),
             )
             "gool" -> listOf(
-                Rung(listOf("--gool", "--scan", "thorough", "--noize", "aggressive"), 20),
-                Rung(listOf("--gool-classic", "--scan", "thorough", "--noize", "aggressive"), 20),
+                Rung(listOf("--gool", "--scan", "thorough", "--noize", "aggressive"), 15),
+                Rung(listOf("--gool-classic", "--scan", "thorough", "--noize", "aggressive"), 15),
             )
             else -> auto
         }
@@ -229,7 +229,9 @@ class ZohalVpnService : VpnService() {
         cmd.addAll(listOf("--masque-config", File(configDir, "aether-masque.toml").absolutePath))
         cmd.addAll(listOf("--wg-config", File(configDir, "aether-wg.toml").absolutePath))
         cmd.addAll(listOf("--dns", config.dns.joinToString(",")))
-        if (config.fragment) cmd.add("--fragment")
+        cmd.add("-4")
+        cmd.add("--api-fragment")
+        if (config.fragment && !cmd.contains("--fragment")) cmd.add("--fragment")
         if (config.ech) cmd.addAll(listOf("--ech", "auto"))
         Log.i(TAG, "spawning aether rung ${rung.args.take(3)} on $socksPort")
 
@@ -507,18 +509,57 @@ class ZohalVpnService : VpnService() {
     private fun startTicker(session: Session) {
         stopTicker()
         ticker = Thread({
+            var lastRx = android.net.TrafficStats.getUidRxBytes(android.os.Process.myUid())
+            var lastTx = android.net.TrafficStats.getUidTxBytes(android.os.Process.myUid())
+            var lastTime = System.currentTimeMillis()
+            var tickCount = 0
             while (!stopRequested.get() && !Thread.currentThread().isInterrupted) {
                 try {
-                    Thread.sleep(10000)
+                    Thread.sleep(1000)
                 } catch (_: InterruptedException) {
                     break
                 }
-                val secs = System.currentTimeMillis() / 1000 - session.sinceUnix
-                startForegroundWith("متصل است · ${formatDuration(secs)}")
+                val now = System.currentTimeMillis()
+                val curRx = android.net.TrafficStats.getUidRxBytes(android.os.Process.myUid())
+                val curTx = android.net.TrafficStats.getUidTxBytes(android.os.Process.myUid())
+                val dtSec = (now - lastTime) / 1000.0
+                val rxBps = if (dtSec > 0.1 && curRx >= lastRx) (((curRx - lastRx) * 8) / dtSec).toLong() else 0L
+                val txBps = if (dtSec > 0.1 && curTx >= lastTx) (((curTx - lastTx) * 8) / dtSec).toLong() else 0L
+                lastRx = curRx
+                lastTx = curTx
+                lastTime = now
+
+                broadcastStats(rxBps, txBps, curRx, curTx)
+
+                tickCount++
+                if (tickCount % 5 == 0) {
+                    val secs = System.currentTimeMillis() / 1000 - session.sinceUnix
+                    startForegroundWith("متصل است · ${formatDuration(secs)}")
+                }
             }
         }, "zohal-ticker")
         ticker?.isDaemon = true
         ticker?.start()
+    }
+
+    private fun broadcastStats(rxBps: Long, txBps: Long, rxTotal: Long, txTotal: Long) {
+        val intent = Intent(BROADCAST_STATE).apply {
+            setPackage(packageName)
+            putExtra("phase", "connected")
+            putExtra("stage", "none")
+            currentSession?.let {
+                putExtra("exitIp", it.exitIp)
+                putExtra("exitLoc", it.exitLoc)
+                putExtra("sinceUnix", it.sinceUnix)
+            }
+            putExtra("rxBps", rxBps)
+            putExtra("txBps", txBps)
+            putExtra("rxTotal", rxTotal)
+            putExtra("txTotal", txTotal)
+        }
+        try {
+            sendBroadcast(intent)
+        } catch (_: Exception) {}
     }
 
     private fun stopTicker() {

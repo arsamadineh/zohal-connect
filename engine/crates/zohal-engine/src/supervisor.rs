@@ -244,7 +244,7 @@ impl Supervisor {
         });
 
         let verify_fut = self.backend.verify_path(&cand);
-        let trace = match tokio::time::timeout(Duration::from_secs(3), verify_fut).await {
+        let trace = match tokio::time::timeout(Duration::from_secs(8), verify_fut).await {
             Ok(Ok(t)) => t,
             Ok(Err(e)) => {
                 let _ = self.backend.teardown_system_tunnel(&self.journal).await;

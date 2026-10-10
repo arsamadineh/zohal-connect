@@ -17,6 +17,10 @@ class VpnNativeState {
   final String? exitIp;
   final String? exitLoc;
   final int? sinceUnix;
+  final int? rxBps;
+  final int? txBps;
+  final int? rxTotal;
+  final int? txTotal;
 
   const VpnNativeState({
     required this.phase,
@@ -25,6 +29,10 @@ class VpnNativeState {
     this.exitIp,
     this.exitLoc,
     this.sinceUnix,
+    this.rxBps,
+    this.txBps,
+    this.rxTotal,
+    this.txTotal,
   });
 
   factory VpnNativeState.fromMap(Map<dynamic, dynamic> map) {
@@ -35,6 +43,10 @@ class VpnNativeState {
       exitIp: map['exitIp'] as String?,
       exitLoc: map['exitLoc'] as String?,
       sinceUnix: (map['sinceUnix'] as num?)?.toInt(),
+      rxBps: (map['rxBps'] as num?)?.toInt(),
+      txBps: (map['txBps'] as num?)?.toInt(),
+      rxTotal: (map['rxTotal'] as num?)?.toInt(),
+      txTotal: (map['txTotal'] as num?)?.toInt(),
     );
   }
 }

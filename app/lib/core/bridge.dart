@@ -13,7 +13,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'engine_state.dart';
 import 'logger.dart';
@@ -177,6 +176,16 @@ class ZohalBridgeClient {
             'epoch': _epoch,
           }),
         );
+        if (native.rxBps != null || native.txBps != null) {
+          _statsController.add(
+            EngineStats(
+              rxBps: native.rxBps ?? 0,
+              txBps: native.txBps ?? 0,
+              rxTotal: native.rxTotal ?? 0,
+              txTotal: native.txTotal ?? 0,
+            ),
+          );
+        }
       },
       onError: (Object e) {
         ZohalLogger().warn('VPN state channel error: $e');
@@ -220,7 +229,10 @@ class ZohalBridgeClient {
   }
 
   // ---- Desktop path: Unix socket to zohald ----
-  static const String _systemSocketPath = '/run/zohal/engine.sock';
+  static final List<String> _systemSocketPaths = [
+    '/run/zohal/engine.sock',
+    '${Directory.systemTemp.path}/zohal/engine.sock',
+  ];
 
   static String _userSocketPath() {
     return '${Directory.systemTemp.path}/zohal_user/user_engine.sock';
@@ -228,10 +240,13 @@ class ZohalBridgeClient {
 
   List<String> _zohaldCandidates() {
     final exeDir = File(Platform.resolvedExecutable).parent.path;
+    final appdir = Platform.environment['ZOHAL_APPDIR'];
     return [
-      '/usr/lib/zohal/zohald',
+      if (appdir != null) '$appdir/usr/bin/zohald',
       '$exeDir/zohald',
       '$exeDir/../lib/zohal/zohald',
+      '/usr/lib/zohal/zohald',
+      '/usr/bin/zohald',
       '/opt/zohal/zohald',
     ];
   }
@@ -241,16 +256,22 @@ class ZohalBridgeClient {
       _scheduleReconnect();
       return;
     }
-    // 1. System service socket.
-    if (await _tryConnect(_systemSocketPath)) return;
+    // 1. System service sockets.
+    for (final sysPath in _systemSocketPaths) {
+      if (await _tryConnect(sysPath)) return;
+    }
     // 2. Per-user engine socket (AppImage/tarball without the service).
     if (await _tryConnect(_userSocketPath())) return;
-    // 3. Spawn the bundled user-scope engine once, then connect to it.
+
+    // 3. Spawn engine: ask for root for TUN, or fallback to user proxy.
     if (!_spawnAttempted) {
       _spawnAttempted = true;
-      if (await _spawnUserEngine()) {
-        for (var i = 0; i < 10; i++) {
-          await Future<void>.delayed(const Duration(milliseconds: 300));
+      if (await _spawnEngine()) {
+        for (var i = 0; i < 15; i++) {
+          await Future<void>.delayed(const Duration(milliseconds: 200));
+          for (final sysPath in _systemSocketPaths) {
+            if (await _tryConnect(sysPath)) return;
+          }
           if (await _tryConnect(_userSocketPath())) return;
         }
       }
@@ -276,25 +297,59 @@ class ZohalBridgeClient {
     }
   }
 
-  Future<bool> _spawnUserEngine() async {
-    try {
-      final supportDir = await getApplicationSupportDirectory();
-      final logPath = '${supportDir.path}/zohald-user.log';
-      for (final candidate in _zohaldCandidates()) {
-        final bin = File(candidate);
-        if (!await bin.exists()) continue;
-        ZohalLogger().info('Spawning user engine: $candidate');
-        final logFile = await File(logPath).open(mode: FileMode.write);
-        await Process.start(
-          candidate,
-          ['user'],
-          mode: ProcessStartMode.detached,
-          runInShell: false,
-        );
-        await logFile.close();
-        return true;
+  Future<bool> _spawnEngine() async {
+    final candidates = _zohaldCandidates();
+    String? binPath;
+    for (final c in candidates) {
+      if (File(c).existsSync()) {
+        binPath = c;
+        break;
       }
-      ZohalLogger().warn('No bundled zohald binary found for user scope');
+    }
+    if (binPath == null) {
+      ZohalLogger().warn('No bundled zohald binary found');
+      return false;
+    }
+
+    // Ask for root privilege via pkexec on Linux for full TUN access.
+    // If granted, zohald service runs as root with kernel TUN.
+    // If cancelled or rejected, fallback to user proxy mode.
+    if (Platform.isLinux) {
+      try {
+        final whichPkexec = await Process.run('which', ['pkexec']);
+        if (whichPkexec.exitCode == 0) {
+          ZohalLogger()
+              .info('Requesting root privileges via pkexec for TUN engine');
+          await Process.start(
+            'pkexec',
+            [binPath, 'service'],
+            mode: ProcessStartMode.detached,
+          );
+          for (var i = 0; i < 15; i++) {
+            await Future<void>.delayed(const Duration(milliseconds: 200));
+            for (final sysPath in _systemSocketPaths) {
+              if (await _tryConnect(sysPath)) {
+                ZohalLogger().info('Connected to root TUN engine at $sysPath');
+                return true;
+              }
+            }
+          }
+        }
+      } catch (e) {
+        ZohalLogger().debug('pkexec attempt skipped: $e');
+      }
+    }
+
+    // Fallback: spawn user proxy mode without root (100% works)
+    ZohalLogger().info('Falling back to user proxy engine: $binPath user');
+    try {
+      await Process.start(
+        binPath,
+        ['user'],
+        mode: ProcessStartMode.detached,
+        runInShell: false,
+      );
+      return true;
     } catch (e) {
       ZohalLogger().warn('Failed to spawn user engine: $e');
     }

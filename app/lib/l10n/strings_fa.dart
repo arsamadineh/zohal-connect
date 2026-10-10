@@ -73,19 +73,19 @@ class StringsFa {
       'بهترین روش را خودکار پیدا میکند و در صورت قطع، روش دیگری را امتحان میکند.';
 
   static const String modeMasque3Title = 'MASQUE (HTTP/3)';
-  static const String modeMasque3Desc = 'سریعترین روش؛ مناسب بیشتر شبکهها.';
+  static const String modeMasque3Desc = 'سریع‌ترین روش؛ مناسب بیشتر شبکه‌ها.';
 
   static const String modeMasque2Title = 'MASQUE (HTTP/2)';
   static const String modeMasque2Desc =
-      'برای شبکههایی که UDP را مسدود یا کند میکنند.';
+      'برای شبکه‌هایی که UDP را مسدود یا کند می‌کنند.';
 
   static const String modeWireguardTitle = 'WireGuard';
   static const String modeWireguardDesc =
-      'سبک و بسیار سریع؛ مناسب شبکههای کممحدودیت.';
+      'سبک و بسیار سریع؛ مناسب شبکه‌های کم‌محدودیت.';
 
   static const String modeGoolTitle = 'Gool';
   static const String modeGoolDesc =
-      'دو لایه رمزنگاری؛ آخرین راه برای شبکههای سختگیر.';
+      'دو لایه رمزنگاری؛ آخرین راه برای شبکه‌های سخت‌گیر.';
 
   static const String scopeTun = 'کل سیستم (TUN)';
   static const String scopeProxy = 'پراکسی سیستم';

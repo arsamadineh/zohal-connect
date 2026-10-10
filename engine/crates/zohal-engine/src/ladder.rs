@@ -28,6 +28,16 @@ impl Ladder {
             ConnectionMode::Auto => vec![
                 RungConfig {
                     rung_number: 1,
+                    transport: Transport::Masque2,
+                    scan: ScanProfile::Turbo,
+                    noize: NoizeProfile::Firewall,
+                    use_cache: true,
+                    h2_proven_only: true,
+                    fragment: true,
+                    deadline: Duration::from_secs(4),
+                },
+                RungConfig {
+                    rung_number: 2,
                     transport: Transport::Masque3,
                     scan: ScanProfile::Turbo,
                     noize: NoizeProfile::Firewall,
@@ -37,34 +47,24 @@ impl Ladder {
                     deadline: Duration::from_secs(4),
                 },
                 RungConfig {
-                    rung_number: 2,
-                    transport: Transport::Masque2,
-                    scan: ScanProfile::Turbo,
-                    noize: NoizeProfile::Firewall,
-                    use_cache: true,
-                    h2_proven_only: true,
-                    fragment: false,
-                    deadline: Duration::from_secs(5),
-                },
-                RungConfig {
                     rung_number: 3,
-                    transport: Transport::Masque3,
-                    scan: ScanProfile::Balanced,
-                    noize: NoizeProfile::Gfw,
-                    use_cache: false,
-                    h2_proven_only: false,
-                    fragment: false,
-                    deadline: Duration::from_secs(8),
-                },
-                RungConfig {
-                    rung_number: 4,
                     transport: Transport::Masque2,
                     scan: ScanProfile::Balanced,
                     noize: NoizeProfile::Gfw,
                     use_cache: false,
                     h2_proven_only: false,
                     fragment: true,
-                    deadline: Duration::from_secs(8),
+                    deadline: Duration::from_secs(6),
+                },
+                RungConfig {
+                    rung_number: 4,
+                    transport: Transport::Masque3,
+                    scan: ScanProfile::Balanced,
+                    noize: NoizeProfile::Gfw,
+                    use_cache: false,
+                    h2_proven_only: false,
+                    fragment: false,
+                    deadline: Duration::from_secs(6),
                 },
                 RungConfig {
                     rung_number: 5,
@@ -84,7 +84,7 @@ impl Ladder {
                     use_cache: false,
                     h2_proven_only: false,
                     fragment: false,
-                    deadline: Duration::from_secs(12),
+                    deadline: Duration::from_secs(10),
                 },
             ],
             ConnectionMode::Masque3 => vec![
@@ -256,9 +256,9 @@ mod tests {
         let ladder = Ladder::build(ConnectionMode::Auto, false, None);
         assert_eq!(ladder.rungs.len(), 6);
         assert_eq!(ladder.rungs[0].rung_number, 1);
-        assert_eq!(ladder.rungs[0].transport, Transport::Masque3);
+        assert_eq!(ladder.rungs[0].transport, Transport::Masque2);
         assert_eq!(ladder.rungs[1].rung_number, 2);
-        assert_eq!(ladder.rungs[1].transport, Transport::Masque2);
+        assert_eq!(ladder.rungs[1].transport, Transport::Masque3);
     }
 
     #[test]

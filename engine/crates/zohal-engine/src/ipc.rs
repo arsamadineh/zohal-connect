@@ -127,89 +127,164 @@ async fn handle_client(
         }
     }
 
-    // 2. Command processing loop
+    // 2. Command processing loop with live State & Stats push
+    let mut state_watch = state_rx.clone();
+    let mut stats_interval = tokio::time::interval(Duration::from_secs(1));
+    stats_interval.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
+
+    let mut last_rx_bytes = 0u64;
+    let mut last_tx_bytes = 0u64;
+    let mut last_time = tokio::time::Instant::now();
+
     line.clear();
-    while reader.read_line(&mut line).await? > 0 {
-        let msg = match ClientMessage::from_line(&line) {
-            Ok(m) => m,
-            Err(e) => {
-                let err = ServerMessage::Error {
-                    code: ErrorCode::E400,
-                    msg: format!("Invalid JSON message: {e}"),
+    loop {
+        tokio::select! {
+            read_res = reader.read_line(&mut line) => {
+                let bytes = read_res?;
+                if bytes == 0 {
+                    break;
+                }
+                let msg = match ClientMessage::from_line(&line) {
+                    Ok(m) => m,
+                    Err(e) => {
+                        let err = ServerMessage::Error {
+                            code: ErrorCode::E400,
+                            msg: format!("Invalid JSON message: {e}"),
+                        };
+                        writer_half.write_all(err.to_line()?.as_bytes()).await?;
+                        writer_half.flush().await?;
+                        line.clear();
+                        continue;
+                    }
                 };
-                writer_half.write_all(err.to_line()?.as_bytes()).await?;
+
+                match msg {
+                    ClientMessage::SetDesired { up, epoch } => {
+                        let intent = if up {
+                            DesiredIntent::Up
+                        } else {
+                            DesiredIntent::Down
+                        };
+                        let _ = desired_tx.send(DesiredState { intent, epoch });
+                        let resp = ServerMessage::State {
+                            state: Box::new(state_watch.borrow().clone()),
+                        };
+                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    }
+                    ClientMessage::GetState => {
+                        let resp = ServerMessage::State {
+                            state: Box::new(state_watch.borrow().clone()),
+                        };
+                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    }
+                    ClientMessage::GetSettings => {
+                        let resp = ServerMessage::Notice {
+                            code: ErrorCode::E100,
+                            params: HashMap::new(),
+                        };
+                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    }
+                    ClientMessage::PatchSettings {
+                        settings: new_settings,
+                    } => {
+                        if let Err(e) = new_settings.validate() {
+                            let err = ServerMessage::Error {
+                                code: ErrorCode::E400,
+                                msg: format!("Invalid settings: {e:?}"),
+                            };
+                            writer_half.write_all(err.to_line()?.as_bytes()).await?;
+                        } else {
+                            *settings.write() = *new_settings;
+                            let resp = ServerMessage::Pong;
+                            writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                        }
+                    }
+                    ClientMessage::Ping => {
+                        let resp = ServerMessage::Pong;
+                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    }
+                    ClientMessage::ExportDiagnostics => {
+                        let st = state_watch.borrow().clone();
+                        let sett = settings.read().clone();
+                        let diag = log_ring.export_diagnostics(
+                            env!("CARGO_PKG_VERSION"),
+                            "v2.3.0",
+                            &st,
+                            &sett,
+                            "Endpoints: 0, Rungs: 0",
+                        );
+                        let resp = ServerMessage::Diagnostics { data: diag };
+                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    }
+                    _ => {
+                        let resp = ServerMessage::Pong;
+                        writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                    }
+                }
                 writer_half.flush().await?;
                 line.clear();
-                continue;
             }
-        };
 
-        match msg {
-            ClientMessage::SetDesired { up, epoch } => {
-                let intent = if up {
-                    DesiredIntent::Up
-                } else {
-                    DesiredIntent::Down
-                };
-                let _ = desired_tx.send(DesiredState { intent, epoch });
+            change_res = state_watch.changed() => {
+                if change_res.is_err() {
+                    break;
+                }
+                let st = state_watch.borrow().clone();
                 let resp = ServerMessage::State {
-                    state: Box::new(state_rx.borrow().clone()),
+                    state: Box::new(st),
                 };
-                writer_half.write_all(resp.to_line()?.as_bytes()).await?;
-            }
-            ClientMessage::GetState => {
-                let resp = ServerMessage::State {
-                    state: Box::new(state_rx.borrow().clone()),
-                };
-                writer_half.write_all(resp.to_line()?.as_bytes()).await?;
-            }
-            ClientMessage::GetSettings => {
-                let _current = settings.read().clone();
-                let resp = ServerMessage::Notice {
-                    code: ErrorCode::E100, // Reuse notice or settings encoding
-                    params: HashMap::new(),
-                };
-                writer_half.write_all(resp.to_line()?.as_bytes()).await?;
-            }
-            ClientMessage::PatchSettings {
-                settings: new_settings,
-            } => {
-                if let Err(e) = new_settings.validate() {
-                    let err = ServerMessage::Error {
-                        code: ErrorCode::E400,
-                        msg: format!("Invalid settings: {e:?}"),
-                    };
-                    writer_half.write_all(err.to_line()?.as_bytes()).await?;
-                } else {
-                    *settings.write() = *new_settings;
-                    let resp = ServerMessage::Pong;
-                    writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+                if let Ok(l) = resp.to_line() {
+                    let _ = writer_half.write_all(l.as_bytes()).await;
+                    let _ = writer_half.flush().await;
                 }
             }
-            ClientMessage::Ping => {
-                let resp = ServerMessage::Pong;
-                writer_half.write_all(resp.to_line()?.as_bytes()).await?;
-            }
-            ClientMessage::ExportDiagnostics => {
-                let st = state_rx.borrow().clone();
-                let sett = settings.read().clone();
-                let diag = log_ring.export_diagnostics(
-                    env!("CARGO_PKG_VERSION"),
-                    "v2.3.0",
-                    &st,
-                    &sett,
-                    "Endpoints: 0, Rungs: 0",
-                );
-                let resp = ServerMessage::Diagnostics { data: diag };
-                writer_half.write_all(resp.to_line()?.as_bytes()).await?;
-            }
-            _ => {
-                let resp = ServerMessage::Pong;
-                writer_half.write_all(resp.to_line()?.as_bytes()).await?;
+
+            _ = stats_interval.tick() => {
+                let st = state_watch.borrow().clone();
+                if st.phase == zohal_proto::types::Phase::Connected {
+                    let rx_path = "/sys/class/net/zohal0/statistics/rx_bytes";
+                    let tx_path = "/sys/class/net/zohal0/statistics/tx_bytes";
+                    let cur_rx = std::fs::read_to_string(rx_path)
+                        .ok()
+                        .and_then(|s| s.trim().parse::<u64>().ok())
+                        .unwrap_or(0);
+                    let cur_tx = std::fs::read_to_string(tx_path)
+                        .ok()
+                        .and_then(|s| s.trim().parse::<u64>().ok())
+                        .unwrap_or(0);
+
+                    let now = tokio::time::Instant::now();
+                    let dt = now.duration_since(last_time).as_secs_f64();
+                    let rx_bps = if dt > 0.1 && cur_rx >= last_rx_bytes && last_rx_bytes > 0 {
+                        (((cur_rx - last_rx_bytes) as f64 * 8.0) / dt) as u64
+                    } else {
+                        0
+                    };
+                    let tx_bps = if dt > 0.1 && cur_tx >= last_tx_bytes && last_tx_bytes > 0 {
+                        (((cur_tx - last_tx_bytes) as f64 * 8.0) / dt) as u64
+                    } else {
+                        0
+                    };
+
+                    last_rx_bytes = cur_rx;
+                    last_tx_bytes = cur_tx;
+                    last_time = now;
+
+                    let stats_msg = ServerMessage::Stats {
+                        stats: zohal_proto::types::TrafficStats {
+                            rx_total: cur_rx,
+                            tx_total: cur_tx,
+                            rx_bps,
+                            tx_bps,
+                        },
+                    };
+                    if let Ok(l) = stats_msg.to_line() {
+                        let _ = writer_half.write_all(l.as_bytes()).await;
+                        let _ = writer_half.flush().await;
+                    }
+                }
             }
         }
-        writer_half.flush().await?;
-        line.clear();
     }
 
     Ok(())

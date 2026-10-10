@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::signal;
-use tracing::{error, info};
+use tracing::{error, info, warn};
 use zohal_engine::cache::CacheManager;
 use zohal_engine::ipc::IpcServer;
 use zohal_engine::ipc_client::IpcClient;
@@ -34,6 +34,32 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     Ok(())
+}
+
+fn find_aether_bin() -> PathBuf {
+    let mut candidates = Vec::new();
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(parent) = exe.parent() {
+            candidates.push(parent.join("aether"));
+            candidates.push(parent.join("usr/bin/aether"));
+        }
+    }
+    if let Ok(appdir) = std::env::var("ZOHAL_APPDIR") {
+        candidates.push(PathBuf::from(appdir).join("usr/bin/aether"));
+    }
+    candidates.push(PathBuf::from("/usr/lib/zohal/aether"));
+    candidates.push(PathBuf::from("/usr/bin/aether"));
+    candidates.push(PathBuf::from("/opt/zohal/aether"));
+    candidates.push(PathBuf::from("third_party/dist/linux-x86_64/aether"));
+
+    for c in &candidates {
+        if c.exists() {
+            info!("[zohald] found aether binary at {:?}", c);
+            return c.clone();
+        }
+    }
+    warn!("[zohald] aether binary not found in candidate paths, falling back to 'aether'");
+    PathBuf::from("aether")
 }
 
 async fn run_service() -> Result<(), Box<dyn std::error::Error>> {
@@ -93,18 +119,7 @@ async fn run_service() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     // 2. Locate Aether binary
-    let binary_candidates = [
-        PathBuf::from("/usr/lib/zohal/aether"),
-        PathBuf::from("third_party/dist/linux-x86_64/aether"),
-        std::env::current_exe()?.parent().unwrap().join("aether"),
-    ];
-
-    let aether_bin = binary_candidates
-        .iter()
-        .find(|p| p.exists())
-        .cloned()
-        .unwrap_or_else(|| PathBuf::from("aether"));
-
+    let aether_bin = find_aether_bin();
     info!("[zohald] using aether binary: {:?}", aether_bin);
 
     let cache = Arc::new(CacheManager::new(&data_dir, "zohal_salt_host")?);
@@ -182,10 +197,13 @@ async fn run_user_proxy() -> Result<(), Box<dyn std::error::Error>> {
 
     let cache = Arc::new(CacheManager::new(&tmp, "zohal_user_salt")?);
     let log_ring = LogRingBuffer::new();
-    let settings = Arc::new(parking_lot::RwLock::new(Settings::default()));
+    let settings = Arc::new(parking_lot::RwLock::new(Settings {
+        scope: zohal_proto::types::Scope::SystemProxy,
+        ..Default::default()
+    }));
     let journal = Arc::new(Journal::new(&tmp)?);
 
-    let aether_bin = PathBuf::from("third_party/dist/linux-x86_64/aether");
+    let aether_bin = find_aether_bin();
     let backend = Arc::new(RealAetherBackend::new(aether_bin, &tmp));
 
     let (mut supervisor, state_rx, desired_tx) = Supervisor::new(

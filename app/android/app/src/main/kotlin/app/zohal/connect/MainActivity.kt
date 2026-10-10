@@ -137,6 +137,18 @@ class MainActivity : FlutterActivity() {
                         if (intent.hasExtra("sinceUnix")) {
                             map["sinceUnix"] = intent.getLongExtra("sinceUnix", 0)
                         }
+                        if (intent.hasExtra("rxBps")) {
+                            map["rxBps"] = intent.getLongExtra("rxBps", 0)
+                        }
+                        if (intent.hasExtra("txBps")) {
+                            map["txBps"] = intent.getLongExtra("txBps", 0)
+                        }
+                        if (intent.hasExtra("rxTotal")) {
+                            map["rxTotal"] = intent.getLongExtra("rxTotal", 0)
+                        }
+                        if (intent.hasExtra("txTotal")) {
+                            map["txTotal"] = intent.getLongExtra("txTotal", 0)
+                        }
                         try {
                             eventSink?.success(map)
                         } catch (_: Exception) {

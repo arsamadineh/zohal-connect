@@ -368,3 +368,8 @@ All tests passed! (21/21)
 
 ### 6. Release v0.1.1 Scope Note (2026-10-10, operator decision)
 - AppImage unwired from CI/release (deferred, see KNOWN_LIMITS 10). Release ships Android per-ABI APKs, `.deb`, `.rpm`, and `.tar.gz` (tarball and system packages now include the Flutter UI bundle; desktop `Exec` corrected to `/opt/zohal/zohal`).
+
+### 7. Release v0.1.2 Evidence (RUN in GitHub Actions)
+- Release run `38020870515`: `build-linux` success, `build-android` success, `publish-release` success.
+- Published assets: `zohal_0.1.2_amd64.deb`, `zohal-0.1.2.x86_64.rpm`, `zohal-v0.1.2-linux-x86_64.tar.gz`, `zohal-v0.1.2-{arm64-v8a,armeabi-v7a,x86_64}.apk` + universal, `SHA256SUMS.txt`.
+- CI run on main: `engine-linux`, `app-linux`, `app-android` green (AppImage job removed per deferral).

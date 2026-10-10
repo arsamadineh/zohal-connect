@@ -1,0 +1,1 @@
+# Allow-list for legitimate exceptions in Persian linter

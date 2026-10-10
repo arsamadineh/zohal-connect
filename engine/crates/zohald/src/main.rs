@@ -1,3 +1,5 @@
+#![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
+
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -399,9 +401,9 @@ async fn run_bench_connect(runs: usize) -> Result<(), Box<dyn std::error::Error>
         if v.is_empty() {
             return (0.0, 0.0, 0.0, 0.0, 0.0);
         }
-        v.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        v.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
         let min = v[0];
-        let max = *v.last().unwrap();
+        let max = *v.last().unwrap_or(&0.0);
         let mean = v.iter().sum::<f64>() / v.len() as f64;
         let p50 = v[v.len() / 2];
         let p95_idx = ((v.len() as f64 * 0.95) as usize).min(v.len() - 1);

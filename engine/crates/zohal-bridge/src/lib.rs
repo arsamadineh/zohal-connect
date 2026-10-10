@@ -1,3 +1,5 @@
+#![cfg_attr(not(test), deny(clippy::unwrap_used, clippy::expect_used))]
+
 // engine/crates/zohal-bridge/src/lib.rs
 // Bridge between Flutter UI and Zohal Engine according to ZOHAL_SPEC Section 6.4 & 12.3.
 

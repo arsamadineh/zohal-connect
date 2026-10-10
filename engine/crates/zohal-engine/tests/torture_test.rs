@@ -5,10 +5,10 @@ use std::time::Duration;
 use tempfile::tempdir;
 use tokio::time::sleep;
 use zohal_engine::cache::CacheManager;
-use zohal_engine::fake_backend::FakeAetherBackend;
 use zohal_engine::journal::Journal;
 use zohal_engine::log_ring::LogRingBuffer;
 use zohal_engine::supervisor::Supervisor;
+use zohal_engine::test_backend::FakeAetherBackend;
 use zohal_proto::settings::Settings;
 use zohal_proto::types::{DesiredIntent, DesiredState, Phase};
 

@@ -55,7 +55,9 @@ impl CacheManager {
         hasher.update(b"|");
         hasher.update(default_gateway_ip.as_bytes());
         let hash = hasher.finalize();
-        format!("{:016x}", u64::from_be_bytes(hash[..8].try_into().unwrap()))
+        let mut bytes = [0u8; 8];
+        bytes.copy_from_slice(&hash[..8]);
+        format!("{:016x}", u64::from_be_bytes(bytes))
     }
 
     pub fn load_endpoints(&self) -> EndpointsCache {

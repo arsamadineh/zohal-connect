@@ -115,7 +115,7 @@ impl TunnelBackend for FakeAetherBackend {
     ) -> Pin<Box<dyn Future<Output = Result<(), BackendError>> + Send + 'a>> {
         Box::pin(async move {
             let _ = journal.record_action(
-                "fake_tun",
+                "test_tun",
                 json!({"handle_id": handle.id}),
                 json!({"revert_handle_id": handle.id}),
             );

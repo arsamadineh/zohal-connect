@@ -241,7 +241,7 @@ fn is_domain(word: &str) -> bool {
             && parts
                 .iter()
                 .all(|p| !p.is_empty() && p.chars().all(|c| c.is_ascii_alphanumeric() || c == '-'))
-            && (parts.last().unwrap().len() >= 2)
+            && parts.last().map(|s| s.len() >= 2).unwrap_or(false)
             && !is_ipv4(host)
     } else {
         false

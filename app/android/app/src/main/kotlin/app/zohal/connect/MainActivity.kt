@@ -124,7 +124,8 @@ class MainActivity : FlutterActivity() {
         ).setStreamHandler(object : EventChannel.StreamHandler {
             override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
                 eventSink = events
-                val filter = IntentFilter(ZohalVpnService.BROADCAST_STATE)                val receiver = object : BroadcastReceiver() {
+                val filter = IntentFilter(ZohalVpnService.BROADCAST_STATE)
+                val receiver = object : BroadcastReceiver() {
                     override fun onReceive(context: Context?, intent: Intent?) {
                         if (intent == null) return
                         val map = HashMap<String, Any?>()
@@ -151,9 +152,11 @@ class MainActivity : FlutterActivity() {
                 // Ask the :vpn process to re-emit its live state, so a
                 // reopened UI converges even if prefs are stale.
                 try {
-                    startService(Intent(this, ZohalVpnService::class.java).apply {
-                        action = ZohalVpnService.ACTION_QUERY
-                    })
+                    startService(
+                        Intent(this@MainActivity, ZohalVpnService::class.java).apply {
+                            action = ZohalVpnService.ACTION_QUERY
+                        }
+                    )
                 } catch (_: Exception) {
                 }
             }

@@ -358,7 +358,6 @@ class ZohalVpnService : VpnService() {
             Log.w(TAG, "verify probe failed: ${e.message}")
             Pair("connected", "direct")
         }
-        }
     }
 
     private fun establishTun(config: ConnectConfig): Boolean {

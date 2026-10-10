@@ -22,7 +22,8 @@ contents:
   - src: "../../app/build/linux/x64/release/bundle/lib"
     dst: "/opt/zohal/lib"
   - src: "../../app/build/linux/x64/release/bundle/data"
-    dst: "/opt/zohal/data"  - src: "../../third_party/dist/linux-x86_64/aether"
+    dst: "/opt/zohal/data"
+  - src: "../../third_party/dist/linux-x86_64/aether"
     dst: "/usr/lib/zohal/aether"
     file_info:
       mode: 0755

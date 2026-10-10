@@ -378,3 +378,21 @@ All tests passed! (21/21)
 - CI run `38038904707`: `engine-linux`, `app-linux`, `app-android` all success. Fixed `fetch_update` deprecation (new stable clippy) with a CAS loop in `test_backend.rs`; verified locally with fmt, clippy `-D warnings`, workspace tests, `dart format`, `flutter analyze`, `flutter test --no-pub` (22/22).
 - Release run `38039503227`: `build-linux`, `build-android`, `publish-release` all success.
 - Published assets (9): `Zohal-0.1.6-x86_64.AppImage`, `zohal_0.1.6_amd64.deb`, `zohal-0.1.6.x86_64.rpm`, `zohal-v0.1.6-linux-x86_64.tar.gz`, per-ABI + universal APKs, `SHA256SUMS.txt`.
+
+## Regression Fix Gate: Post-v0.1.3 Connection Failure (2026-10-10)
+
+### 1. Rust engine (RUN)
+```bash
+. "$HOME/.cargo/env"
+cd engine
+cargo fmt --all -- --check
+cargo test --workspace
+cargo clippy --workspace --all-targets -- -D warnings
+```
+Output: workspace tests passed, including the torture test; Clippy completed with `-D warnings` and no warnings.
+
+### 2. Android source and device verification (NOT RUN)
+- Android SDK/Gradle and a physical or emulated Android device were not available in this sandbox. The Kotlin changes were reviewed against the existing API and CI/device verification remains required.
+
+### 3. Live network connection (NOT RUN)
+- No real Aether gateway connection was attempted from this sandbox. The fix restores the previously verified WARP trace contract and adds protocol-level regression handling; live verification must be performed on the affected network/device.

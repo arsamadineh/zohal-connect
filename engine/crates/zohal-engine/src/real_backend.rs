@@ -54,19 +54,57 @@ async fn tcp_probe_socks(socks_port: u16) -> Result<(), BackendError> {
         BackendError::VerificationFailed(format!("SOCKS write connect failed: {e}"))
     })?;
 
-    let mut conn_resp = [0u8; 10];
-    tokio::time::timeout(Duration::from_secs(4), stream.read_exact(&mut conn_resp))
+    // SOCKS5 replies have a variable-length address field. A fixed ten-byte
+    // read rejects valid IPv6 and domain-form replies as false timeouts.
+    let mut header = [0u8; 4];
+    tokio::time::timeout(Duration::from_secs(4), stream.read_exact(&mut header))
         .await
         .map_err(|_| BackendError::Timeout)?
         .map_err(|e| BackendError::VerificationFailed(format!("SOCKS read connect failed: {e}")))?;
-
-    if conn_resp[1] == 0x00 {
-        Ok(())
-    } else {
-        Err(BackendError::VerificationFailed(format!(
+    if header[0] != 0x05 {
+        return Err(BackendError::VerificationFailed(
+            "SOCKS invalid reply version".into(),
+        ));
+    }
+    if header[1] != 0x00 {
+        return Err(BackendError::VerificationFailed(format!(
             "SOCKS connect error REP={:#x}",
-            conn_resp[1]
-        )))
+            header[1]
+        )));
+    }
+    let address_len = match header[3] {
+        0x01 => 4,
+        0x03 => {
+            let mut len = [0u8; 1];
+            stream.read_exact(&mut len).await.map_err(|e| {
+                BackendError::VerificationFailed(format!("SOCKS read domain length failed: {e}"))
+            })?;
+            usize::from(len[0])
+        }
+        0x04 => 16,
+        atyp => {
+            return Err(BackendError::VerificationFailed(format!(
+                "SOCKS unsupported address type {atyp:#x}"
+            )))
+        }
+    };
+    let mut address_and_port = vec![0u8; address_len + 2];
+    stream
+        .read_exact(&mut address_and_port)
+        .await
+        .map_err(|e| {
+            BackendError::VerificationFailed(format!("SOCKS read connect address failed: {e}"))
+        })?;
+    Ok(())
+}
+
+fn clear_last_connection_cache(data_dir: &Path) {
+    for name in [
+        "aether-masque-lastconn.toml",
+        "aether-lastconn.toml",
+        "aether-wg-lastconn.toml",
+    ] {
+        let _ = std::fs::remove_file(data_dir.join(name));
     }
 }
 
@@ -159,6 +197,11 @@ impl TunnelBackend for RealAetherBackend {
             cmd.arg("--http-proxy")
                 .arg(format!("127.0.0.1:{http_port}"));
 
+            // Keep the IPv4 and API-fragment fallback used by the v0.1.3
+            // connection path for networks that filter enrollment traffic.
+            cmd.arg("-4");
+            cmd.arg("--api-fragment");
+
             // Obfuscation and scan modes
             let scan_mode = format!("{:?}", rung.scan).to_lowercase();
             cmd.arg("--scan").arg(&scan_mode);
@@ -241,9 +284,8 @@ impl TunnelBackend for RealAetherBackend {
                     let _ = ch.kill().await;
                     let _ = ch.wait().await;
                 }
-                // Purge any stale lastconn so subsequent attempts do not retry an unresponsive gateway
-                let _ = std::fs::remove_file(self.data_dir.join("aether-masque-lastconn.toml"));
-                let _ = std::fs::remove_file(self.data_dir.join("aether-lastconn.toml"));
+                // Purge stale lastconn files so retries do not reuse an unresponsive gateway.
+                clear_last_connection_cache(&self.data_dir);
                 return Err(BackendError::Timeout);
             }
 
@@ -264,8 +306,7 @@ impl TunnelBackend for RealAetherBackend {
                     let _ = ch.kill().await;
                     let _ = ch.wait().await;
                 }
-                let _ = std::fs::remove_file(self.data_dir.join("aether-masque-lastconn.toml"));
-                let _ = std::fs::remove_file(self.data_dir.join("aether-lastconn.toml"));
+                clear_last_connection_cache(&self.data_dir);
                 return Err(e);
             }
             info!(
@@ -292,42 +333,53 @@ impl TunnelBackend for RealAetherBackend {
     ) -> Pin<Box<dyn Future<Output = Result<PathTrace, BackendError>> + Send + 'a>> {
         Box::pin(async move {
             info!(
-                "[verify] TUN-path check: connecting to 1.1.1.1:443 through system tunnel (cand id={})",
-                handle.id
+                "[verify] probing WARP trace through candidate id={} (SOCKS port {})",
+                handle.id, handle.socks_port
             );
-
-            // Plain unmarked TCP connect to 1.1.1.1:443 through the system tunnel (1500 ms timeout)
-            let tun_probe = tokio::time::timeout(
-                Duration::from_millis(1500),
-                tokio::net::TcpStream::connect("1.1.1.1:443"),
-            )
-            .await;
-
-            match tun_probe {
-                Ok(Ok(_stream)) => {
-                    info!(
-                        "[verify] TUN-path TCP check to 1.1.1.1:443 succeeded for cand id={}",
-                        handle.id
-                    );
-                }
-                _ => {
-                    #[cfg(target_os = "linux")]
-                    if unsafe { libc::geteuid() == 0 } {
-                        return Err(BackendError::VerificationFailed(
-                            "TUN-path TCP check to 1.1.1.1:443 failed".into(),
-                        ));
+            let proxy_url = format!("socks5h://127.0.0.1:{}", handle.socks_port);
+            let proxy_agent = ureq::Proxy::new(&proxy_url)
+                .map_err(|e| BackendError::VerificationFailed(e.to_string()))?;
+            let agent = ureq::builder()
+                .proxy(proxy_agent)
+                .timeout(Duration::from_secs(8))
+                .build();
+            let body = tokio::task::spawn_blocking(move || {
+                agent
+                    .get("https://1.1.1.1/cdn-cgi/trace")
+                    .call()
+                    .map_err(|e| e.to_string())
+                    .and_then(|resp| resp.into_string().map_err(|e| e.to_string()))
+            })
+            .await
+            .map_err(|e| BackendError::VerificationFailed(e.to_string()))?
+            .map_err(BackendError::VerificationFailed)?;
+            if !body.lines().any(|line| {
+                let Some((key, value)) = line.split_once('=') else {
+                    return false;
+                };
+                key.trim() == "warp" && matches!(value.trim(), "on" | "plus")
+            }) {
+                return Err(BackendError::VerificationFailed(
+                    "WARP trace did not report warp=on or warp=plus".into(),
+                ));
+            }
+            let mut ip = "unknown".to_string();
+            let mut loc = "unknown".to_string();
+            let mut colo = "unknown".to_string();
+            for line in body.lines() {
+                if let Some((key, value)) = line.split_once('=') {
+                    match key.trim() {
+                        "ip" => ip = value.trim().to_string(),
+                        "loc" => loc = value.trim().to_string(),
+                        "colo" => colo = value.trim().to_string(),
+                        _ => {}
                     }
-                    info!(
-                        "[verify] unprivileged scope: proxy-path verified for cand id={}",
-                        handle.id
-                    );
                 }
             }
-
             Ok(PathTrace {
-                ip: String::new(),
-                loc: String::new(),
-                colo: String::new(),
+                ip,
+                loc,
+                colo,
                 warp_on: true,
             })
         })

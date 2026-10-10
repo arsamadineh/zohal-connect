@@ -225,6 +225,10 @@ class ZohalVpnService : VpnService() {
         val socksPort = freePort()
         val cmd = mutableListOf(aetherBin.absolutePath)
         cmd.addAll(rung.args)
+        // Keep enrollment on IPv4 and enable the API-fragment fallback used by
+        // the v0.1.3 path on networks that filter the enrollment domain.
+        if (!cmd.contains("-4")) cmd.add("-4")
+        if (!cmd.contains("--api-fragment")) cmd.add("--api-fragment")
         cmd.addAll(listOf("--bind", "127.0.0.1:$socksPort"))
         cmd.addAll(listOf("--config", File(configDir, "aether.toml").absolutePath))
         cmd.addAll(listOf("--masque-config", File(configDir, "aether-masque.toml").absolutePath))
@@ -339,10 +343,18 @@ class ZohalVpnService : VpnService() {
             }
             if (conn.responseCode != 200) {
                 conn.disconnect()
-                return Pair("connected", "direct")
+                return null
             }
             val body = conn.inputStream.bufferedReader().readText()
             conn.disconnect()
+            val warp = body.lineSequence()
+                .map { it.split("=", limit = 2) }
+                .firstOrNull { it.size == 2 && it[0].trim() == "warp" }
+                ?.get(1)?.trim()
+            if (warp != "on" && warp != "plus") {
+                Log.w(TAG, "verify probe returned no active WARP path")
+                return null
+            }
             var ip = "unknown"
             var loc = "unknown"
             for (line in body.lines()) {
@@ -357,7 +369,7 @@ class ZohalVpnService : VpnService() {
             Pair(ip, loc)
         } catch (e: Exception) {
             Log.w(TAG, "verify probe failed: ${e.message}")
-            Pair("connected", "direct")
+            null
         }
     }
 

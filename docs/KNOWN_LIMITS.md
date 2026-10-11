@@ -1,6 +1,6 @@
 # KNOWN_LIMITS.md - Technical Constraints and Known Limits
 
-This document records deliberate trade-offs, scope boundaries, and known technical limitations of Zohal Connect according to Rule R1.
+This document records deliberate trade-offs, scope boundaries, and known technical limitations of Zohal Connect.
 
 ## 1. Local SOCKS5 Proxy Ports
 - Aether opens local proxy listeners on loopback (`127.0.0.1`) without password authentication.

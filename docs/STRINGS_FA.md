@@ -1,6 +1,6 @@
 # STRINGS_FA.md - Complete Persian Copy Reference
 
-This document mirrors all user-visible Persian strings from `app/lib/l10n/strings_fa.dart` according to Section 14 of the Zohal Master Specification.
+This document mirrors all user-visible Persian strings from `app/lib/l10n/strings_fa.dart`.
 
 ## 1. Application Name & Descriptions
 - Short Name: `زحل`

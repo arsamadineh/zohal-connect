@@ -12,7 +12,6 @@ app/android/app/src/main/jniLibs/
 # Build artifacts and temp files
 dist/
 *.log
-!tools/experiments/aether-logs/*.log
 *.tmp
 *.bak
 *.swp

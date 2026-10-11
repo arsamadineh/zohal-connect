@@ -1,6 +1,6 @@
 # DEPENDENCIES.md - Pinned Dependencies
 
-This document records pinned versions and dates of all external tooling, binaries, and dependencies per Rule R12.
+This document records pinned versions and dates of external tooling, binaries, and dependencies.
 
 | Dependency | Version / Pin | Date Recorded | Source | Hash / Notes |
 |---|---|---|---|---|

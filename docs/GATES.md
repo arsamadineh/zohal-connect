@@ -1,6 +1,6 @@
-# GATES.md - Phase Verification Gates Log
+# GATES.md - Verification Test Outputs & Benchmarks
 
-This document records the exact execution commands and verified outputs for phase gates per Rule R3.
+This document records verification test execution commands and verified benchmark outputs.
 
 ---
 

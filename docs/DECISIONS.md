@@ -1,6 +1,6 @@
 # DECISIONS.md - Architectural & Design Decisions
 
-This document records deliberate design and technical decisions made for Zohal Connect, adhering to Rule R4 and R6.
+This document records architecture and design decisions made for Zohal Connect.
 
 ## 001: Pinned Aether Upstream Release
 - **Date**: 2026-10-10
@@ -68,6 +68,6 @@ This document records deliberate design and technical decisions made for Zohal C
 ## 011: Geometric Zayn («ز») Connection Glyph Animation
 - **Date**: 2026-10-11
 - **Context**: The centerpiece connect control previously depicted an abstract Saturn ring-and-square. The visual identity of Zohal Connect is centered on the Persian letter «ز» (Zayn, the initial of زُحَل), featuring a severed-circuit slash line cutting through the square dot when disconnected, an internal flowing energy beam and laser pulse during connecting, and a smooth slice-away retraction of the slash line with an expanding sharp shockwave upon connection.
-- **Decision**: Implemented the new connection animation in `app/lib/design/components/connect_control.dart` using a canonical vector painter. Maintained sharp corners (border radius 0) per Rule R18, using a sharp square dot, sharp square expanding shockwave, and sharp stage indicators. Maintained exact semantics labels for accessibility and test compatibility.
+- **Decision**: Implemented the new connection animation in `app/lib/design/components/connect_control.dart` using a canonical vector painter. Maintained sharp corners (border radius 0), using a sharp square dot, sharp square expanding shockwave, and sharp stage indicators. Maintained exact semantics labels for accessibility and test compatibility.
 - **Status**: Accepted.
 

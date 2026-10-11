@@ -101,7 +101,7 @@ This manual provides test procedures for validating Zohal Connect on real physic
 1. While connected, disconnect Wi-Fi to trigger mobile data failover.
 2. Observe reconnecting and successful recovery without user interaction.
 
-### 3.4 Connect Flow After Repair (Phase 7)
+### 3.4 Connect Flow
 1. Fresh install, launch, tap the connect square on the main screen.
 2. Expected: control reacts within one frame (preparing animation + stage ticks); on first run the system VPN consent dialog appears.
 3. Deny consent: state shows failed with the permission error; tap the VPN row in onboarding step 1 to re-request.

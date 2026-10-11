@@ -16,7 +16,8 @@ This document records pinned versions and dates of all external tooling, binarie
 | zbus | 5.19 | 2026-10-10 | crates.io | D-Bus communication |
 | sd-notify | 0.5.0 | 2026-10-10 | crates.io | systemd Type=notify integration |
 | proptest | 1.6 | 2026-10-10 | crates.io | property testing (10k toggles) |
-| ureq | 2.12 | 2026-10-10 | crates.io | health verification probe |
+| ureq | 2.12 | 2026-10-10 | crates.io | health verification probe; `socks-proxy` feature enabled so the probe can reach the local SOCKS5 port (`socks5://`) |
+| socks (transitive via ureq `socks-proxy`) | 0.3.4 | 2026-10-11 | crates.io | SOCKS5 client used by ureq for the WARP trace probe |
 | flutter_riverpod | 2.5.1 | 2026-10-10 | pub.dev | reactive state management |
 | window_manager | 0.3.9 | 2026-10-10 | pub.dev | desktop window dimensions |
 | tray_manager | 0.2.3 | 2026-10-10 | pub.dev | system tray integration |

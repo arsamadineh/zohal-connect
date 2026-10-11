@@ -58,3 +58,9 @@ This document records deliberate design and technical decisions made for Zohal C
 - **Context**: Aether logs showed fallback rungs using `balanced` and `thorough`, while cached reconnects used a shortcut that did not make the endpoint-verification policy explicit. This caused slow, inconsistent behavior and allowed parameters outside the required policy.
 - **Decision**: Zohal may start Aether only with `--scan turbo` for fresh discovery or `--scan verified` for cached/measured endpoints. The desktop backend enforces this at command construction regardless of stale settings or ladder data; Android uses the same ladder policy. The `--quick-reconnect` bypass is removed so cached candidates go through Aether's verified-endpoint scanner. All candidates still require SOCKS proxy-path and `warp=on|plus` verification before routing is changed.
 - **Status**: Accepted.
+
+## 010: Desktop WARP Trace Probe SOCKS Support
+- **Date**: 2026-10-11
+- **Context**: The v0.1.13 desktop verifier used `ureq::Proxy::new("socks5h://...")`. ureq 2.12.1 rejects the `socks5h` scheme (`InvalidProxyUrl`), and the workspace `ureq` dependency disabled the `socks-proxy` feature, so even `socks5://` fails with `SOCKS feature disabled`. Every desktop candidate would therefore fail WARP verification.
+- **Decision**: Use `socks5://127.0.0.1:<port>` (the SOCKS5 proxy resolves the hostname on the far side regardless of scheme, since the trace request goes to the IP literal `1.1.1.1`) and enable the `socks-proxy` feature on the workspace `ureq` dependency. Adds `socks` 0.3.4 transitively. Recorded in `docs/DEPENDENCIES.md`.
+- **Status**: Accepted. Covered by a unit test on the SOCKS probe; live connection still NOT RUN in this sandbox.

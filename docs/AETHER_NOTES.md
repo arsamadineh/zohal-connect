@@ -173,8 +173,8 @@ Advanced:
 | Protocol: Gool Classic | `--gool-classic` | `AETHER_GOOL_MODE=classic` | WG-in-WG |
 | Protocol: MIM | `--mim` | `AETHER_PROTOCOL=mim` | MASQUE-in-MASQUE |
 | Scan mode | `--scan <mode>` | `AETHER_SCAN` | `turbo`, `balanced`, `thorough`, `verified`, `ironclad` |
-| Fast quick reconnect | `--quick-reconnect` | `AETHER_QUICK_RECONNECT=1` | Reuses lastconn gateway |
-| Forced fresh scan | `--no-quick-reconnect` | `AETHER_QUICK_RECONNECT=0` | Clears lastconn cache |
+| Fast quick reconnect | `--quick-reconnect` | `AETHER_QUICK_RECONNECT=1` | NOT USED by Zohal (see DECISIONS 009); cached candidates use `--scan verified` |
+| Forced fresh scan | `--no-quick-reconnect` | `AETHER_QUICK_RECONNECT=0` | NOT USED by Zohal |
 | IP Version: IPv4 only | `-4` or `--ip v4` | `AETHER_IP=v4` | |
 | IP Version: IPv6 only | `-6` or `--ip v6` | `AETHER_IP=v6` | |
 | IP Version: Dual stack | `--dual` or `--ip both` | `AETHER_IP=both` | |

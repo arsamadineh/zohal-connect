@@ -340,7 +340,7 @@ impl TunnelBackend for RealAetherBackend {
                 "[verify] probing WARP trace through candidate id={} (SOCKS port {})",
                 handle.id, handle.socks_port
             );
-            let proxy_url = format!("socks5h://127.0.0.1:{}", handle.socks_port);
+            let proxy_url = format!("socks5://127.0.0.1:{}", handle.socks_port);
             let proxy_agent = ureq::Proxy::new(&proxy_url)
                 .map_err(|e| BackendError::VerificationFailed(e.to_string()))?;
             let agent = ureq::builder()
@@ -514,5 +514,57 @@ impl TunnelBackend for RealAetherBackend {
             }
             Ok(())
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::tcp_probe_socks;
+    use tokio::io::{AsyncReadExt, AsyncWriteExt};
+    use tokio::net::TcpListener;
+
+    async fn fake_socks(reply: Vec<u8>) -> u16 {
+        let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        tokio::spawn(async move {
+            let (mut s, _) = listener.accept().await.unwrap();
+            let mut greeting = [0u8; 3];
+            s.read_exact(&mut greeting).await.unwrap();
+            s.write_all(&[0x05, 0x00]).await.unwrap();
+            let mut req = [0u8; 10];
+            s.read_exact(&mut req).await.unwrap();
+            s.write_all(&reply).await.unwrap();
+        });
+        port
+    }
+
+    #[tokio::test]
+    async fn socks_probe_accepts_ipv4_reply() {
+        let port = fake_socks(vec![0x05, 0x00, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await;
+        assert!(tcp_probe_socks(port).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn socks_probe_accepts_domain_reply() {
+        let mut reply = vec![0x05, 0x00, 0x00, 0x03, 9];
+        reply.extend_from_slice(b"localhost");
+        reply.extend_from_slice(&[0x01, 0xbb]);
+        let port = fake_socks(reply).await;
+        assert!(tcp_probe_socks(port).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn socks_probe_accepts_ipv6_reply() {
+        let mut reply = vec![0x05, 0x00, 0x00, 0x04];
+        reply.extend_from_slice(&[0u8; 16]);
+        reply.extend_from_slice(&[0x01, 0xbb]);
+        let port = fake_socks(reply).await;
+        assert!(tcp_probe_socks(port).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn socks_probe_rejects_nonzero_reply() {
+        let port = fake_socks(vec![0x05, 0x05, 0x00, 0x01, 0, 0, 0, 0, 0, 0]).await;
+        assert!(tcp_probe_socks(port).await.is_err());
     }
 }

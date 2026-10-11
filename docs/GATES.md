@@ -396,3 +396,29 @@ Output: workspace tests passed, including the torture test; Clippy completed wit
 
 ### 3. Live network connection (NOT RUN)
 - No real Aether gateway connection was attempted from this sandbox. The fix restores the previously verified WARP trace contract and adds protocol-level regression handling; live verification must be performed on the affected network/device.
+
+## Desktop Verifier Fix Gate (2026-10-11)
+
+### 1. Dependency and proxy scheme fix
+- Change: `ureq` workspace features now include `socks-proxy`; verifier uses `socks5://` instead of `socks5h://`.
+- Evidence: scratch crate with ureq 2.12.1 showed `socks5h://` -> `InvalidProxyUrl` and `socks5://` without the feature -> `SOCKS feature disabled`. After the feature change, `cargo tree -e features -i ureq` lists `socks-proxy`, and `socks` 0.3.4 is in `engine/Cargo.lock`.
+
+### 2. SOCKS reply parser regression tests (RUN)
+```bash
+cd engine && cargo test -p zohal-engine socks_probe
+```
+Output: 4 passed (IPv4, domain, IPv6 replies accepted; non-zero REP rejected).
+
+### 3. Engine gates (RUN)
+```bash
+cd engine
+cargo fmt --all -- --check        # FMT_OK
+cargo clippy --workspace --all-targets -- -D warnings   # finished, no warnings
+cargo test --workspace            # all suites ok, 0 failed
+```
+
+### 4. Live Aether connection (NOT RUN)
+- No `aether` binary in this sandbox. The WARP trace path through a real gateway was not exercised.
+
+### 5. Flutter and Android (NOT RUN)
+- `flutter` is not on PATH (only `dart`); `flutter analyze` and app tests not run. Android build not run.

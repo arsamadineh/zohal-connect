@@ -422,3 +422,25 @@ cargo test --workspace            # all suites ok, 0 failed
 
 ### 5. Flutter and Android (NOT RUN)
 - `flutter` is not on PATH (only `dart`); `flutter analyze` and app tests not run. Android build not run.
+
+## Zayn Glyph Connect Animation Gate (2026-10-11)
+
+### 1. Flutter / Dart analysis (RUN)
+```bash
+cd app
+dart format --output=none --set-exit-if-changed .
+dart analyze
+```
+Output:
+- `dart format`: 29 files checked, 0 changed.
+- `dart analyze`: Analyzing app... No issues found!
+
+### 2. Rust engine (RUN)
+```bash
+cd engine
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+```
+Output:
+- Formatting clean, clippy finished with `-D warnings` and no warnings.
+

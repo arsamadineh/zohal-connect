@@ -64,3 +64,10 @@ This document records deliberate design and technical decisions made for Zohal C
 - **Context**: The v0.1.13 desktop verifier used `ureq::Proxy::new("socks5h://...")`. ureq 2.12.1 rejects the `socks5h` scheme (`InvalidProxyUrl`), and the workspace `ureq` dependency disabled the `socks-proxy` feature, so even `socks5://` fails with `SOCKS feature disabled`. Every desktop candidate would therefore fail WARP verification.
 - **Decision**: Use `socks5://127.0.0.1:<port>` (the SOCKS5 proxy resolves the hostname on the far side regardless of scheme, since the trace request goes to the IP literal `1.1.1.1`) and enable the `socks-proxy` feature on the workspace `ureq` dependency. Adds `socks` 0.3.4 transitively. Recorded in `docs/DEPENDENCIES.md`.
 - **Status**: Accepted. Covered by a unit test on the SOCKS probe; live connection still NOT RUN in this sandbox.
+
+## 011: Geometric Zayn («ز») Connection Glyph Animation
+- **Date**: 2026-10-11
+- **Context**: The centerpiece connect control previously depicted an abstract Saturn ring-and-square. The visual identity of Zohal Connect is centered on the Persian letter «ز» (Zayn, the initial of زُحَل), featuring a severed-circuit slash line cutting through the square dot when disconnected, an internal flowing energy beam and laser pulse during connecting, and a smooth slice-away retraction of the slash line with an expanding sharp shockwave upon connection.
+- **Decision**: Implemented the new connection animation in `app/lib/design/components/connect_control.dart` using a canonical vector painter. Maintained sharp corners (border radius 0) per Rule R18, using a sharp square dot, sharp square expanding shockwave, and sharp stage indicators. Maintained exact semantics labels for accessibility and test compatibility.
+- **Status**: Accepted.
+

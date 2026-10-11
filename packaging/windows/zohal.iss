@@ -3,7 +3,7 @@
 ; RTL Persian wizard, Administrator privileges, registers ZohalEngine service, idempotent uninstall
 
 #define MyAppName "Zohal"
-#define MyAppVersion "0.1.13"
+#define MyAppVersion "0.1.14"
 #define MyAppPublisher "Zohal Connect Team"
 #define MyAppURL "https://github.com/zohal-connect/zohal-connect"
 #define MyAppExeName "zohal.exe"

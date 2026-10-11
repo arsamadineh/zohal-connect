@@ -14,8 +14,8 @@ android {
         targetSdk = 34
         // A constant versionCode made later APKs fail to upgrade over an
         // installed build.
-        versionCode = 13
-        versionName = "0.1.13"
+        versionCode = 14
+        versionName = "0.1.14"
 
         ndk {
             abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a", "x86_64"))

@@ -7,12 +7,15 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Release tag to build, for example v0.1.12'
+        description: 'Release tag to build, for example v0.1.14'
         required: true
         type: string
 
 permissions:
   contents: write
+
+env:
+  RELEASE_TAG: ${{ inputs.tag_name || github.ref_name }}
 
 jobs:
   build-linux:
@@ -50,7 +53,7 @@ jobs:
 
       - name: Build AppImage
         run: |
-          TAG_NAME="${{ inputs.tag_name || github.ref_name }}"
+          TAG_NAME="${RELEASE_TAG}"
           VERSION="${TAG_NAME#v}"
           bash tools/build-appimage.sh "$VERSION"
 
@@ -61,7 +64,7 @@ jobs:
       - name: Package Release Assets (.deb, .rpm, tarball)
         run: |
           mkdir -p dist/linux
-          TAG_NAME="${{ inputs.tag_name || github.ref_name }}"
+          TAG_NAME="${RELEASE_TAG}"
           VERSION="${TAG_NAME#v}"
           sed "s/^version:.*/version: \"${VERSION}\"/" packaging/linux/nfpm.yaml > /tmp/nfpm.yaml
 
@@ -141,7 +144,7 @@ jobs:
       - name: Prepare Android Artifacts
         run: |
           mkdir -p dist/android
-          TAG_NAME="${{ inputs.tag_name || github.ref_name }}"
+          TAG_NAME="${RELEASE_TAG}"
           cd app/build/app/outputs/flutter-apk
           for apk in *.apk; do
             if [ -f "$apk" ]; then
@@ -180,6 +183,8 @@ jobs:
         with:
           files: |
             release-assets/*
+          tag_name: ${{ inputs.tag_name || github.ref_name }}
+          target_commitish: ${{ github.sha }}
           generate_release_notes: true
           draft: false
           prerelease: false

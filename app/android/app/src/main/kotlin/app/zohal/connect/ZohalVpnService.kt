@@ -180,10 +180,12 @@ class ZohalVpnService : VpnService() {
             val f = File(configDir, name)
             if (f.exists()) {
                 try {
-                    f.forEachLine { line ->
-                        if (line.startsWith("peer = ")) {
-                            val peer = line.removePrefix("peer = ").trim().trim('"')
-                            if (peer.isNotEmpty()) return peer
+                    f.bufferedReader().use { reader ->
+                        for (line in reader.lineSequence()) {
+                            if (line.startsWith("peer = ")) {
+                                val peer = line.removePrefix("peer = ").trim().trim('"')
+                                if (peer.isNotEmpty()) return peer
+                            }
                         }
                     }
                 } catch (_: Exception) {}

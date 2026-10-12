@@ -5,18 +5,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/bridge.dart';
+import 'core/tray_service.dart';
 import 'design/theme.dart';
 import 'features/connect/main_screen.dart';
+import 'features/onboarding/onboarding_screen.dart';
 import 'l10n/strings_fa.dart';
 
-class ZohalApp extends ConsumerWidget {
+final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('onboarding_completed') ?? false;
+  } catch (_) {
+    return true;
+  }
+});
+
+class ZohalApp extends ConsumerStatefulWidget {
   const ZohalApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ZohalApp> createState() => _ZohalAppState();
+}
+
+class _ZohalAppState extends ConsumerState<ZohalApp> {
+  @override
+  void initState() {
+    super.initState();
+    ref.read(trayServiceProvider).init();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final systemAccent = ref.watch(systemAccentProvider);
+    final onboarding = ref.watch(onboardingCompletedProvider);
 
     return MaterialApp(
       title: StringsFa.appName,
@@ -40,7 +64,12 @@ class ZohalApp extends ConsumerWidget {
           child: child ?? const SizedBox.shrink(),
         );
       },
-      home: const MainScreen(),
+      home: onboarding.when(
+        data: (completed) =>
+            completed ? const MainScreen() : const OnboardingScreen(),
+        loading: () => const Scaffold(body: SizedBox.shrink()),
+        error: (_, __) => const MainScreen(),
+      ),
     );
   }
 }

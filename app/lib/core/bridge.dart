@@ -147,6 +147,7 @@ class ZohalBridgeClient {
   StreamSubscription<VpnNativeState>? _vpnSub;
   StreamSubscription<Map<String, dynamic>>? _vpnLogSub;
   bool _spawnAttempted = false;
+  final List<String> _pendingMessages = [];
 
   ZohalBridgeClient() {
     if (VpnChannel.isSupported) {
@@ -268,6 +269,9 @@ class ZohalBridgeClient {
         return targetBin;
       }
     } catch (e) {
+      if (File('/tmp/zohal_stage/zohald').existsSync()) {
+        return '/tmp/zohal_stage/zohald';
+      }
       ZohalLogger().warn('Staging binary outside FUSE mount failed: $e');
     }
     return null;
@@ -275,7 +279,8 @@ class ZohalBridgeClient {
 
   List<String> _zohaldCandidates() {
     final exeDir = File(Platform.resolvedExecutable).parent.path;
-    final appdir = Platform.environment['ZOHAL_APPDIR'];
+    final appdir =
+        Platform.environment['ZOHAL_APPDIR'] ?? Platform.environment['APPDIR'];
     return [
       if (appdir != null) '$appdir/usr/bin/zohald',
       '$exeDir/zohald',
@@ -302,7 +307,7 @@ class ZohalBridgeClient {
     if (!_spawnAttempted) {
       _spawnAttempted = true;
       if (await _spawnEngine()) {
-        for (var i = 0; i < 15; i++) {
+        for (var i = 0; i < 30; i++) {
           await Future<void>.delayed(const Duration(milliseconds: 200));
           for (final sysPath in _systemSocketPaths) {
             if (await _tryConnect(sysPath)) return;
@@ -349,11 +354,13 @@ class ZohalBridgeClient {
     // Attempt root privilege via pkexec on Linux for kernel TUN mode.
     // If running from AppImage (inside FUSE mount), stage binaries to /tmp/zohal_stage
     // so pkexec/root has direct access outside FUSE restrictions.
+    final appdir =
+        Platform.environment['ZOHAL_APPDIR'] ?? Platform.environment['APPDIR'];
     if (Platform.isLinux) {
       String runBin = binPath;
       if (File('/usr/lib/zohal/zohald').existsSync()) {
         runBin = '/usr/lib/zohal/zohald';
-      } else if (Platform.environment['ZOHAL_APPDIR'] != null) {
+      } else if (appdir != null) {
         final staged = await _stageAppImageBinary(binPath);
         if (staged != null) runBin = staged;
       }
@@ -397,6 +404,11 @@ class ZohalBridgeClient {
         ['user'],
         mode: ProcessStartMode.detached,
         runInShell: false,
+        environment: {
+          ...Platform.environment,
+          if (appdir != null) 'ZOHAL_APPDIR': appdir,
+          if (appdir != null) 'APPDIR': appdir,
+        },
       );
       return true;
     } catch (e) {
@@ -423,6 +435,16 @@ class ZohalBridgeClient {
     // Subscribe to stats
     final sub = jsonEncode({'t': 'subscribe', 'stats': true});
     _socket?.writeln(sub);
+
+    // Request current state immediately so UI reflects engine's real state
+    final getState = jsonEncode({'t': 'get_state'});
+    _socket?.writeln(getState);
+
+    // Flush any pending commands buffered while disconnected
+    while (_pendingMessages.isNotEmpty) {
+      final msg = _pendingMessages.removeAt(0);
+      _socket?.writeln(msg);
+    }
 
     // Read lines
     _socket
@@ -468,6 +490,22 @@ class ZohalBridgeClient {
             code: code,
             timestampSeconds: (json['ts'] as num?)?.toInt(),
           );
+          break;
+        case 'hello':
+          // Server handshake reply — ignore
+          break;
+        case 'pong':
+          // Server pong — ignore
+          break;
+        case 'notice':
+          // Server notice
+          break;
+        case 'error':
+          ZohalLogger().warn('IPC server error: ${json["msg"]}');
+          break;
+        case 'diagnostics':
+          // Diagnostic export — log receipt
+          ZohalLogger().info('Diagnostic data received');
           break;
       }
     } catch (e) {
@@ -519,6 +557,8 @@ class ZohalBridgeClient {
   void _send(String payload) {
     if (_connected && _socket != null) {
       _socket?.writeln(payload);
+    } else {
+      _pendingMessages.add(payload);
     }
   }
 

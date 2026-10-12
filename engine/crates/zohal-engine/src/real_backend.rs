@@ -229,7 +229,13 @@ impl TunnelBackend for RealAetherBackend {
                 cmd.arg("--mark").arg(DEFAULT_FWMARK.to_string());
             }
 
-            if let Some(peer) = endpoint {
+            let cached_peer = if rung.use_cache && endpoint.is_none() {
+                extract_lastconn_peer(&self.data_dir)
+            } else {
+                None
+            };
+            let peer_to_use = endpoint.or(cached_peer.as_deref());
+            if let Some(peer) = peer_to_use {
                 cmd.arg("--peer").arg(peer);
             }
 

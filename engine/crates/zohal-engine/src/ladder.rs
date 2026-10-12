@@ -1,7 +1,7 @@
 use std::time::Duration;
 use zohal_proto::types::{ConnectionMode, NoizeProfile, ScanProfile, Transport};
 
-pub const TOTAL_LADDER_TIMEOUT: Duration = Duration::from_secs(35);
+pub const TOTAL_LADDER_TIMEOUT: Duration = Duration::from_secs(30);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RungConfig {
@@ -34,7 +34,7 @@ impl Ladder {
                     use_cache: true,
                     h2_proven_only: true,
                     fragment: true,
-                    deadline: Duration::from_secs(4),
+                    deadline: Duration::from_secs(3),
                 },
                 RungConfig {
                     rung_number: 2,
@@ -44,7 +44,7 @@ impl Ladder {
                     use_cache: true,
                     h2_proven_only: false,
                     fragment: false,
-                    deadline: Duration::from_secs(4),
+                    deadline: Duration::from_secs(3),
                 },
                 RungConfig {
                     rung_number: 3,
@@ -54,7 +54,7 @@ impl Ladder {
                     use_cache: false,
                     h2_proven_only: false,
                     fragment: true,
-                    deadline: Duration::from_secs(6),
+                    deadline: Duration::from_secs(5),
                 },
                 RungConfig {
                     rung_number: 4,
@@ -64,7 +64,7 @@ impl Ladder {
                     use_cache: false,
                     h2_proven_only: false,
                     fragment: false,
-                    deadline: Duration::from_secs(6),
+                    deadline: Duration::from_secs(5),
                 },
                 RungConfig {
                     rung_number: 5,
@@ -74,7 +74,7 @@ impl Ladder {
                     use_cache: false,
                     h2_proven_only: false,
                     fragment: false,
-                    deadline: Duration::from_secs(8),
+                    deadline: Duration::from_secs(6),
                 },
                 RungConfig {
                     rung_number: 6,
@@ -84,7 +84,7 @@ impl Ladder {
                     use_cache: false,
                     h2_proven_only: false,
                     fragment: false,
-                    deadline: Duration::from_secs(10),
+                    deadline: Duration::from_secs(8),
                 },
             ],
             ConnectionMode::Masque3 => vec![
@@ -96,7 +96,7 @@ impl Ladder {
                     use_cache: true,
                     h2_proven_only: false,
                     fragment: false,
-                    deadline: Duration::from_secs(4),
+                    deadline: Duration::from_secs(3),
                 },
                 RungConfig {
                     rung_number: 2,
@@ -106,7 +106,7 @@ impl Ladder {
                     use_cache: false,
                     h2_proven_only: false,
                     fragment: false,
-                    deadline: Duration::from_secs(8),
+                    deadline: Duration::from_secs(6),
                 },
                 RungConfig {
                     rung_number: 3,
@@ -116,7 +116,7 @@ impl Ladder {
                     use_cache: false,
                     h2_proven_only: false,
                     fragment: false,
-                    deadline: Duration::from_secs(12),
+                    deadline: Duration::from_secs(10),
                 },
             ],
             ConnectionMode::Masque2 => vec![
@@ -128,7 +128,7 @@ impl Ladder {
                     use_cache: true,
                     h2_proven_only: true,
                     fragment: false,
-                    deadline: Duration::from_secs(5),
+                    deadline: Duration::from_secs(3),
                 },
                 RungConfig {
                     rung_number: 2,
@@ -138,7 +138,7 @@ impl Ladder {
                     use_cache: false,
                     h2_proven_only: false,
                     fragment: false,
-                    deadline: Duration::from_secs(8),
+                    deadline: Duration::from_secs(6),
                 },
                 RungConfig {
                     rung_number: 3,

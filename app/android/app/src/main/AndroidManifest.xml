@@ -72,6 +72,21 @@
             </intent-filter>
         </receiver>
 
+        <!-- Home Screen App Widget -->
+        <receiver
+            android:name=".ZohalWidgetProvider"
+            android:exported="true"
+            android:label="زحل">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="app.zohal.connect.ACTION_WIDGET_TOGGLE" />
+                <action android:name="app.zohal.connect.VPN_STATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_info" />
+        </receiver>
+
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />

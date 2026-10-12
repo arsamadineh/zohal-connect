@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/bridge.dart';
 import '../../core/engine_state.dart';
@@ -34,7 +35,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     });
   }
 
-  void _finishOnboarding() {
+  Future<void> _finishOnboarding() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('onboarding_completed', true);
+    } catch (_) {}
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       ZohalMotion.createPageRoute<void>(const MainScreen()),
     );

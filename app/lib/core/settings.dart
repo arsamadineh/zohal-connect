@@ -199,8 +199,12 @@ class ZohalSettings {
       };
 
   factory ZohalSettings.fromJson(Map<String, dynamic> json) {
+    final data = json['settings'] is Map<String, dynamic>
+        ? json['settings'] as Map<String, dynamic>
+        : json;
+
     ConnectionMode parseMode(String? val) {
-      switch (val) {
+      switch (val?.toLowerCase()) {
         case 'masque3':
           return ConnectionMode.masque3;
         case 'masque2':
@@ -215,37 +219,37 @@ class ZohalSettings {
     }
 
     return ZohalSettings(
-      connectionMode: parseMode(json['connection_mode'] as String?),
-      scope: json['scope'] as String? ?? 'Tun',
-      killSwitch: json['kill_switch'] as bool? ?? true,
-      autoConnectOnLaunch: json['auto_connect_on_launch'] as bool? ?? true,
-      restoreLastState: json['restore_last_state'] as bool? ?? true,
-      autoConnectOnBoot: json['auto_connect_on_boot'] as bool? ?? false,
-      startWithSystem: json['start_with_system'] as bool? ?? false,
-      minimizeToTray: json['minimize_to_tray'] as bool? ?? true,
+      connectionMode: parseMode(data['connection_mode'] as String?),
+      scope: data['scope'] as String? ?? 'Tun',
+      killSwitch: data['kill_switch'] as bool? ?? true,
+      autoConnectOnLaunch: data['auto_connect_on_launch'] as bool? ?? true,
+      restoreLastState: data['restore_last_state'] as bool? ?? true,
+      autoConnectOnBoot: data['auto_connect_on_boot'] as bool? ?? false,
+      startWithSystem: data['start_with_system'] as bool? ?? false,
+      minimizeToTray: data['minimize_to_tray'] as bool? ?? true,
       smartDomesticDirect:
-          json['routing.smart_domestic_direct'] as bool? ?? true,
-      lanDirect: json['routing.lan_direct'] as bool? ?? true,
-      directRules: (json['routing.direct_rules'] as List<dynamic>?)
+          data['routing.smart_domestic_direct'] as bool? ?? true,
+      lanDirect: data['routing.lan_direct'] as bool? ?? true,
+      directRules: (data['routing.direct_rules'] as List<dynamic>?)
               ?.map((e) => RoutingRule.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      blockRules: (json['routing.block_rules'] as List<dynamic>?)
+      blockRules: (data['routing.block_rules'] as List<dynamic>?)
               ?.map((e) => RoutingRule.fromJson(e as Map<String, dynamic>))
               .toList() ??
           const [],
-      appSplit: json['routing.app_split'] != null
+      appSplit: data['routing.app_split'] != null
           ? AppSplitConfig.fromJson(
-              json['routing.app_split'] as Map<String, dynamic>,
+              data['routing.app_split'] as Map<String, dynamic>,
             )
           : const AppSplitConfig(),
-      dnsServers: (json['dns.servers'] as List<dynamic>?)
+      dnsServers: (data['dns.servers'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           const ['1.1.1.1', '1.0.0.1'],
-      fragment: json['advanced.fragment'] as bool? ?? false,
-      ech: json['advanced.ech'] as bool? ?? false,
-      diagnosticLog: json['diagnostic_log'] as bool? ?? true,
+      fragment: data['advanced.fragment'] as bool? ?? false,
+      ech: data['advanced.ech'] as bool? ?? false,
+      diagnosticLog: data['diagnostic_log'] as bool? ?? true,
     );
   }
 }

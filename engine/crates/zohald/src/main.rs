@@ -75,7 +75,7 @@ fn find_aether_bin() -> PathBuf {
             candidates.push(parent.join("usr/bin/aether"));
         }
     }
-    if let Ok(appdir) = std::env::var("ZOHAL_APPDIR") {
+    if let Ok(appdir) = std::env::var("ZOHAL_APPDIR").or_else(|_| std::env::var("APPDIR")) {
         candidates.push(PathBuf::from(appdir).join("usr/bin/aether"));
     }
     candidates.push(PathBuf::from("/usr/lib/zohal/aether"));

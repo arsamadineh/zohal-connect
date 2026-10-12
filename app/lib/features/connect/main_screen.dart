@@ -5,14 +5,17 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/bridge.dart';
 import '../../core/engine_state.dart';
 import '../../core/persian.dart';
 import '../../core/settings.dart';
+import '../../core/updater.dart';
 import '../../design/components/connect_control.dart';
 import '../../design/components/sharp_row.dart';
 import '../../design/components/sharp_sheet.dart';
@@ -192,6 +195,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final engineState = ref.watch(engineStateProvider);
     final engineStats = ref.watch(engineStatsProvider);
     final settings = ref.watch(zohalSettingsProvider);
+    final updateInfo = ref.watch(updateInfoProvider);
 
     final isConnected = engineState.phase == ConnectionPhase.connected;
 
@@ -247,6 +251,33 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 ),
                 Container(height: 1.0, color: hairline),
 
+                // Update banner (Linux AppImage only)
+                if (updateInfo.valueOrNull != null)
+                  GestureDetector(
+                    onTap: () async {
+                      final url = Uri.parse(updateInfo.value!.downloadUrl);
+                      if (await canLaunchUrl(url)) await launchUrl(url);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0,
+                        vertical: 8.0,
+                      ),
+                      color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                      child: Text(
+                        'نسخه جدید ${Persian.ltrIsolate(Persian.toPersianDigits(updateInfo.value!.version))} در دسترس است',
+                        style: TextStyle(
+                          fontFamily: ZohalTokens.fontFamily,
+                          fontSize: 12.0,
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+
                 // 2. Body Area (Connect Control + Labels)
                 Expanded(
                   child: Column(
@@ -284,6 +315,45 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                         ),
                       ),
                       const SizedBox(height: 16.0),
+
+                      // Country flag + location row (when connected and exitLoc known)
+                      if (isConnected &&
+                          engineState.exitLoc != null &&
+                          engineState.exitLoc!.trim().length == 2)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: hairline,
+                                    width: 1.0,
+                                  ),
+                                ),
+                                child: CountryFlag.fromCountryCode(
+                                  engineState.exitLoc!.trim().toUpperCase(),
+                                  height: 16.0,
+                                  width: 24.0,
+                                  borderRadius: 0,
+                                ),
+                              ),
+                              const SizedBox(width: 8.0),
+                              Text(
+                                Persian.ltrIsolate(
+                                  engineState.exitLoc!.trim().toUpperCase(),
+                                ),
+                                style: TextStyle(
+                                  fontFamily: ZohalTokens.fontFamily,
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w500,
+                                  color: textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
 
                       // 5. Stats Row (when connected)
                       if (isConnected)

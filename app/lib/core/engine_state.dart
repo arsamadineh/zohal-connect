@@ -62,19 +62,23 @@ class EngineState {
   });
 
   factory EngineState.fromJson(Map<String, dynamic> json) {
+    final state = json['state'] is Map<String, dynamic>
+        ? json['state'] as Map<String, dynamic>
+        : json;
+
     ConnectionPhase parsePhase(String? val) {
-      switch (val) {
-        case 'Preparing':
+      switch (val?.toLowerCase()) {
+        case 'preparing':
           return ConnectionPhase.preparing;
-        case 'Connecting':
+        case 'connecting':
           return ConnectionPhase.connecting;
-        case 'Connected':
+        case 'connected':
           return ConnectionPhase.connected;
-        case 'Reconnecting':
+        case 'reconnecting':
           return ConnectionPhase.reconnecting;
-        case 'Disconnecting':
+        case 'disconnecting':
           return ConnectionPhase.disconnecting;
-        case 'Failed':
+        case 'failed':
           return ConnectionPhase.failed;
         default:
           return ConnectionPhase.idle;
@@ -82,14 +86,14 @@ class EngineState {
     }
 
     ConnectionStage parseStage(String? val) {
-      switch (val) {
-        case 'Prepare':
+      switch (val?.toLowerCase()) {
+        case 'prepare':
           return ConnectionStage.prepare;
-        case 'FindGateway':
+        case 'findgateway':
           return ConnectionStage.findGateway;
-        case 'BuildTunnel':
+        case 'buildtunnel':
           return ConnectionStage.buildTunnel;
-        case 'VerifyPath':
+        case 'verifypath':
           return ConnectionStage.verifyPath;
         default:
           return ConnectionStage.none;
@@ -97,41 +101,50 @@ class EngineState {
     }
 
     TransportKind parseTransport(String? val) {
-      switch (val) {
-        case 'Masque3':
+      switch (val?.toLowerCase()) {
+        case 'masque3':
           return TransportKind.masque3;
-        case 'Masque2':
+        case 'masque2':
           return TransportKind.masque2;
-        case 'WireGuard':
+        case 'wireguard':
           return TransportKind.wireguard;
-        case 'GoolMasque':
+        case 'goolmasque':
           return TransportKind.goolMasque;
-        case 'GoolClassic':
+        case 'goolclassic':
           return TransportKind.goolClassic;
         default:
           return TransportKind.none;
       }
     }
 
+    final desired = state['desired'];
+    final bool desiredUp = desired == 'up' ||
+        desired == true ||
+        (desired is Map &&
+            (desired['intent'] == 'Up' || desired['intent'] == 'up'));
+
+    final int epoch = (state['epoch'] as num?)?.toInt() ??
+        (desired is Map ? (desired['epoch'] as num?)?.toInt() ?? 0 : 0);
+
     return EngineState(
-      phase: parsePhase(json['phase'] as String?),
-      stage: parseStage(json['stage'] as String?),
-      desiredUp: json['desired'] == 'up' || json['desired'] == true,
-      epoch: (json['epoch'] as num?)?.toInt() ?? 0,
-      transport: parseTransport(json['transport'] as String?),
-      rung: (json['rung'] as num?)?.toInt() ?? 0,
-      attempt: (json['attempt'] as num?)?.toInt() ?? 0,
-      gateway: json['gateway'] as String?,
-      exitIp: json['exit_ip'] as String?,
-      exitLoc: json['exit_loc'] as String?,
-      colo: json['colo'] as String?,
-      sinceUnix: (json['since_unix'] as num?)?.toInt(),
-      errorCode: json['error'] as String?,
-      failStreak: (json['fail_streak'] as num?)?.toInt() ?? 0,
-      scope: json['scope'] == 'SystemProxy'
+      phase: parsePhase(state['phase'] as String?),
+      stage: parseStage(state['stage'] as String?),
+      desiredUp: desiredUp,
+      epoch: epoch,
+      transport: parseTransport(state['transport'] as String?),
+      rung: (state['rung'] as num?)?.toInt() ?? 0,
+      attempt: (state['attempt'] as num?)?.toInt() ?? 0,
+      gateway: state['gateway'] as String?,
+      exitIp: state['exit_ip'] as String?,
+      exitLoc: state['exit_loc'] as String?,
+      colo: state['colo'] as String?,
+      sinceUnix: (state['since_unix'] as num?)?.toInt(),
+      errorCode: state['error'] as String?,
+      failStreak: (state['fail_streak'] as num?)?.toInt() ?? 0,
+      scope: state['scope'] == 'SystemProxy'
           ? ConnectionScope.systemProxy
           : ConnectionScope.tun,
-      killSwitchEngaged: json['kill_switch_engaged'] as bool? ?? true,
+      killSwitchEngaged: state['kill_switch_engaged'] as bool? ?? true,
     );
   }
 

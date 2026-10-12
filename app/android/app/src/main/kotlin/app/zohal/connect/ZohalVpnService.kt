@@ -174,44 +174,87 @@ class ZohalVpnService : VpnService() {
         val stage: String = "findGateway",
     )
 
-    private fun buildLadder(mode: String, _useCache: Boolean): List<Rung> {
+    private fun extractLastConnPeer(configDir: File): String? {
+        val files = listOf("aether-masque-lastconn.toml", "aether-lastconn.toml", "aether-wg-lastconn.toml")
+        for (name in files) {
+            val f = File(configDir, name)
+            if (f.exists()) {
+                try {
+                    f.forEachLine { line ->
+                        if (line.startsWith("peer = ")) {
+                            val peer = line.removePrefix("peer = ").trim().trim('"')
+                            if (peer.isNotEmpty()) return peer
+                        }
+                    }
+                } catch (_: Exception) {}
+            }
+        }
+        return null
+    }
+
+    private fun buildLadder(mode: String, configDir: File): List<Rung> {
+        val cachedPeer = extractLastConnPeer(configDir)
         val h2fast = listOf("--masque", "--h2", "--fragment", "--scan", "verified",
             "--noize", "firewall")
         val h3fast = listOf("--masque", "--h3", "--scan", "verified",
             "--noize", "firewall")
+
+        val rungs = mutableListOf<Rung>()
+        if (cachedPeer != null) {
+            // Prioritize cached known-good endpoint for fast sub-second connection
+            rungs.add(Rung(listOf("--masque", "--h2", "--fragment", "--peer", cachedPeer, "--scan", "verified", "--noize", "firewall"), 3))
+        }
+
         val auto = listOf(
-            Rung(h2fast, 6),
-            Rung(h3fast, 6),
-            Rung(listOf("--masque", "--h2", "--fragment", "--scan", "turbo", "--noize", "firewall"), 10),
-            Rung(listOf("--masque", "--h3", "--scan", "turbo", "--noize", "firewall"), 10),
-            Rung(listOf("--gool", "--scan", "turbo", "--noize", "aggressive"), 15),
-            Rung(listOf("--wg", "--scan", "turbo", "--noize", "balanced"), 20),
+            Rung(h2fast, 3),
+            Rung(h3fast, 3),
+            Rung(listOf("--masque", "--h2", "--fragment", "--scan", "turbo", "--noize", "firewall"), 6),
+            Rung(listOf("--masque", "--h3", "--scan", "turbo", "--noize", "firewall"), 6),
+            Rung(listOf("--gool", "--scan", "turbo", "--noize", "aggressive"), 10),
+            Rung(listOf("--wg", "--scan", "turbo", "--noize", "balanced"), 10),
         )
         return when (mode) {
-            "masque-h3" -> listOf(
-                Rung(h3fast, 6),
-                Rung(listOf("--masque", "--h3", "--scan", "turbo", "--noize", "firewall"), 12),
-                Rung(listOf("--masque", "--h3", "--scan", "turbo", "--noize", "firewall"), 18),
-            )
-            "masque-h2" -> listOf(
-                Rung(h2fast, 6),
-                Rung(listOf("--masque", "--h2", "--fragment", "--scan", "turbo", "--noize", "firewall"), 12),
-                Rung(listOf("--masque", "--h2", "--fragment", "--scan", "turbo", "--noize", "firewall"), 18),
-            )
+            "masque-h3" -> {
+                val list = mutableListOf<Rung>()
+                if (cachedPeer != null) {
+                    list.add(Rung(listOf("--masque", "--h3", "--peer", cachedPeer, "--scan", "verified", "--noize", "firewall"), 3))
+                }
+                list.addAll(listOf(
+                    Rung(h3fast, 3),
+                    Rung(listOf("--masque", "--h3", "--scan", "turbo", "--noize", "firewall"), 8),
+                    Rung(listOf("--masque", "--h3", "--scan", "turbo", "--noize", "firewall"), 12),
+                ))
+                list
+            }
+            "masque-h2" -> {
+                val list = mutableListOf<Rung>()
+                if (cachedPeer != null) {
+                    list.add(Rung(listOf("--masque", "--h2", "--fragment", "--peer", cachedPeer, "--scan", "verified", "--noize", "firewall"), 3))
+                }
+                list.addAll(listOf(
+                    Rung(h2fast, 3),
+                    Rung(listOf("--masque", "--h2", "--fragment", "--scan", "turbo", "--noize", "firewall"), 8),
+                    Rung(listOf("--masque", "--h2", "--fragment", "--scan", "turbo", "--noize", "firewall"), 12),
+                ))
+                list
+            }
             "wireguard" -> listOf(
+                Rung(listOf("--wg", "--scan", "turbo", "--noize", "balanced"), 8),
                 Rung(listOf("--wg", "--scan", "turbo", "--noize", "balanced"), 12),
-                Rung(listOf("--wg", "--scan", "turbo", "--noize", "balanced"), 20),
             )
             "gool" -> listOf(
-                Rung(listOf("--gool", "--scan", "turbo", "--noize", "aggressive"), 15),
-                Rung(listOf("--gool-classic", "--scan", "turbo", "--noize", "aggressive"), 15),
+                Rung(listOf("--gool", "--scan", "turbo", "--noize", "aggressive"), 10),
+                Rung(listOf("--gool-classic", "--scan", "turbo", "--noize", "aggressive"), 10),
             )
-            else -> auto
+            else -> {
+                rungs.addAll(auto)
+                rungs
+            }
         }
     }
 
     private fun runLadder(config: ConnectConfig, configDir: File, aetherBin: File): Session? {
-        for (rung in buildLadder(config.mode, true)) {
+        for (rung in buildLadder(config.mode, configDir)) {
             if (stopRequested.get()) return null
             val session = tryRung(rung, config, configDir, aetherBin)
             if (session != null) return session
@@ -691,6 +734,7 @@ class ZohalVpnService : VpnService() {
         }
         try {
             sendBroadcast(intent)
+            ZohalWidgetProvider.updateAllWidgets(this)
         } catch (e: Exception) {
             Log.w(TAG, "broadcast failed: ${e.message}")
         }
@@ -735,6 +779,7 @@ class ZohalVpnService : VpnService() {
         }
         try {
             sendBroadcast(intent)
+            ZohalWidgetProvider.updateAllWidgets(this)
         } catch (e: Exception) {
             Log.w(TAG, "broadcast failed: ${e.message}")
         }

@@ -1,7 +1,7 @@
 // design/components/connect_control.dart
 // Centerpiece Persian letter «ز» connection control for Zohal Connect.
-// Features the sharp square dot, angular «ز» body, severed circuit slash line,
-// internal energy beam, state transitions, and ambient atmospheric glow.
+// Minimalist, high-framerate geometric Saturn/Zayn circuit control adhering
+// strictly to Rule R18 (sharp corners, zero border radius) and Rule R14/R15.
 
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -34,8 +34,8 @@ class ConnectControl extends StatefulWidget {
 class _ConnectControlState extends State<ConnectControl>
     with TickerProviderStateMixin {
   late AnimationController _connectTransitionController;
-  late AnimationController _laserPulseController;
-  late AnimationController _energyBeamController;
+  late AnimationController _pulseController;
+  late AnimationController _reticleController;
   late AnimationController _floatController;
   late AnimationController _shockwaveController;
   late AnimationController _pressController;
@@ -44,37 +44,37 @@ class _ConnectControlState extends State<ConnectControl>
   void initState() {
     super.initState();
 
-    // Connection transition: 750 ms cubic ease for slash retraction & illumination
+    // Circuit engagement / retraction transition: 600 ms cubic ease
     _connectTransitionController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 750),
+      duration: const Duration(milliseconds: 600),
     );
 
-    // Laser charging / breathing pulse: 1100 ms alternate loop
-    _laserPulseController = AnimationController(
+    // Subtle breathing luminosity pulse: 1400 ms alternate loop
+    _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1100),
+      duration: const Duration(milliseconds: 1400),
     );
 
-    // Flowing energy beam through the letter spine: 1600 ms continuous loop
-    _energyBeamController = AnimationController(
+    // Geometric targeting reticle scanning loop: 1800 ms
+    _reticleController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1600),
+      duration: const Duration(milliseconds: 1800),
     );
 
-    // Subtle gentle float in connected state: 3000 ms alternate loop
+    // Connected state gentle levitation: 3200 ms alternate loop
     _floatController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3000),
+      duration: const Duration(milliseconds: 3200),
     );
 
-    // Expanding square shockwave on connection: 800 ms single shot
+    // Single-shot geometric square shockwave on connect: 650 ms
     _shockwaveController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 650),
     );
 
-    // Press scale: 90 ms in
+    // Press scale response
     _pressController = AnimationController(
       vsync: this,
       duration: ZohalMotion.durationPressIn,
@@ -99,24 +99,24 @@ class _ConnectControlState extends State<ConnectControl>
         _floatController.stop();
         _connectTransitionController.animateTo(
           0.0,
-          duration: const Duration(milliseconds: 250),
+          duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutCubic,
         );
-        if (!_laserPulseController.isAnimating) {
-          _laserPulseController.repeat(reverse: true);
+        if (!_pulseController.isAnimating) {
+          _pulseController.repeat(reverse: true);
         }
-        if (!_energyBeamController.isAnimating) {
-          _energyBeamController.repeat();
+        if (!_reticleController.isAnimating) {
+          _reticleController.repeat();
         }
         break;
 
       case ConnectionPhase.connected:
-        _laserPulseController.stop();
-        _energyBeamController.stop();
+        _pulseController.stop();
+        _reticleController.stop();
         _connectTransitionController.animateTo(
           1.0,
-          duration: const Duration(milliseconds: 750),
-          curve: Curves.easeOutCubic,
+          duration: const Duration(milliseconds: 600),
+          curve: Curves.easeInOutCubic,
         );
         if (oldPhase != ConnectionPhase.connected) {
           _shockwaveController.forward(from: 0.0);
@@ -129,13 +129,13 @@ class _ConnectControlState extends State<ConnectControl>
       case ConnectionPhase.idle:
       case ConnectionPhase.disconnecting:
       case ConnectionPhase.failed:
-        _laserPulseController.stop();
-        _energyBeamController.stop();
+        _pulseController.stop();
+        _reticleController.stop();
         _floatController.stop();
         _shockwaveController.stop();
         _connectTransitionController.animateTo(
           0.0,
-          duration: const Duration(milliseconds: 400),
+          duration: const Duration(milliseconds: 350),
           curve: Curves.easeOutCubic,
         );
         break;
@@ -145,8 +145,8 @@ class _ConnectControlState extends State<ConnectControl>
   @override
   void dispose() {
     _connectTransitionController.dispose();
-    _laserPulseController.dispose();
-    _energyBeamController.dispose();
+    _pulseController.dispose();
+    _reticleController.dispose();
     _floatController.dispose();
     _shockwaveController.dispose();
     _pressController.dispose();
@@ -209,8 +209,8 @@ class _ConnectControlState extends State<ConnectControl>
         child: AnimatedBuilder(
           animation: Listenable.merge([
             _connectTransitionController,
-            _laserPulseController,
-            _energyBeamController,
+            _pulseController,
+            _reticleController,
             _floatController,
             _shockwaveController,
             _pressController,
@@ -228,8 +228,8 @@ class _ConnectControlState extends State<ConnectControl>
                     phase: widget.phase,
                     stage: widget.stage,
                     connectProgress: _connectTransitionController.value,
-                    laserValue: _laserPulseController.value,
-                    energyBeamValue: _energyBeamController.value,
+                    pulseValue: _pulseController.value,
+                    reticleValue: _reticleController.value,
                     floatValue: _floatController.value,
                     shockwaveValue: _shockwaveController.value,
                     hairlineColor: hairline,
@@ -253,8 +253,8 @@ class _ZohalGlyphPainter extends CustomPainter {
   final ConnectionPhase phase;
   final ConnectionStage stage;
   final double connectProgress;
-  final double laserValue;
-  final double energyBeamValue;
+  final double pulseValue;
+  final double reticleValue;
   final double floatValue;
   final double shockwaveValue;
   final Color hairlineColor;
@@ -268,8 +268,8 @@ class _ZohalGlyphPainter extends CustomPainter {
     required this.phase,
     required this.stage,
     required this.connectProgress,
-    required this.laserValue,
-    required this.energyBeamValue,
+    required this.pulseValue,
+    required this.reticleValue,
     required this.floatValue,
     required this.shockwaveValue,
     required this.hairlineColor,
@@ -300,7 +300,7 @@ class _ZohalGlyphPainter extends CustomPainter {
     final bool isConnected = phase == ConnectionPhase.connected;
     final bool isFailed = phase == ConnectionPhase.failed;
 
-    // 1. Ambient Background Glow
+    // 1. Ambient Background Glow (Subtle & theme-aligned, no garish bleed)
     _drawAmbientGlow(
         canvas, canonW, canonH, isConnecting, isConnected, isFailed);
 
@@ -310,26 +310,20 @@ class _ZohalGlyphPainter extends CustomPainter {
     }
 
     // 3. Subtle floating vertical offset in connected state
-    final double floatDy = isConnected ? -3.5 * floatValue : 0.0;
+    final double floatDy = isConnected ? -3.0 * floatValue : 0.0;
 
     // 4. Angular «ز» Body
     _drawGlyphBody(canvas, floatDy, isConnecting, isConnected, isFailed);
 
-    // 5. Internal Flowing Energy Beam (Active during connecting)
-    if (isConnecting) {
-      _drawEnergyBeam(canvas, floatDy);
-    }
-
-    // 6. Square Dot at (160, 72)
+    // 5. Square Dot & Precision Reticle at (160, 72)
     _drawSquareDot(canvas, floatDy, isConnecting, isConnected, isFailed);
 
-    // 7. Crossing Slash Line (The Severed Circuit)
-    // Slices away and vanishes in connected state (connectProgress -> 1.0)
+    // 6. Crossing Slash Line (Severed circuit that heals on connect)
     if (connectProgress < 1.0) {
       _drawSlashLine(canvas, floatDy, isConnecting, isFailed);
     }
 
-    // 8. 4 Sharp Stage Indicator Pips at the bottom
+    // 7. 4 Sharp Stage Indicator Ticks at the bottom
     _drawStagePips(canvas, isConnecting, isConnected, isFailed);
 
     canvas.restore();
@@ -348,36 +342,37 @@ class _ZohalGlyphPainter extends CustomPainter {
 
     if (isFailed) {
       glowColor = errorColor;
-      glowAlpha = 0.18;
-    } else if (isConnecting) {
-      glowColor = const Color(0xFF3B82F6);
-      glowAlpha = 0.16 + 0.14 * laserValue;
+      glowAlpha = 0.12;
     } else if (isConnected) {
       glowColor = const Color(0xFF10B981);
-      glowAlpha = 0.22;
+      glowAlpha = 0.14;
+    } else if (isConnecting) {
+      glowColor = accentColor;
+      glowAlpha = 0.08 + 0.08 * pulseValue;
     } else {
       glowColor = textPrimaryColor;
-      glowAlpha = 0.05;
+      glowAlpha = 0.03;
     }
 
     final glowPaint = Paint()
       ..shader = ui.Gradient.radial(
-        const Offset(160.0, 180.0),
-        160.0,
+        const Offset(160.0, 190.0),
+        150.0,
         [
           glowColor.withValues(alpha: glowAlpha),
-          glowColor.withValues(alpha: glowAlpha * 0.4),
+          glowColor.withValues(alpha: glowAlpha * 0.3),
           Colors.transparent,
         ],
-        const [0.0, 0.55, 1.0],
+        const [0.0, 0.6, 1.0],
       );
 
     canvas.drawRect(Rect.fromLTWH(0.0, 0.0, w, h), glowPaint);
   }
 
   void _drawShockwave(Canvas canvas, double progress) {
-    final double shockScale = 0.7 + 1.8 * progress;
-    final double shockAlpha = (1.0 - progress).clamp(0.0, 1.0) * 0.85;
+    // Sharp square expanding shockwave (Rule R18: sharp corners only)
+    final double shockScale = 0.8 + 1.6 * progress;
+    final double shockAlpha = (1.0 - progress).clamp(0.0, 1.0) * 0.7;
 
     final shockRect = Rect.fromCenter(
       center: const Offset(160.0, 72.0),
@@ -387,7 +382,7 @@ class _ZohalGlyphPainter extends CustomPainter {
 
     final shockPaint = Paint()
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.0
+      ..strokeWidth = 1.5
       ..color = const Color(0xFF10B981).withValues(alpha: shockAlpha);
 
     canvas.drawRect(shockRect, shockPaint);
@@ -403,7 +398,7 @@ class _ZohalGlyphPainter extends CustomPainter {
     canvas.save();
     canvas.translate(0.0, floatDy);
 
-    // Modern angular «ز» body polygon
+    // Crisp angular «ز» body polygon
     final bodyPath = Path()
       ..moveTo(142.0, 142.0)
       ..lineTo(176.0, 108.0)
@@ -413,7 +408,6 @@ class _ZohalGlyphPainter extends CustomPainter {
       ..lineTo(182.0, 200.0)
       ..close();
 
-    // Body Fill Gradient
     final Color topColor;
     final Color bottomColor;
 
@@ -422,15 +416,11 @@ class _ZohalGlyphPainter extends CustomPainter {
       bottomColor = errorColor.withValues(alpha: 0.75);
     } else if (isConnected) {
       topColor = Colors.white;
-      bottomColor = const Color(0xFFE2E4E9);
+      bottomColor = const Color(0xFFD1FAE5);
     } else if (isConnecting) {
-      final double boost = 0.85 + 0.15 * laserValue;
-      topColor = Color.lerp(
-        const Color(0xFFDBEAFE),
-        Colors.white,
-        boost,
-      )!;
-      bottomColor = const Color(0xFFBFDBFE);
+      final double boost = 0.75 + 0.25 * pulseValue;
+      topColor = Color.lerp(textPrimaryColor, accentColor, boost)!;
+      bottomColor = Color.lerp(textSecondaryColor, accentColor, boost * 0.7)!;
     } else {
       topColor = textPrimaryColor;
       bottomColor = textSecondaryColor.withValues(alpha: 0.85);
@@ -445,80 +435,17 @@ class _ZohalGlyphPainter extends CustomPainter {
 
     canvas.drawPath(bodyPath, bodyPaint);
 
-    // Subtle edge hairline for crispness
+    // Razor-sharp 1px edge stroke
     final strokePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0
       ..color = isConnected
-          ? const Color(0xFF10B981).withValues(alpha: 0.40)
-          : hairlineColor.withValues(alpha: 0.60);
+          ? const Color(0xFF10B981).withValues(alpha: 0.45)
+          : isConnecting
+              ? accentColor.withValues(alpha: 0.5)
+              : hairlineColor.withValues(alpha: 0.6);
 
     canvas.drawPath(bodyPath, strokePaint);
-
-    canvas.restore();
-  }
-
-  void _drawEnergyBeam(Canvas canvas, double floatDy) {
-    canvas.save();
-    canvas.translate(0.0, floatDy);
-
-    // Internal laser energy spine inside «ز»
-    final beamPath = Path()
-      ..moveTo(160.0, 125.0)
-      ..lineTo(202.0, 198.0)
-      ..lineTo(118.0, 306.0);
-
-    final metrics = beamPath.computeMetrics().toList();
-    if (metrics.isNotEmpty) {
-      final metric = metrics.first;
-      final totalLen = metric.length;
-      const segmentLen = 65.0;
-
-      // Stage speed / presence boost
-      final double cycleSpeed;
-      switch (stage) {
-        case ConnectionStage.prepare:
-          cycleSpeed = 0.7;
-          break;
-        case ConnectionStage.findGateway:
-          cycleSpeed = 1.0;
-          break;
-        case ConnectionStage.buildTunnel:
-          cycleSpeed = 1.3;
-          break;
-        case ConnectionStage.verifyPath:
-          cycleSpeed = 1.7;
-          break;
-        case ConnectionStage.none:
-          cycleSpeed = 1.0;
-          break;
-      }
-
-      final double pos = (energyBeamValue * cycleSpeed) % 1.0;
-      final double head = pos * (totalLen + segmentLen) - segmentLen / 2.0;
-      final double start = (head - segmentLen).clamp(0.0, totalLen);
-      final double end = head.clamp(0.0, totalLen);
-
-      if (end > start) {
-        final extracted = metric.extractPath(start, end);
-
-        // Soft outer glow of beam
-        final glowPaint = Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.square
-          ..strokeWidth = 10.0
-          ..color = const Color(0xFF3B82F6).withValues(alpha: 0.35);
-        canvas.drawPath(extracted, glowPaint);
-
-        // Core electric beam
-        final corePaint = Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.square
-          ..strokeWidth = 4.5
-          ..color = const Color(0xFF60A5FA);
-        canvas.drawPath(extracted, corePaint);
-      }
-    }
 
     canvas.restore();
   }
@@ -536,28 +463,43 @@ class _ZohalGlyphPainter extends CustomPainter {
     // Dot geometry: Rect(132, 44, 56, 56), center at (160, 72)
     const dotRect = Rect.fromLTWH(132.0, 44.0, 56.0, 56.0);
 
-    // Radiant halo behind dot when connected or connecting
-    if (isConnected) {
-      final glowRect = Rect.fromCenter(
-        center: const Offset(160.0, 72.0),
-        width: 84.0,
-        height: 84.0,
-      );
-      final glowPaint = Paint()
-        ..color = const Color(0xFF10B981).withValues(alpha: 0.35);
-      canvas.drawRect(glowRect, glowPaint);
-    } else if (isConnecting) {
-      final double auraSize = 64.0 + 12.0 * laserValue;
-      final glowRect = Rect.fromCenter(
-        center: const Offset(160.0, 72.0),
-        width: auraSize,
-        height: auraSize,
-      );
-      final glowPaint = Paint()
-        ..color = const Color(0xFF60A5FA).withValues(
-          alpha: 0.20 + 0.15 * laserValue,
-        );
-      canvas.drawRect(glowRect, glowPaint);
+    // Precision Aerospace Reticle Brackets (during connecting)
+    if (isConnecting) {
+      // Micro-pulse breathing aperture
+      final double d = 3.0 + 3.0 * math.sin(reticleValue * 2 * math.pi);
+      const double bracketLen = 10.0;
+      final reticlePaint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5
+        ..color = accentColor.withValues(alpha: 0.65 + 0.35 * pulseValue);
+
+      // Top-Left L-bracket
+      final tl = Path()
+        ..moveTo(126.0 - d, 44.0 + bracketLen)
+        ..lineTo(126.0 - d, 38.0 - d)
+        ..lineTo(132.0 - d + bracketLen, 38.0 - d);
+      canvas.drawPath(tl, reticlePaint);
+
+      // Top-Right L-bracket
+      final tr = Path()
+        ..moveTo(188.0 + d + bracketLen, 44.0 + bracketLen)
+        ..lineTo(194.0 + d, 38.0 - d)
+        ..lineTo(194.0 + d - bracketLen, 38.0 - d);
+      canvas.drawPath(tr, reticlePaint);
+
+      // Bottom-Left L-bracket
+      final bl = Path()
+        ..moveTo(126.0 - d, 100.0 - bracketLen)
+        ..lineTo(126.0 - d, 106.0 + d)
+        ..lineTo(132.0 - d + bracketLen, 106.0 + d);
+      canvas.drawPath(bl, reticlePaint);
+
+      // Bottom-Right L-bracket
+      final br = Path()
+        ..moveTo(188.0 + d + bracketLen, 100.0 - bracketLen)
+        ..lineTo(194.0 + d, 106.0 + d)
+        ..lineTo(194.0 + d - bracketLen, 106.0 + d);
+      canvas.drawPath(br, reticlePaint);
     }
 
     // Dot Fill: Sharp square (Zero border radius per Rule R18)
@@ -568,9 +510,9 @@ class _ZohalGlyphPainter extends CustomPainter {
       dotFillColor = Colors.white;
     } else if (isConnecting) {
       dotFillColor = Color.lerp(
-        const Color(0xFFE0E7FF),
+        textPrimaryColor,
         Colors.white,
-        laserValue,
+        0.5 + 0.5 * pulseValue,
       )!;
     } else {
       dotFillColor = textPrimaryColor;
@@ -582,13 +524,15 @@ class _ZohalGlyphPainter extends CustomPainter {
 
     canvas.drawRect(dotRect, dotPaint);
 
-    // Subtle hairline border
+    // Subtle sharp perimeter outline
     final strokePaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0
       ..color = isConnected
           ? const Color(0xFF34D399)
-          : hairlineColor.withValues(alpha: 0.70);
+          : isConnecting
+              ? accentColor.withValues(alpha: 0.8)
+              : hairlineColor.withValues(alpha: 0.7);
 
     canvas.drawRect(dotRect, strokePaint);
 
@@ -604,9 +548,8 @@ class _ZohalGlyphPainter extends CustomPainter {
     canvas.save();
     canvas.translate(0.0, floatDy);
 
-    // Slash line: cuts at 45° directly through dot center (160, 72)
-    // Canonical points: (104, 128) to (216, 16)
-    // Slices away towards top-right (+38, -38) and shortens when connectProgress increases
+    // Slash line: cuts at 45 deg directly through dot center (160, 72)
+    // Slices away smoothly towards top-right (+38, -38) and retracts
     final double slideProgress = connectProgress;
     final double alpha = (1.0 - slideProgress).clamp(0.0, 1.0);
     final double lengthFactor = (1.0 - slideProgress).clamp(0.0, 1.0);
@@ -618,54 +561,25 @@ class _ZohalGlyphPainter extends CustomPainter {
     final Offset pStart = center + shift - vHalf * lengthFactor;
     final Offset pEnd = center + shift + vHalf * lengthFactor;
 
+    final Color slashColor;
     if (isFailed) {
-      // Broken circuit slash in error color
-      final slashPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 8.5
-        ..strokeCap = StrokeCap.square
-        ..color = errorColor.withValues(alpha: alpha);
-      canvas.drawLine(pStart, pEnd, slashPaint);
+      slashColor = errorColor.withValues(alpha: alpha);
     } else if (isConnecting) {
-      // Laser pulse charge traveling along the slash line
-      final glowPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 16.0
-        ..strokeCap = StrokeCap.square
-        ..color = const Color(0xFF3B82F6).withValues(
-          alpha: (0.35 + 0.25 * laserValue) * alpha,
-        );
-      canvas.drawLine(pStart, pEnd, glowPaint);
-
-      // Gradient laser stroke
-      final laserPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 8.5
-        ..strokeCap = StrokeCap.square
-        ..shader = ui.Gradient.linear(
-          pStart,
-          pEnd,
-          [
-            const Color(0xFF60A5FA).withValues(alpha: alpha),
-            Colors.white.withValues(alpha: alpha),
-            const Color(0xFF93C5FD).withValues(alpha: alpha),
-          ],
-          [
-            (laserValue - 0.25).clamp(0.0, 1.0),
-            laserValue.clamp(0.0, 1.0),
-            (laserValue + 0.25).clamp(0.0, 1.0),
-          ],
-        );
-      canvas.drawLine(pStart, pEnd, laserPaint);
+      // Crisp pulse in accent color
+      final double blend = 0.5 + 0.5 * pulseValue;
+      slashColor = Color.lerp(textPrimaryColor, accentColor, blend)!
+          .withValues(alpha: alpha);
     } else {
-      // Disconnected: Solid sharp line cutting through square dot
-      final slashPaint = Paint()
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 8.5
-        ..strokeCap = StrokeCap.square
-        ..color = textPrimaryColor.withValues(alpha: alpha);
-      canvas.drawLine(pStart, pEnd, slashPaint);
+      slashColor = textPrimaryColor.withValues(alpha: alpha);
     }
+
+    final slashPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 8.0
+      ..strokeCap = StrokeCap.square
+      ..color = slashColor;
+
+    canvas.drawLine(pStart, pEnd, slashPaint);
 
     canvas.restore();
   }
@@ -677,7 +591,7 @@ class _ZohalGlyphPainter extends CustomPainter {
     bool isFailed,
   ) {
     // 4 sharp horizontal ticks at bottom: (Prepare, FindGateway, BuildTunnel, VerifyPath)
-    // Spaced evenly along the baseline at y = 356
+    // Spaced evenly along the baseline at y = 356 (Rule R18: 0 border radius)
     const double pipW = 24.0;
     const double pipH = 3.0;
     const double spacing = 8.0;
@@ -716,13 +630,11 @@ class _ZohalGlyphPainter extends CustomPainter {
             active = stage == ConnectionStage.verifyPath;
             break;
         }
-        pipColor = active
-            ? const Color(0xFF60A5FA)
-            : hairlineColor.withValues(alpha: 0.50);
+        pipColor = active ? accentColor : hairlineColor.withValues(alpha: 0.45);
       } else {
         pipColor = cancelConfirmationArmed
             ? accentColor
-            : hairlineColor.withValues(alpha: 0.40);
+            : hairlineColor.withValues(alpha: 0.35);
       }
 
       final paint = Paint()
@@ -738,8 +650,8 @@ class _ZohalGlyphPainter extends CustomPainter {
     return oldDelegate.phase != phase ||
         oldDelegate.stage != stage ||
         oldDelegate.connectProgress != connectProgress ||
-        oldDelegate.laserValue != laserValue ||
-        oldDelegate.energyBeamValue != energyBeamValue ||
+        oldDelegate.pulseValue != pulseValue ||
+        oldDelegate.reticleValue != reticleValue ||
         oldDelegate.floatValue != floatValue ||
         oldDelegate.shockwaveValue != shockwaveValue ||
         oldDelegate.hairlineColor != hairlineColor ||

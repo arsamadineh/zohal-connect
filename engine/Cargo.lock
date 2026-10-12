@@ -2846,7 +2846,7 @@ checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
 
 [[package]]
 name = "zohal-android"
-version = "0.1.14"
+version = "0.1.15"
 dependencies = [
  "tokio",
  "tokio-util",
@@ -2856,7 +2856,7 @@ dependencies = [
 
 [[package]]
 name = "zohal-bridge"
-version = "0.1.14"
+version = "0.1.15"
 dependencies = [
  "interprocess",
  "parking_lot",
@@ -2872,7 +2872,7 @@ dependencies = [
 
 [[package]]
 name = "zohal-engine"
-version = "0.1.14"
+version = "0.1.15"
 dependencies = [
  "interprocess",
  "libc",
@@ -2896,7 +2896,7 @@ dependencies = [
 
 [[package]]
 name = "zohal-platform"
-version = "0.1.14"
+version = "0.1.15"
 dependencies = [
  "nix 0.29.0",
  "serde",
@@ -2910,7 +2910,7 @@ dependencies = [
 
 [[package]]
 name = "zohal-proto"
-version = "0.1.14"
+version = "0.1.15"
 dependencies = [
  "proptest",
  "serde",
@@ -2920,7 +2920,7 @@ dependencies = [
 
 [[package]]
 name = "zohal-tun"
-version = "0.1.14"
+version = "0.1.15"
 dependencies = [
  "thiserror",
  "tokio",
@@ -2932,7 +2932,7 @@ dependencies = [
 
 [[package]]
 name = "zohald"
-version = "0.1.14"
+version = "0.1.15"
 dependencies = [
  "parking_lot",
  "sd-notify",

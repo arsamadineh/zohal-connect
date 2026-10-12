@@ -23,6 +23,8 @@ final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
   }
 });
 
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
 class ZohalApp extends ConsumerStatefulWidget {
   const ZohalApp({super.key});
 
@@ -43,6 +45,7 @@ class _ZohalAppState extends ConsumerState<ZohalApp> {
     final onboarding = ref.watch(onboardingCompletedProvider);
 
     return MaterialApp(
+      navigatorKey: rootNavigatorKey,
       title: StringsFa.appName,
       debugShowCheckedModeBanner: false,
       locale: const Locale('fa', 'IR'),

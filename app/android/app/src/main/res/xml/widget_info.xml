@@ -4,6 +4,8 @@
     android:minHeight="50dp"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/widget_zohal"
+    android:previewImage="@drawable/widget_preview"
+    android:previewLayout="@layout/widget_zohal"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen">
 </appwidget-provider>

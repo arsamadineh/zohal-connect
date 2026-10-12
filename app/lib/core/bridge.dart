@@ -13,6 +13,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'engine_state.dart';
 import 'logger.dart';
@@ -108,14 +109,38 @@ class ZohalSettingsNotifier extends StateNotifier<ZohalSettings> {
   StreamSubscription<ZohalSettings>? _sub;
 
   ZohalSettingsNotifier(this.bridge) : super(const ZohalSettings()) {
+    _loadPersistedSettings();
     bridge.pushSettings(state);
     _sub = bridge.settingsStream.listen((newSettings) {
       state = newSettings;
     });
   }
 
+  Future<void> _loadPersistedSettings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString('zohal_user_settings');
+      if (raw != null && raw.isNotEmpty) {
+        final decoded = jsonDecode(raw) as Map<String, dynamic>;
+        final loaded = ZohalSettings.fromJson(decoded);
+        state = loaded;
+        bridge.pushSettings(loaded);
+        await bridge.patchSettings(loaded);
+      }
+    } catch (e) {
+      ZohalLogger().debug('Failed to load persisted settings: $e');
+    }
+  }
+
   Future<void> updateSettings(ZohalSettings settings) async {
     state = settings;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'zohal_user_settings',
+        jsonEncode(settings.toJson()),
+      );
+    } catch (_) {}
     bridge.pushSettings(settings);
     await bridge.patchSettings(settings);
   }
@@ -220,6 +245,8 @@ class ZohalBridgeClient {
       await channel.start({
         'mode': _lastSettings.connectionMode.name,
         'dns': _lastSettings.dnsServers,
+        'ipVersion': _lastSettings.ipVersion.name,
+        'killSwitch': _lastSettings.killSwitch,
         'fragment': _lastSettings.fragment,
         'ech': _lastSettings.ech,
         'splitMode': _lastSettings.appSplit.mode.name,
@@ -228,6 +255,10 @@ class ZohalBridgeClient {
     } else {
       await channel.stop();
     }
+  }
+
+  Future<bool> ensureNotificationPermission() async {
+    return VpnChannel().ensureNotificationPermission();
   }
 
   // ---- Desktop path: Unix socket to zohald ----

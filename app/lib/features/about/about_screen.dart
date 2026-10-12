@@ -1,22 +1,55 @@
 // features/about/about_screen.dart
 // About screen for Zohal Connect according to ZOHAL_SPEC Section 13.6.
-// AGPL-3.0 notice, source code link, third-party licenses, credit to Aether.
+// AGPL-3.0 notice, source code link, third-party licenses, credit to Aether, and manual update checker.
 
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/persian.dart';
+import '../../core/updater.dart';
+import '../../design/components/brand_logo.dart';
 import '../../design/components/sharp_row.dart';
+import '../../design/components/sharp_toast.dart';
 import '../../design/tokens.dart';
 import '../../l10n/strings_fa.dart';
+import 'update_dialog.dart';
 
-class AboutScreen extends StatelessWidget {
+class AboutScreen extends StatefulWidget {
   const AboutScreen({super.key});
 
+  @override
+  State<AboutScreen> createState() => _AboutScreenState();
+}
+
+class _AboutScreenState extends State<AboutScreen> {
   static final Future<PackageInfo> _packageInfo = PackageInfo.fromPlatform();
-  static const String repoUrl =
-      'https://github.com/zohal-connect/zohal-connect';
+  static const String repoUrl = 'https://github.com/arsamadineh/zohal-connect';
+
+  bool _isCheckingUpdate = false;
+
+  Future<void> _handleCheckUpdate() async {
+    if (_isCheckingUpdate) return;
+    setState(() => _isCheckingUpdate = true);
+
+    try {
+      final update = await fetchLatestUpdate();
+      if (!mounted) return;
+      if (update != null) {
+        await UpdateDialog.show(context, update);
+      } else {
+        SharpToast.show(context, StringsFa.updateUpToDate);
+      }
+    } catch (_) {
+      if (mounted) {
+        SharpToast.show(context, StringsFa.updateFailed);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isCheckingUpdate = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,15 +88,7 @@ class AboutScreen extends StatelessWidget {
             Center(
               child: Column(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.zero,
-                    child: Image.asset(
-                      'assets/images/logo.png',
-                      width: 64.0,
-                      height: 64.0,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
+                  const BrandLogo(size: 64.0),
                   const SizedBox(height: 16.0),
                   Text(
                     StringsFa.appName,
@@ -117,6 +142,28 @@ class AboutScreen extends StatelessWidget {
                   ],
                 );
               },
+            ),
+
+            // Check for updates row
+            SharpRow(
+              title: StringsFa.updateCheck,
+              trailing: _isCheckingUpdate
+                  ? SizedBox(
+                      width: 16.0,
+                      height: 16.0,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.0,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.colorScheme.primary,
+                        ),
+                      ),
+                    )
+                  : Icon(
+                      Icons.arrow_back_ios_new_sharp,
+                      size: 12.0,
+                      color: textSecondary,
+                    ),
+              onTap: _isCheckingUpdate ? null : _handleCheckUpdate,
             ),
 
             // AGPL Notice

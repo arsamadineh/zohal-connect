@@ -165,5 +165,34 @@ void main() {
       expect(state2.stage, ConnectionStage.findGateway);
       expect(state2.transport, TransportKind.masque3);
     });
+
+    test('serializes and deserializes IpVersion and DNS servers roundtrip', () {
+      const s = ZohalSettings(
+        connectionMode: ConnectionMode.wireguard,
+        ipVersion: IpVersion.v6,
+        dnsServers: ['1.1.1.1', '2606:4700:4700::1111'],
+        smartDomesticDirect: false,
+        lanDirect: false,
+        fragment: true,
+        killSwitch: true,
+      );
+
+      final json = s.toJson();
+      expect(json['connection_mode'], 'WireGuard');
+      expect(json['ip_version'], 'V6');
+      expect(json['dns_servers'], ['1.1.1.1', '2606:4700:4700::1111']);
+      expect(json['routing.smart_domestic_direct'], false);
+      expect(json['routing.lan_direct'], false);
+      expect(json['advanced.fragment'], true);
+
+      final decoded = ZohalSettings.fromJson(json);
+      expect(decoded.connectionMode, ConnectionMode.wireguard);
+      expect(decoded.ipVersion, IpVersion.v6);
+      expect(decoded.dnsServers, ['1.1.1.1', '2606:4700:4700::1111']);
+      expect(decoded.smartDomesticDirect, false);
+      expect(decoded.lanDirect, false);
+      expect(decoded.fragment, true);
+      expect(decoded.killSwitch, true);
+    });
   });
 }

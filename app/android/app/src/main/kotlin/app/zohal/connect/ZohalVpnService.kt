@@ -68,6 +68,7 @@ class ZohalVpnService : VpnService() {
                 if (worker?.isAlive == true) return START_STICKY
                 stopRequested.set(false)
                 persistConfig(intent)
+                startForegroundWith("در حال اتصال")
                 worker = Thread({ runConnectLoop() }, "zohal-connect")
                 worker?.start()
             }
@@ -81,6 +82,10 @@ class ZohalVpnService : VpnService() {
         intent.getStringExtra("mode")?.let { ed.putString("mode", it) }
         intent.getStringArrayExtra("dns")?.let {
             ed.putString("dns", it.joinToString(","))
+        }
+        intent.getStringExtra("ipVersion")?.let { ed.putString("ipVersion", it) }
+        if (intent.hasExtra("killSwitch")) {
+            ed.putBoolean("killSwitch", intent.getBooleanExtra("killSwitch", true))
         }
         if (intent.hasExtra("fragment")) {
             ed.putBoolean("fragment", intent.getBooleanExtra("fragment", false))
@@ -102,6 +107,8 @@ class ZohalVpnService : VpnService() {
             dns = (prefs.getString("dns", null)
                 ?: "1.1.1.1,1.0.0.1,2606:4700:4700::1111,2606:4700:4700::1001")
                 .split(",").map { it.trim() }.filter { it.isNotEmpty() },
+            ipVersion = prefs.getString("ipVersion", "auto") ?: "auto",
+            killSwitch = prefs.getBoolean("killSwitch", true),
             fragment = prefs.getBoolean("fragment", false),
             ech = prefs.getBoolean("ech", false),
             splitMode = prefs.getString("splitMode", "all") ?: "all",
@@ -155,6 +162,8 @@ class ZohalVpnService : VpnService() {
     private data class ConnectConfig(
         val mode: String,
         val dns: List<String>,
+        val ipVersion: String,
+        val killSwitch: Boolean,
         val fragment: Boolean,
         val ech: Boolean,
         val splitMode: String,
@@ -440,14 +449,22 @@ class ZohalVpnService : VpnService() {
             val builder = Builder()
                 .setSession("Zohal")
                 .setMtu(MTU)
-                .addAddress("198.18.0.1", 30)
-                .addRoute("0.0.0.0", 0)
-                .addAddress("fd7a:6f68:616c::1", 126)
-                .addRoute("::", 0)
-                .setBlocking(false)
+                .setBlocking(config.killSwitch)
                 .setMetered(false)
                 .addDisallowedApplication(packageName)
+
+            if (config.ipVersion != "v6") {
+                builder.addAddress("198.18.0.1", 30)
+                builder.addRoute("0.0.0.0", 0)
+            }
+            if (config.ipVersion != "v4") {
+                builder.addAddress("fd7a:6f68:616c::1", 126)
+                builder.addRoute("::", 0)
+            }
+
             for (dns in config.dns) {
+                if (config.ipVersion == "v4" && dns.contains(":")) continue
+                if (config.ipVersion == "v6" && !dns.contains(":")) continue
                 try {
                     builder.addDnsServer(dns)
                 } catch (_: Exception) {
@@ -578,7 +595,11 @@ class ZohalVpnService : VpnService() {
         tearDownDataPath()
         unregisterNetworkCallback()
         broadcast(finalPhase, "none", null)
-        stopForeground(STOP_FOREGROUND_REMOVE)
+        try {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            val nm = getSystemService(NOTIFICATION_SERVICE) as? android.app.NotificationManager
+            nm?.cancel(Notifications.NOTIFICATION_ID)
+        } catch (_: Exception) {}
     }
 
     private fun startTicker(session: Session) {
@@ -641,14 +662,23 @@ class ZohalVpnService : VpnService() {
     private fun startForegroundWith(text: String) {
         try {
             val notification = Notifications.buildStatusNotification(this, text)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 startForeground(
                     Notifications.NOTIFICATION_ID,
                     notification,
+                    android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+                )
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                startForeground(
+                    Notifications.NOTIFICATION_ID,
+                    notification,
+                    0
                 )
             } else {
                 startForeground(Notifications.NOTIFICATION_ID, notification)
             }
+            val nm = getSystemService(NOTIFICATION_SERVICE) as? android.app.NotificationManager
+            nm?.notify(Notifications.NOTIFICATION_ID, notification)
         } catch (e: Exception) {
             Log.e(TAG, "startForeground failed: ${e.message}")
             broadcastLog("error", "Unable to update foreground notification: ${e.message}")

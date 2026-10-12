@@ -8,10 +8,15 @@ import android.net.VpnService
 import android.os.Build
 import android.util.Log
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import android.content.pm.PackageManager
+import android.os.Bundle
+import android.Manifest
+import java.io.File
 
 class MainActivity : FlutterActivity() {
     companion object {
@@ -20,6 +25,7 @@ class MainActivity : FlutterActivity() {
         const val EVENT_CHANNEL_STATS = "app.zohal.connect/vpn_stats"
         const val EVENT_CHANNEL_LOGS = "app.zohal.connect/vpn_logs"
         const val REQUEST_VPN_PREPARE = 4101
+        const val REQUEST_NOTIFICATIONS = 4102
     }
 
     private var prepareResult: MethodChannel.Result? = null
@@ -29,6 +35,16 @@ class MainActivity : FlutterActivity() {
     private var statsReceiver: BroadcastReceiver? = null
     private var logSink: EventChannel.EventSink? = null
     private var logReceiver: BroadcastReceiver? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Notifications.createNotificationChannel(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
+            }
+        }
+    }
 
     @Suppress("DEPRECATION")
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -78,6 +94,13 @@ class MainActivity : FlutterActivity() {
                             (call.argument<List<String>>("dns"))?.toTypedArray()?.let {
                                 putExtra("dns", it)
                             }
+                            call.argument<String>("ipVersion")?.let {
+                                putExtra("ipVersion", it)
+                            }
+                            if (call.hasArgument("killSwitch")) {
+                                putExtra("killSwitch",
+                                    call.argument<Boolean>("killSwitch") == true)
+                            }
                             if (call.hasArgument("fragment")) {
                                 putExtra("fragment",
                                     call.argument<Boolean>("fragment") == true)
@@ -100,6 +123,17 @@ class MainActivity : FlutterActivity() {
                         result.error("START_FAILED", e.message, null)
                     }
                 }
+                "ensureNotificationPermission" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val granted = checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                        if (!granted) {
+                            requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), REQUEST_NOTIFICATIONS)
+                        }
+                        result.success(granted)
+                    } else {
+                        result.success(true)
+                    }
+                }
                 "stopVpn" -> {
                     try {
                         val intent = Intent(this, ZohalVpnService::class.java).apply {
@@ -119,6 +153,31 @@ class MainActivity : FlutterActivity() {
                             prefs.getString("phase", "idle") ?: "idle")
                     } catch (_: Exception) {
                         result.success("idle")
+                    }
+                }
+                "installApk" -> {
+                    val apkPath = call.argument<String>("path")
+                    if (apkPath != null) {
+                        try {
+                            val file = File(apkPath)
+                            val uri = FileProvider.getUriForFile(
+                                this,
+                                "${applicationContext.packageName}.fileprovider",
+                                file
+                            )
+                            val intent = Intent(Intent.ACTION_VIEW).apply {
+                                setDataAndType(uri, "application/vnd.android.package-archive")
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                            }
+                            startActivity(intent)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            Log.e("MainActivity", "installApk failed: ${e.message}")
+                            result.error("INSTALL_FAILED", e.message, null)
+                        }
+                    } else {
+                        result.error("INVALID_ARGS", "Missing path argument", null)
                     }
                 }
                 else -> result.notImplemented()

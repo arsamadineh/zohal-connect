@@ -9,13 +9,13 @@ import 'package:country_flags/country_flags.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/bridge.dart';
 import '../../core/engine_state.dart';
 import '../../core/persian.dart';
 import '../../core/settings.dart';
 import '../../core/updater.dart';
+import '../../design/components/brand_logo.dart';
 import '../../design/components/connect_control.dart';
 import '../../design/components/sharp_row.dart';
 import '../../design/components/sharp_sheet.dart';
@@ -23,6 +23,7 @@ import '../../design/components/sharp_toast.dart';
 import '../../design/motion.dart';
 import '../../design/tokens.dart';
 import '../../l10n/strings_fa.dart';
+import '../about/update_dialog.dart';
 import '../mode/mode_sheet.dart';
 import '../routing/routing_screen.dart';
 import '../settings/settings_screen.dart';
@@ -214,16 +215,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 20.0),
                   child: Row(
                     children: [
-                      // Wordmark with 14 dp square mark
-                      ClipRRect(
-                        borderRadius: BorderRadius.zero,
-                        child: Image.asset(
-                          'assets/images/logo.png',
-                          width: 22.0,
-                          height: 22.0,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
+                      // Wordmark with responsive brand logo
+                      const BrandLogo(size: 22.0),
                       const SizedBox(width: 10.0),
                       Text(
                         StringsFa.appName,
@@ -254,9 +247,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                 // Update banner (Linux AppImage only)
                 if (updateInfo.valueOrNull != null)
                   GestureDetector(
-                    onTap: () async {
-                      final url = Uri.parse(updateInfo.value!.downloadUrl);
-                      if (await canLaunchUrl(url)) await launchUrl(url);
+                    onTap: () {
+                      UpdateDialog.show(context, updateInfo.value!);
                     },
                     child: Container(
                       width: double.infinity,

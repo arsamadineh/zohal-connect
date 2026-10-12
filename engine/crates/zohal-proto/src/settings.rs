@@ -5,13 +5,21 @@ use std::net::IpAddr;
 use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum RuleKind {
+    #[serde(alias = "domain")]
     Domain,
+    #[serde(alias = "full")]
     Full,
+    #[serde(alias = "keyword")]
     Keyword,
+    #[serde(alias = "regexp")]
     Regexp,
+    #[serde(alias = "cidr")]
     Cidr,
+    #[serde(alias = "port")]
     Port,
+    #[serde(alias = "private")]
     Private,
 }
 
@@ -140,9 +148,13 @@ impl Rule {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum AppSplitMode {
+    #[serde(alias = "all")]
     All,
+    #[serde(alias = "only")]
     Only,
+    #[serde(alias = "except")]
     Except,
 }
 

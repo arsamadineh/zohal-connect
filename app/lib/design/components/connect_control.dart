@@ -323,9 +323,6 @@ class _ZohalGlyphPainter extends CustomPainter {
       _drawSlashLine(canvas, floatDy, isConnecting, isFailed);
     }
 
-    // 7. 4 Sharp Stage Indicator Ticks at the bottom
-    _drawStagePips(canvas, isConnecting, isConnected, isFailed);
-
     canvas.restore();
   }
 
@@ -582,67 +579,6 @@ class _ZohalGlyphPainter extends CustomPainter {
     canvas.drawLine(pStart, pEnd, slashPaint);
 
     canvas.restore();
-  }
-
-  void _drawStagePips(
-    Canvas canvas,
-    bool isConnecting,
-    bool isConnected,
-    bool isFailed,
-  ) {
-    // 4 sharp horizontal ticks at bottom: (Prepare, FindGateway, BuildTunnel, VerifyPath)
-    // Spaced evenly along the baseline at y = 356 (Rule R18: 0 border radius)
-    const double pipW = 24.0;
-    const double pipH = 3.0;
-    const double spacing = 8.0;
-    const double totalW = 4 * pipW + 3 * spacing; // 120
-    const double startX = 160.0 - totalW / 2.0; // 100.0
-    const double y = 356.0;
-
-    for (int i = 0; i < 4; i++) {
-      final double x = startX + i * (pipW + spacing);
-      final rect = Rect.fromLTWH(x, y, pipW, pipH);
-
-      final Color pipColor;
-      if (isFailed) {
-        pipColor = errorColor;
-      } else if (isConnected) {
-        pipColor = const Color(0xFF10B981);
-      } else if (isConnecting) {
-        bool active = false;
-        switch (i) {
-          case 0:
-            active = stage == ConnectionStage.prepare ||
-                stage == ConnectionStage.findGateway ||
-                stage == ConnectionStage.buildTunnel ||
-                stage == ConnectionStage.verifyPath;
-            break;
-          case 1:
-            active = stage == ConnectionStage.findGateway ||
-                stage == ConnectionStage.buildTunnel ||
-                stage == ConnectionStage.verifyPath;
-            break;
-          case 2:
-            active = stage == ConnectionStage.buildTunnel ||
-                stage == ConnectionStage.verifyPath;
-            break;
-          case 3:
-            active = stage == ConnectionStage.verifyPath;
-            break;
-        }
-        pipColor = active ? accentColor : hairlineColor.withValues(alpha: 0.45);
-      } else {
-        pipColor = cancelConfirmationArmed
-            ? accentColor
-            : hairlineColor.withValues(alpha: 0.35);
-      }
-
-      final paint = Paint()
-        ..style = PaintingStyle.fill
-        ..color = pipColor;
-
-      canvas.drawRect(rect, paint);
-    }
   }
 
   @override

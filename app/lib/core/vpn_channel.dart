@@ -116,4 +116,27 @@ class VpnChannel {
       return 'idle';
     }
   }
+
+  Future<bool> ensureNotificationPermission() async {
+    if (!isSupported) return true;
+    try {
+      final res =
+          await _methods.invokeMethod<bool>('ensureNotificationPermission');
+      return res ?? true;
+    } on PlatformException {
+      return true;
+    }
+  }
+
+  Future<bool> installApk(String filePath) async {
+    if (!isSupported) return false;
+    try {
+      final success = await _methods.invokeMethod<bool>('installApk', {
+        'path': filePath,
+      });
+      return success ?? false;
+    } on PlatformException {
+      return false;
+    }
+  }
 }

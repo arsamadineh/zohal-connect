@@ -18,7 +18,7 @@ object Notifications {
             val channel = NotificationChannel(
                 CHANNEL_ID,
                 "وضعیت زحل",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_DEFAULT
             ).apply {
                 description = "نمایش وضعیت اتصال فیلترشکن زحل"
                 setShowBadge(false)
@@ -30,6 +30,8 @@ object Notifications {
     }
 
     fun buildStatusNotification(context: Context, statusText: String): Notification {
+        createNotificationChannel(context)
+
         val openAppIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
@@ -53,12 +55,15 @@ object Notifications {
         return NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle("زحل")
             .setContentText(statusText)
-            .setSmallIcon(R.drawable.ic_tile)
+            .setSmallIcon(R.drawable.ic_zohal_logo)
             .setOngoing(true)
+            .setAutoCancel(false)
             .setContentIntent(openPendingIntent)
-            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "قطع", disconnectPendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .addAction(android.R.drawable.ic_menu_close_clear_cancel, "قطع اتصال", disconnectPendingIntent)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setOnlyAlertOnce(true)
+            .setShowWhen(false)
             .build()
     }
 }

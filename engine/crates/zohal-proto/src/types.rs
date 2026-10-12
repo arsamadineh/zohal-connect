@@ -53,46 +53,75 @@ pub enum Transport {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum Scope {
+    #[serde(alias = "tun")]
     Tun,
+    #[serde(alias = "system_proxy", alias = "systemproxy", alias = "systemProxy")]
     SystemProxy,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum IpVersion {
+    #[serde(alias = "auto")]
     Auto,
+    #[serde(alias = "v4", alias = "ipv4")]
     V4,
+    #[serde(alias = "v6", alias = "ipv6")]
     V6,
+    #[serde(alias = "dual")]
     Dual,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum ScanProfile {
+    #[serde(alias = "auto")]
     Auto,
+    #[serde(alias = "turbo")]
     Turbo,
+    #[serde(alias = "balanced")]
     Balanced,
+    #[serde(alias = "thorough")]
     Thorough,
+    #[serde(alias = "verified")]
     Verified,
+    #[serde(alias = "ironclad")]
     Ironclad,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum NoizeProfile {
+    #[serde(alias = "auto")]
     Auto,
+    #[serde(alias = "off")]
     Off,
+    #[serde(alias = "light")]
     Light,
+    #[serde(alias = "balanced")]
     Balanced,
+    #[serde(alias = "aggressive")]
     Aggressive,
+    #[serde(alias = "firewall")]
     Firewall,
+    #[serde(alias = "gfw")]
     Gfw,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "PascalCase")]
 pub enum ConnectionMode {
+    #[serde(alias = "auto")]
     Auto,
+    #[serde(alias = "masque3", alias = "masque_3")]
     Masque3,
+    #[serde(alias = "masque2", alias = "masque_2")]
     Masque2,
+    #[serde(alias = "wireguard", alias = "wire_guard")]
     WireGuard,
+    #[serde(alias = "gool")]
     Gool,
 }
 

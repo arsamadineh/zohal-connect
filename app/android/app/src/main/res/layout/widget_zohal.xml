@@ -8,13 +8,16 @@
     android:padding="12dp"
     android:background="@drawable/widget_background">
 
+    <!-- App Logo Icon -->
     <ImageView
         android:id="@+id/widget_icon"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:src="@drawable/ic_tile"
-        android:contentDescription="زحل" />
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:src="@drawable/ic_zohal_logo"
+        android:contentDescription="زحل"
+        android:scaleType="fitCenter" />
 
+    <!-- Information & Control Section -->
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -23,32 +26,90 @@
         android:paddingStart="12dp"
         android:paddingEnd="12dp">
 
-        <TextView
-            android:id="@+id/widget_title"
+        <!-- Top Row: App Title & Interactive Mode Switcher -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="زحل"
-            android:textColor="#FFFFFFFF"
-            android:textSize="14sp"
-            android:textStyle="bold" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/widget_status"
+            <TextView
+                android:id="@+id/widget_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="زحل"
+                android:textColor="#FFECEDEE"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <!-- Interactive Mode Pill / Badge: Tap to cycle modes! -->
+            <LinearLayout
+                android:id="@+id/widget_mode_container"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/widget_mode_bg"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/widget_mode"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="هوشمند ▾"
+                    android:textColor="#FF9A9DA1"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Bottom Row: Sharp Status Dot & Status / Stats Text -->
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="2dp"
-            android:text="قطع است"
-            android:textColor="#FFA1A1AA"
-            android:textSize="12sp" />
+            android:layout_marginTop="3dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Square status indicator pip matching Zohal sharp dot -->
+            <ImageView
+                android:id="@+id/widget_indicator"
+                android:layout_width="7dp"
+                android:layout_height="7dp"
+                android:src="@drawable/widget_indicator_idle"
+                android:contentDescription="وضعیت" />
+
+            <TextView
+                android:id="@+id/widget_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text="قطع است"
+                android:textColor="#FF9A9DA1"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/widget_stats"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="6dp"
+                android:text=""
+                android:textColor="#FF6A6D70"
+                android:textSize="11sp" />
+        </LinearLayout>
     </LinearLayout>
 
+    <!-- Main Interactive Connect/Disconnect Toggle Button -->
     <TextView
         android:id="@+id/widget_button"
         android:layout_width="wrap_content"
-        android:layout_height="36dp"
+        android:layout_height="38dp"
         android:gravity="center"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
+        android:minWidth="80dp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
         android:background="@drawable/widget_button_bg"
         android:text="اتصال"
         android:textColor="#FFFFFFFF"

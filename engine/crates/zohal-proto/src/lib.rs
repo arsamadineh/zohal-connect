@@ -61,6 +61,77 @@ mod tests {
         assert_eq!(srv, srv_parsed);
     }
 
+    #[test]
+    fn test_enum_serde_resilience() {
+        assert_eq!(
+            serde_json::from_str::<ConnectionMode>("\"auto\"").unwrap(),
+            ConnectionMode::Auto
+        );
+        assert_eq!(
+            serde_json::from_str::<ConnectionMode>("\"Auto\"").unwrap(),
+            ConnectionMode::Auto
+        );
+        assert_eq!(
+            serde_json::from_str::<ConnectionMode>("\"wireguard\"").unwrap(),
+            ConnectionMode::WireGuard
+        );
+        assert_eq!(
+            serde_json::from_str::<ConnectionMode>("\"WireGuard\"").unwrap(),
+            ConnectionMode::WireGuard
+        );
+        assert_eq!(
+            serde_json::from_str::<ConnectionMode>("\"masque3\"").unwrap(),
+            ConnectionMode::Masque3
+        );
+        assert_eq!(
+            serde_json::from_str::<ConnectionMode>("\"Masque3\"").unwrap(),
+            ConnectionMode::Masque3
+        );
+
+        assert_eq!(
+            serde_json::from_str::<IpVersion>("\"v4\"").unwrap(),
+            IpVersion::V4
+        );
+        assert_eq!(
+            serde_json::from_str::<IpVersion>("\"V4\"").unwrap(),
+            IpVersion::V4
+        );
+        assert_eq!(
+            serde_json::from_str::<IpVersion>("\"ipv6\"").unwrap(),
+            IpVersion::V6
+        );
+        assert_eq!(
+            serde_json::from_str::<IpVersion>("\"V6\"").unwrap(),
+            IpVersion::V6
+        );
+
+        assert_eq!(
+            serde_json::from_str::<Scope>("\"tun\"").unwrap(),
+            Scope::Tun
+        );
+        assert_eq!(
+            serde_json::from_str::<Scope>("\"system_proxy\"").unwrap(),
+            Scope::SystemProxy
+        );
+
+        assert_eq!(
+            serde_json::from_str::<ScanProfile>("\"turbo\"").unwrap(),
+            ScanProfile::Turbo
+        );
+        assert_eq!(
+            serde_json::from_str::<NoizeProfile>("\"off\"").unwrap(),
+            NoizeProfile::Off
+        );
+        assert_eq!(
+            serde_json::from_str::<RuleKind>("\"domain\"").unwrap(),
+            RuleKind::Domain
+        );
+        assert_eq!(
+            serde_json::from_str::<AppSplitMode>("\"only\"").unwrap(),
+            AppSplitMode::Only
+        );
+    }
+
     proptest! {
         // T1.11: IPC parser fuzz test ensuring no input panics the parser
         #[test]

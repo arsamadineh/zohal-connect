@@ -156,6 +156,10 @@ class StringsFa {
   static const String settingsGroupNetwork = 'شبکه';
   static const String settingsDnsServers = 'سرورهای DNS';
   static const String settingsIpVersion = 'نسخه پروتکل IP';
+  static const String ipVersionAuto = 'خودکار';
+  static const String ipVersionV4 = 'فقط IPv۴';
+  static const String ipVersionV6 = 'فقط IPv۶';
+  static const String ipVersionDual = 'هر دو (IPv۴ و IPv۶)';
 
   static const String settingsGroupAdvanced = 'پیشرفته';
   static const String settingsAdvancedSection = 'پیشرفته';
@@ -181,6 +185,35 @@ class StringsFa {
       'این نرم‌افزار آزاد است و تحت مجوز AGPL-3.0 منتشر می‌شود.';
   static const String aboutVersion = 'نسخه';
   static const String aboutEngineVersion = 'نسخه موتور';
+
+  // DNS Settings
+  static const String dnsDialogTitle = 'تنظیمات DNS';
+  static const String dnsPresets = 'پیش‌تنظیم‌ها';
+  static const String dnsCustomInput = 'افزودن نشانی سرور';
+  static const String dnsInputHint = 'نشانی آی‌پی';
+  static const String dnsAdd = 'افزودن';
+  static const String dnsInvalidIp = 'نشانی وارد شده معتبر نیست.';
+  static const String dnsDuplicateIp = 'این نشانی قبلاً اضافه شده است.';
+  static const String dnsAtLeastOne = 'حداقل یک سرور DNS باید مشخص باشد.';
+  static const String dnsResetDefaults = 'پیش‌فرض';
+  static const String dnsPresetCloudflare = 'کلودفلر (Cloudflare)';
+  static const String dnsPresetGoogle = 'گوگل (Google)';
+  static const String dnsPresetQuad9 = 'کواد۹ (Quad۹)';
+  static const String dnsPresetShecan = 'شکن (Shecan)';
+  static const String dnsPresetElectro = 'الکترو (Electro)';
+  static const String dnsPresetRadar = 'رادار (Radar)';
+
+  // Updater
+  static const String updateCheck = 'بررسی به‌روزرسانی';
+  static const String updateChecking = 'در حال بررسی...';
+  static const String updateUpToDate = 'شما از آخرین نسخه استفاده می‌کنید.';
+  static const String updateAvailableTitle = 'به‌روزرسانی در دسترس است';
+  static const String updateDownloadAndInstall = 'دریافت و نصب';
+  static const String updateDownloading = 'در حال دریافت به‌روزرسانی...';
+  static const String updateInstalling = 'در حال آماده‌سازی و نصب...';
+  static const String updateFailed = 'دریافت به‌روزرسانی با خطا مواجه شد.';
+  static const String updateRetry = 'تلاش مجدد';
+  static const String updateLater = 'بعداً';
 
   // Onboarding
   static const String onboardingIntro =

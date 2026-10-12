@@ -1,5 +1,5 @@
 // features/onboarding/onboarding_screen.dart
-// 4-step onboarding flow for Zohal Connect according to ZOHAL_SPEC Section 13.7.
+// Onboarding flow for Zohal Connect according to ZOHAL_SPEC Section 13.7.
 
 import 'dart:io';
 
@@ -28,6 +28,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _currentStep = 0;
   bool _vpnGranted = false;
+  bool _notificationGranted = false;
 
   void _nextStep() {
     setState(() {
@@ -61,6 +62,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final engineState = ref.watch(engineStateProvider);
     final settings = ref.watch(zohalSettingsProvider);
 
+    final totalSteps = Platform.isAndroid ? 4 : 3;
+    final isPermissionStep = Platform.isAndroid && _currentStep == 1;
+    final isModeStep =
+        Platform.isAndroid ? _currentStep == 2 : _currentStep == 1;
+    final isConnectStep =
+        Platform.isAndroid ? _currentStep == 3 : _currentStep == 2;
+
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -74,7 +82,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 children: [
                   // Step Indicator Header
                   Row(
-                    children: List.generate(4, (index) {
+                    children: List.generate(totalSteps, (index) {
                       final active = index <= _currentStep;
                       return Expanded(
                         child: Container(
@@ -125,8 +133,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                   ],
 
-                  // Step 1: دسترسیها (Permissions / Service)
-                  if (_currentStep == 1) ...[
+                  // Step 1 on Android: دسترسی‌ها (Permissions)
+                  if (isPermissionStep) ...[
                     Text(
                       StringsFa.onboardingPermissionsTitle,
                       style: TextStyle(
@@ -137,51 +145,50 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       ),
                     ),
                     const SizedBox(height: 24.0),
-                    if (Platform.isAndroid) ...[
-                      SharpRow(
-                        title: StringsFa.onboardingVpnPermission,
-                        trailing: _vpnGranted
-                            ? Icon(
-                                Icons.check_sharp,
-                                size: 20.0,
-                                color: accent,
-                              )
-                            : const SizedBox(width: 20.0, height: 20.0),
-                        onTap: () async {
-                          final granted = await ref
-                              .read(bridgeClientProvider)
-                              .ensureVpnPermission();
-                          if (mounted) {
-                            setState(() => _vpnGranted = granted);
-                          }
-                        },
+                    SharpRow(
+                      title: StringsFa.onboardingVpnPermission,
+                      trailing: _vpnGranted
+                          ? Icon(
+                              Icons.check_sharp,
+                              size: 20.0,
+                              color: accent,
+                            )
+                          : const SizedBox(width: 20.0, height: 20.0),
+                      onTap: () async {
+                        final granted = await ref
+                            .read(bridgeClientProvider)
+                            .ensureVpnPermission();
+                        if (mounted) {
+                          setState(() => _vpnGranted = granted);
+                        }
+                      },
+                    ),
+                    SharpRow(
+                      title: StringsFa.onboardingNotificationPermission,
+                      trailing: _notificationGranted
+                          ? Icon(
+                              Icons.check_sharp,
+                              size: 20.0,
+                              color: accent,
+                            )
+                          : const SizedBox(width: 20.0, height: 20.0),
+                      onTap: () async {
+                        final granted = await ref
+                            .read(bridgeClientProvider)
+                            .ensureNotificationPermission();
+                        if (mounted) {
+                          setState(() => _notificationGranted = granted);
+                        }
+                      },
+                    ),
+                    SharpRow(
+                      title: StringsFa.onboardingBatteryPermission,
+                      trailing: Icon(
+                        Icons.check_sharp,
+                        size: 20.0,
+                        color: accent,
                       ),
-                      SharpRow(
-                        title: StringsFa.onboardingNotificationPermission,
-                        trailing: Icon(
-                          Icons.check_sharp,
-                          size: 20.0,
-                          color: accent,
-                        ),
-                      ),
-                      SharpRow(
-                        title: StringsFa.onboardingBatteryPermission,
-                        trailing: Icon(
-                          Icons.check_sharp,
-                          size: 20.0,
-                          color: accent,
-                        ),
-                      ),
-                    ] else ...[
-                      SharpRow(
-                        title: StringsFa.onboardingServiceRunning,
-                        trailing: Icon(
-                          Icons.check_sharp,
-                          size: 20.0,
-                          color: accent,
-                        ),
-                      ),
-                    ],
+                    ),
                     const Spacer(),
                     SharpButton(
                       label: StringsFa.continueAction,
@@ -190,8 +197,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                   ],
 
-                  // Step 2: روش اتصال (Mode Choice)
-                  if (_currentStep == 2) ...[
+                  // Mode Choice Step
+                  if (isModeStep) ...[
                     Text(
                       StringsFa.connectionMethod,
                       style: TextStyle(
@@ -280,8 +287,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                   ],
 
-                  // Step 3: اولین اتصال (First Connect)
-                  if (_currentStep == 3) ...[
+                  // First Connect Step
+                  if (isConnectStep) ...[
                     ConnectControl(
                       phase: engineState.phase,
                       stage: engineState.stage,

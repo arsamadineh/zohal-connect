@@ -41,7 +41,8 @@ void main() {
         'tls': 'tls',
         'sni': 'fi.fastnode.org',
       };
-      final base64Payload = base64Url.encode(utf8.encode(jsonEncode(vmessJson)));
+      final base64Payload =
+          base64Url.encode(utf8.encode(jsonEncode(vmessJson)));
       final uri = 'vmess://$base64Payload';
 
       final node = ProxyNode.parse(uri);
@@ -58,8 +59,10 @@ void main() {
 
     test('Parses Shadowsocks URI with user info base64', () {
       // chacha20-ietf-poly1305:SecretPassword123
-      final userInfo = base64.encode(utf8.encode('chacha20-ietf-poly1305:SecretPassword123'));
-      final uri = 'ss://$userInfo@ams.edge.nl:8388#%F0%9F%87%B3%F0%9F%87%B1%20Amsterdam%20SS';
+      final userInfo = base64
+          .encode(utf8.encode('chacha20-ietf-poly1305:SecretPassword123'));
+      final uri =
+          'ss://$userInfo@ams.edge.nl:8388#%F0%9F%87%B3%F0%9F%87%B1%20Amsterdam%20SS';
 
       final node = ProxyNode.parse(uri);
       expect(node, isNotNull);
@@ -72,7 +75,8 @@ void main() {
     });
 
     test('Parses Trojan URI with query parameters', () {
-      const uri = 'trojan://superPassword@192.0.2.55:443?sni=cdn.example.com&type=tcp#%5BFR%5D%20Paris%20Trojan';
+      const uri =
+          'trojan://superPassword@192.0.2.55:443?sni=cdn.example.com&type=tcp#%5BFR%5D%20Paris%20Trojan';
       final node = ProxyNode.parse(uri);
       expect(node, isNotNull);
       expect(node!.protocol, equals(ProxyProtocol.trojan));
@@ -102,7 +106,9 @@ void main() {
       expect(ProxyNode.parse('unknownprotocol://server:443'), isNull);
     });
 
-    test('Parses multi-line text input into distinct nodes, filtering blanks and invalids', () {
+    test(
+        'Parses multi-line text input into distinct nodes, filtering blanks and invalids',
+        () {
       const input = '''
 # Comments should be ignored
 vless://uuid@server1.de:443?type=tcp#[DE] Berlin
@@ -125,34 +131,50 @@ trojan://pass@server3.nl:443#[NL] Amsterdam
 
   group('Country Code Inference', () {
     test('Infers from ISO bracket notation [US], (GB)', () {
-      expect(ProxyNode.inferCountryCode('[US] Chicago Node', '1.1.1.1'), equals('US'));
-      expect(ProxyNode.inferCountryCode('(GB) London Core', '1.1.1.1'), equals('GB'));
-      expect(ProxyNode.inferCountryCode('SG - Singapore #1', '1.1.1.1'), equals('SG'));
+      expect(ProxyNode.inferCountryCode('[US] Chicago Node', '1.1.1.1'),
+          equals('US'));
+      expect(ProxyNode.inferCountryCode('(GB) London Core', '1.1.1.1'),
+          equals('GB'));
+      expect(ProxyNode.inferCountryCode('SG - Singapore #1', '1.1.1.1'),
+          equals('SG'));
     });
 
     test('Infers from Unicode emoji flag', () {
-      expect(ProxyNode.inferCountryCode('🇩🇪 Frankfurt #1', '1.1.1.1'), equals('DE'));
-      expect(ProxyNode.inferCountryCode('🇫🇮 Helsinki Fast', '1.1.1.1'), equals('FI'));
-      expect(ProxyNode.inferCountryCode('🇳🇱 Amsterdam Core', '1.1.1.1'), equals('NL'));
-      expect(ProxyNode.inferCountryCode('🇺🇸 Ashburn VIP', '1.1.1.1'), equals('US'));
+      expect(ProxyNode.inferCountryCode('🇩🇪 Frankfurt #1', '1.1.1.1'),
+          equals('DE'));
+      expect(ProxyNode.inferCountryCode('🇫🇮 Helsinki Fast', '1.1.1.1'),
+          equals('FI'));
+      expect(ProxyNode.inferCountryCode('🇳🇱 Amsterdam Core', '1.1.1.1'),
+          equals('NL'));
+      expect(ProxyNode.inferCountryCode('🇺🇸 Ashburn VIP', '1.1.1.1'),
+          equals('US'));
     });
 
     test('Infers from Persian and English keywords', () {
-      expect(ProxyNode.inferCountryCode('سرور اختصاصی آلمان', '1.1.1.1'), equals('DE'));
-      expect(ProxyNode.inferCountryCode('تونل فرانسه با پینگ کم', '1.1.1.1'), equals('FR'));
-      expect(ProxyNode.inferCountryCode('London Fast Proxy', '1.1.1.1'), equals('GB'));
-      expect(ProxyNode.inferCountryCode('Tokyo Edge Cluster', '1.1.1.1'), equals('JP'));
-      expect(ProxyNode.inferCountryCode('Helsinki Dedicated', '1.1.1.1'), equals('FI'));
+      expect(ProxyNode.inferCountryCode('سرور اختصاصی آلمان', '1.1.1.1'),
+          equals('DE'));
+      expect(ProxyNode.inferCountryCode('تونل فرانسه با پینگ کم', '1.1.1.1'),
+          equals('FR'));
+      expect(ProxyNode.inferCountryCode('London Fast Proxy', '1.1.1.1'),
+          equals('GB'));
+      expect(ProxyNode.inferCountryCode('Tokyo Edge Cluster', '1.1.1.1'),
+          equals('JP'));
+      expect(ProxyNode.inferCountryCode('Helsinki Dedicated', '1.1.1.1'),
+          equals('FI'));
     });
 
     test('Infers from host domain suffix when remark has no country', () {
-      expect(ProxyNode.inferCountryCode('Custom VPS', 'edge-fra.de'), equals('DE'));
-      expect(ProxyNode.inferCountryCode('Custom VPS', 'proxy.finland.fi'), equals('FI'));
-      expect(ProxyNode.inferCountryCode('Custom VPS', 'node.london.uk'), equals('GB'));
+      expect(ProxyNode.inferCountryCode('Custom VPS', 'edge-fra.de'),
+          equals('DE'));
+      expect(ProxyNode.inferCountryCode('Custom VPS', 'proxy.finland.fi'),
+          equals('FI'));
+      expect(ProxyNode.inferCountryCode('Custom VPS', 'node.london.uk'),
+          equals('GB'));
     });
 
     test('Defaults to UN (United Nations/World) when undetectable', () {
-      expect(ProxyNode.inferCountryCode('My Node', '192.168.1.1'), equals('UN'));
+      expect(
+          ProxyNode.inferCountryCode('My Node', '192.168.1.1'), equals('UN'));
     });
   });
 

@@ -151,8 +151,7 @@ class _AddConfigDialogState extends ConsumerState<AddConfigDialog> {
                   fontFamily: 'monospace',
                 ),
                 decoration: InputDecoration(
-                  hintText:
-                      'vless://... یا vmess://...\n(یا پیوندهای چندخطی)',
+                  hintText: 'vless://... یا vmess://...\n(یا پیوندهای چندخطی)',
                   hintStyle: TextStyle(
                     fontFamily: ZohalTokens.fontFamily,
                     fontSize: 12.0,

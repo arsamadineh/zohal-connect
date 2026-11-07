@@ -128,8 +128,10 @@ void main() {
     });
   });
 
-  group('Adversarial Probe 2: Unhandled Exception & Storage Failure Fallback', () {
-    test('onboardingCompletedProvider falls back to true on Exception', () async {
+  group('Adversarial Probe 2: Unhandled Exception & Storage Failure Fallback',
+      () {
+    test('onboardingCompletedProvider falls back to true on Exception',
+        () async {
       SharedPreferences.setMockInitialValues({});
       // Directly verify that provider handles errors gracefully
       final container = ProviderContainer(
@@ -149,7 +151,8 @@ void main() {
       container.dispose();
     });
 
-    test('onboardingCompletedProvider falls back to true on Error types', () async {
+    test('onboardingCompletedProvider falls back to true on Error types',
+        () async {
       final container = ProviderContainer(
         overrides: [
           onboardingCompletedProvider.overrideWith((ref) async {
@@ -188,7 +191,8 @@ void main() {
 
         // Inject catastrophic error into the async provider
         completer.completeError(
-          StateError('Simulated catastrophic preference initialization failure'),
+          StateError(
+              'Simulated catastrophic preference initialization failure'),
         );
         await tester.pumpAndSettle();
 
@@ -258,8 +262,11 @@ void main() {
     );
   });
 
-  group('Adversarial Probe 3: Tray Asset Missing & Read-Only /tmp Injection', () {
-    test('DesktopTrayService.init() degrades gracefully when trayManager throws', () async {
+  group('Adversarial Probe 3: Tray Asset Missing & Read-Only /tmp Injection',
+      () {
+    test(
+        'DesktopTrayService.init() degrades gracefully when trayManager throws',
+        () async {
       final container = ProviderContainer();
       final trayService = container.read(trayServiceProvider);
 
@@ -276,7 +283,8 @@ void main() {
       container.dispose();
     });
 
-    test('DesktopTrayService survives read-only or corrupted /tmp file', () async {
+    test('DesktopTrayService survives read-only or corrupted /tmp file',
+        () async {
       final tempIcon = File('${Directory.systemTemp.path}/zohal_tray_icon.png');
 
       // Create a corrupted 0-byte file and make it read-only
@@ -339,8 +347,12 @@ void main() {
     );
   });
 
-  group('Adversarial Probe 4: Single-Instance Lock Concurrency & Mutex Contention', () {
-    test('Lock contention with another process prevents duplicate instances and signals focus', () async {
+  group(
+      'Adversarial Probe 4: Single-Instance Lock Concurrency & Mutex Contention',
+      () {
+    test(
+        'Lock contention with another process prevents duplicate instances and signals focus',
+        () async {
       final lockPath = '${Directory.systemTemp.path}/zohal_instance.lock';
       final lockFile = File(lockPath);
 
@@ -366,9 +378,8 @@ time.sleep(2)
 
       try {
         // Wait until python process confirms it acquired the lock
-        final line = await proc.stdout
-            .transform(const SystemEncoding().decoder)
-            .first;
+        final line =
+            await proc.stdout.transform(const SystemEncoding().decoder).first;
         expect(line.trim(), equals('LOCKED'));
 
         // Now run SingleInstance.ensureSingleInstance in this process

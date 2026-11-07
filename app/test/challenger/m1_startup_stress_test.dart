@@ -175,7 +175,9 @@ void main() {
     });
   });
 
-  group('CHALLENGE 1: Network Deferral Empirical Verification (updateInfoProvider)', () {
+  group(
+      'CHALLENGE 1: Network Deferral Empirical Verification (updateInfoProvider)',
+      () {
     testWidgets(
       'Strict 2.5s network freeze: ZERO outbound network requests occur during first 2.5 seconds of launch',
       (WidgetTester tester) async {
@@ -262,7 +264,8 @@ void main() {
           expect(
             spyOverrides.calls.length,
             equals(1),
-            reason: 'Update check should fire after 3.0s deferral timer expires',
+            reason:
+                'Update check should fire after 3.0s deferral timer expires',
           );
 
           final call = spyOverrides.calls.first;
@@ -431,8 +434,7 @@ void main() {
         expect(
           p95,
           lessThan(100),
-          reason:
-              'P95 Frame 1 cold start render exceeded 100ms: p95=${p95}ms',
+          reason: 'P95 Frame 1 cold start render exceeded 100ms: p95=${p95}ms',
         );
       },
     );
@@ -474,7 +476,9 @@ void main() {
     );
   });
 
-  group('CHALLENGE 3: Simulated Slow Storage Stress Test (SharedPreferences Delay)', () {
+  group(
+      'CHALLENGE 3: Simulated Slow Storage Stress Test (SharedPreferences Delay)',
+      () {
     testWidgets(
       'Simulated 500ms disk delay: SplashScreen remains active without flicker or timeout',
       (WidgetTester tester) async {

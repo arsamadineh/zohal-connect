@@ -110,7 +110,8 @@ class StringsFa {
   static const String configsTitle = 'پیکربندی‌ها و سرورها';
   static const String addConfig = 'افزودن پیکربندی';
   static const String pasteConfig = 'جای‌گذاری از کلیپ‌بورد';
-  static const String configInputHint = 'پیوند پیکربندی (VLESS یا VMess) را وارد کنید';
+  static const String configInputHint =
+      'پیوند پیکربندی (VLESS یا VMess) را وارد کنید';
   static const String pingAll = 'آزمایش پینگ همه';
   static const String pingTesting = 'در حال آزمایش...';
   static const String untested = 'تست نشده';
@@ -234,7 +235,8 @@ class StringsFa {
   static const String updatePaused = 'دانلود متوقف شد';
   static const String updateReconnecting = 'در حال اتصال مجدد...';
   static const String updateVerifying = 'در حال بررسی صحت فایل...';
-  static const String updateVerificationFailed = 'بررسی صحت فایل با خطا مواجه شد.';
+  static const String updateVerificationFailed =
+      'بررسی صحت فایل با خطا مواجه شد.';
   static const String updateSpeed = 'سرعت:';
   static const String updateEta = 'زمان باقی‌مانده:';
   static const String updateInstallRestart = 'نصب و راه‌اندازی مجدد';

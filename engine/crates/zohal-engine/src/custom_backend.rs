@@ -265,7 +265,9 @@ impl TunnelBackend for CustomProxyBackend {
                 serde_json::to_string_pretty(&cfg_json)
                     .map_err(|e| BackendError::ProcessFailed(e.to_string()))?,
             )
-            .map_err(|e| BackendError::ProcessFailed(format!("Failed to write sing-box config: {e}")))?;
+            .map_err(|e| {
+                BackendError::ProcessFailed(format!("Failed to write sing-box config: {e}"))
+            })?;
 
             let mut cmd = Command::new(bin);
             cmd.arg("run").arg("-c").arg(&cfg_path);
@@ -281,10 +283,13 @@ impl TunnelBackend for CustomProxyBackend {
                 });
             }
 
-            info!("[custom_proxy] spawning sing-box candidate id={} on socks_port={}", id, socks_port);
-            let child = cmd
-                .spawn()
-                .map_err(|e| BackendError::ProcessFailed(format!("Failed to spawn sing-box: {e}")))?;
+            info!(
+                "[custom_proxy] spawning sing-box candidate id={} on socks_port={}",
+                id, socks_port
+            );
+            let child = cmd.spawn().map_err(|e| {
+                BackendError::ProcessFailed(format!("Failed to spawn sing-box: {e}"))
+            })?;
 
             self.children.lock().insert(id, (child, cfg_path.clone()));
 
@@ -324,7 +329,10 @@ impl TunnelBackend for CustomProxyBackend {
         handle: &'a CandidateHandle,
     ) -> Pin<Box<dyn Future<Output = Result<PathTrace, BackendError>> + Send + 'a>> {
         Box::pin(async move {
-            info!("[custom_proxy] verifying proxy path via SOCKS5 port {}", handle.socks_port);
+            info!(
+                "[custom_proxy] verifying proxy path via SOCKS5 port {}",
+                handle.socks_port
+            );
             let proxy_url = format!("socks5://127.0.0.1:{}", handle.socks_port);
             let proxy_agent = ureq::Proxy::new(&proxy_url)
                 .map_err(|e| BackendError::VerificationFailed(e.to_string()))?;
@@ -373,15 +381,25 @@ impl TunnelBackend for CustomProxyBackend {
         journal: &'a Journal,
     ) -> Pin<Box<dyn Future<Output = Result<(), BackendError>> + Send + 'a>> {
         Box::pin(async move {
-            info!("[custom_proxy] applying system tunnel on port {}", handle.socks_port);
+            info!(
+                "[custom_proxy] applying system tunnel on port {}",
+                handle.socks_port
+            );
             #[cfg(target_os = "linux")]
             if unsafe { libc::geteuid() } != 0 {
                 let proxy = zohal_platform::proxy_only::DesktopSystemProxy::default();
                 let prev = proxy
-                    .enable_system_proxy(handle.http_port.unwrap_or(handle.socks_port), handle.socks_port)
+                    .enable_system_proxy(
+                        handle.http_port.unwrap_or(handle.socks_port),
+                        handle.socks_port,
+                    )
                     .map_err(BackendError::SystemConfig)?;
                 let undo = serde_json::json!({"action": "proxy_restore", "prev": prev});
-                let _ = journal.record_action("system_proxy", serde_json::json!({"socks": handle.socks_port}), undo);
+                let _ = journal.record_action(
+                    "system_proxy",
+                    serde_json::json!({"socks": handle.socks_port}),
+                    undo,
+                );
                 return Ok(());
             }
 

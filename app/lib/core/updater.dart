@@ -292,7 +292,8 @@ Future<UpdateInfo?> fetchLatestUpdate({
           deviceAbis: deviceAbis,
         );
         if (selected != null) {
-          downloadUrl = selected['browser_download_url'] as String? ?? downloadUrl;
+          downloadUrl =
+              selected['browser_download_url'] as String? ?? downloadUrl;
           filename = selected['name'] as String? ?? '';
           sizeBytes = selected['size'] as int?;
         }
@@ -402,7 +403,8 @@ class DownloadProgress {
   bool get isPaused => status == DownloadStatus.paused;
   bool get isDownloading => status == DownloadStatus.downloading;
   bool get isCompleted =>
-      status == DownloadStatus.completed || status == DownloadStatus.readyToInstall;
+      status == DownloadStatus.completed ||
+      status == DownloadStatus.readyToInstall;
   bool get isRetrying => status == DownloadStatus.retrying;
   bool get isVerifying => status == DownloadStatus.verifying;
   bool get isInstalling => status == DownloadStatus.installing;
@@ -636,7 +638,8 @@ class ResumableDownloader implements IResumableDownloader {
         final client = clientFactory != null ? clientFactory!() : http.Client();
         _activeClient = client;
 
-        final request = http.Request('GET', Uri.parse(_activeInfo!.downloadUrl));
+        final request =
+            http.Request('GET', Uri.parse(_activeInfo!.downloadUrl));
         request.headers['User-Agent'] = 'ZohalConnect/${_activeInfo!.version}';
         request.headers['Accept'] = '*/*';
 
@@ -874,9 +877,8 @@ class ResumableDownloader implements IResumableDownloader {
         ? _calculateEta(speed, remainingBytes)
         : null;
 
-    final progressFraction = _totalBytes > 0
-        ? (_receivedBytes / _totalBytes).clamp(0.0, 1.0)
-        : 0.0;
+    final progressFraction =
+        _totalBytes > 0 ? (_receivedBytes / _totalBytes).clamp(0.0, 1.0) : 0.0;
 
     final progress = DownloadProgress(
       bytesReceived: _receivedBytes,

@@ -131,9 +131,9 @@ pub struct CustomNodeConfig {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub public_key: Option<String>, // Reality pbk
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub short_id: Option<String>,   // Reality sid
+    pub short_id: Option<String>, // Reality sid
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub flow: Option<String>,       // e.g. "xtls-rprx-vision"
+    pub flow: Option<String>, // e.g. "xtls-rprx-vision"
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]

@@ -14,11 +14,13 @@ import 'package:zohal/core/autostart.dart';
 import 'package:zohal/core/updater.dart';
 
 class MockHttpClient extends http.BaseClient {
-  final Future<http.StreamedResponse> Function(http.BaseRequest request) handler;
+  final Future<http.StreamedResponse> Function(http.BaseRequest request)
+      handler;
   MockHttpClient(this.handler);
 
   @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) => handler(request);
+  Future<http.StreamedResponse> send(http.BaseRequest request) =>
+      handler(request);
 }
 
 void main() {
@@ -98,7 +100,8 @@ void main() {
   // 2. SHA256 Integrity Verification
   // ===========================================================================
   group('SHA256 Integrity Verification', () {
-    test('parseSha256Sums parses single and multi-line GNU coreutils outputs', () {
+    test('parseSha256Sums parses single and multi-line GNU coreutils outputs',
+        () {
       const sample = '''
 # Comments should be ignored
 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8  Zohal-0.2.0-x86_64.AppImage
@@ -112,16 +115,19 @@ invalid line without hash
       expect(sums.length, equals(3));
       expect(
         sums['Zohal-0.2.0-x86_64.AppImage'],
-        equals('5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'),
+        equals(
+            '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'),
       );
       // Case-insensitive normalized to lowercase, directory stripped, '*' stripped
       expect(
         sums['zohal-v0.2.0-arm64-v8a.apk'],
-        equals('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
+        equals(
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'),
       );
       expect(
         sums['zohal-v0.2.0-x86_64.exe'],
-        equals('4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a'),
+        equals(
+            '4b227777d4dd1fc61c6f884f48641d02b4d121d3fd328cb08b5531fcacdabf8a'),
       );
     });
 
@@ -133,14 +139,18 @@ invalid line without hash
       final hash = await computeFileSha256(testFile);
       expect(
         hash,
-        equals('b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9'),
+        equals(
+            'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9'),
       );
     });
 
-    test('ResumableDownloader deletes .part file and throws ChecksumMismatchException on hash mismatch', () async {
+    test(
+        'ResumableDownloader deletes .part file and throws ChecksumMismatchException on hash mismatch',
+        () async {
       const filename = 'update_mismatch.bin';
       final payload = utf8.encode('real content payload');
-      const badExpectedHash = '0000000000000000000000000000000000000000000000000000000000000000';
+      const badExpectedHash =
+          '0000000000000000000000000000000000000000000000000000000000000000';
 
       final downloader = ResumableDownloader(
         info: const UpdateInfo(
@@ -179,10 +189,26 @@ invalid line without hash
   // ===========================================================================
   group('Android ABI Selection', () {
     final assets = [
-      {'name': 'zohal-v0.2.0-arm64-v8a.apk', 'browser_download_url': 'url-arm64', 'size': 100},
-      {'name': 'zohal-v0.2.0-armeabi-v7a.apk', 'browser_download_url': 'url-v7a', 'size': 90},
-      {'name': 'zohal-v0.2.0-x86_64.apk', 'browser_download_url': 'url-x86_64', 'size': 110},
-      {'name': 'zohal-v0.2.0.universal.apk', 'browser_download_url': 'url-universal', 'size': 200},
+      {
+        'name': 'zohal-v0.2.0-arm64-v8a.apk',
+        'browser_download_url': 'url-arm64',
+        'size': 100
+      },
+      {
+        'name': 'zohal-v0.2.0-armeabi-v7a.apk',
+        'browser_download_url': 'url-v7a',
+        'size': 90
+      },
+      {
+        'name': 'zohal-v0.2.0-x86_64.apk',
+        'browser_download_url': 'url-x86_64',
+        'size': 110
+      },
+      {
+        'name': 'zohal-v0.2.0.universal.apk',
+        'browser_download_url': 'url-universal',
+        'size': 200
+      },
     ];
 
     test('selects arm64-v8a for 64-bit ARM device', () {
@@ -223,7 +249,9 @@ invalid line without hash
   // 4. ResumableDownloader & HTTP Range Protocol
   // ===========================================================================
   group('ResumableDownloader HTTP Range Protocol', () {
-    test('Fresh Download (HTTP 200) transfers full payload and renames .part to target', () async {
+    test(
+        'Fresh Download (HTTP 200) transfers full payload and renames .part to target',
+        () async {
       const filename = 'fresh_download.bin';
       final payload = List.generate(1000, (i) => i % 256);
       String? emittedRangeHeader;
@@ -247,13 +275,17 @@ invalid line without hash
       );
 
       final resultFile = await downloader.start();
-      expect(emittedRangeHeader, isNull, reason: 'Offset 0 must not emit Range header');
+      expect(emittedRangeHeader, isNull,
+          reason: 'Offset 0 must not emit Range header');
       expect(await resultFile.exists(), isTrue);
       expect(await resultFile.length(), equals(1000));
-      expect(await File('${tempTestDir.path}/$filename.part').exists(), isFalse);
+      expect(
+          await File('${tempTestDir.path}/$filename.part').exists(), isFalse);
     });
 
-    test('Resuming Download (HTTP 206) emits Range header and appends remaining bytes', () async {
+    test(
+        'Resuming Download (HTTP 206) emits Range header and appends remaining bytes',
+        () async {
       const filename = 'resume_download.bin';
       final partFile = File('${tempTestDir.path}/$filename.part');
       final initialBytes = List.generate(400, (i) => 1);
@@ -289,7 +321,8 @@ invalid line without hash
       expect(fileBytes.sublist(400), equals(remainingBytes));
     });
 
-    test('HTTP 200 Overwrite Fallback truncates .part and rewrites from byte 0', () async {
+    test('HTTP 200 Overwrite Fallback truncates .part and rewrites from byte 0',
+        () async {
       const filename = 'fallback_200.bin';
       final partFile = File('${tempTestDir.path}/$filename.part');
       await partFile.writeAsBytes(List.generate(400, (i) => 9)); // stale bytes
@@ -320,7 +353,9 @@ invalid line without hash
       expect(await resultFile.readAsBytes(), equals(allBytes));
     });
 
-    test('HTTP 416 Range Not Satisfiable completes if local file already matches totalBytes', () async {
+    test(
+        'HTTP 416 Range Not Satisfiable completes if local file already matches totalBytes',
+        () async {
       const filename = 'completed_416.bin';
       final partFile = File('${tempTestDir.path}/$filename.part');
       await partFile.writeAsBytes(List.generate(1000, (i) => 7));
@@ -347,7 +382,8 @@ invalid line without hash
       expect(await resultFile.length(), equals(1000));
     });
 
-    test('Pause preserves byte offset and Resume continues from that offset', () async {
+    test('Pause preserves byte offset and Resume continues from that offset',
+        () async {
       const filename = 'pause_resume.bin';
       final chunk1 = List.generate(500, (i) => 1);
       final chunk2 = List.generate(500, (i) => 2);
@@ -410,7 +446,9 @@ invalid line without hash
       expect(await finalFile.length(), equals(1000));
     });
 
-    test('Cancel cleans up .part file and completes with DownloadCancelledException', () async {
+    test(
+        'Cancel cleans up .part file and completes with DownloadCancelledException',
+        () async {
       const filename = 'cancel_test.bin';
       final streamController = StreamController<List<int>>();
 
@@ -444,7 +482,9 @@ invalid line without hash
       expect(await partFile.exists(), isFalse);
     });
 
-    test('Transient network drop (SocketException) auto-retries from current offset', () async {
+    test(
+        'Transient network drop (SocketException) auto-retries from current offset',
+        () async {
       const filename = 'auto_retry.bin';
       int attempts = 0;
       final chunk1 = List.generate(400, (i) => 1);
@@ -464,7 +504,8 @@ invalid line without hash
             // First attempt sends 400 bytes then fails with SocketException
             final controller = StreamController<List<int>>();
             controller.add(chunk1);
-            controller.addError(const SocketException('Simulated network reset'));
+            controller
+                .addError(const SocketException('Simulated network reset'));
             return http.StreamedResponse(
               controller.stream,
               200,
@@ -488,7 +529,9 @@ invalid line without hash
       expect(await finalFile.length(), equals(1000));
     });
 
-    test('Exhausting maxRetries fails with DownloadException and preserves .part file', () async {
+    test(
+        'Exhausting maxRetries fails with DownloadException and preserves .part file',
+        () async {
       const filename = 'fail_exhaust.bin';
       int attempts = 0;
 
@@ -518,7 +561,9 @@ invalid line without hash
   // 5. Riverpod State Scoping & Startup Deferral
   // ===========================================================================
   group('Riverpod State Scoping & Startup Delay', () {
-    test('initialUpdateDelayProvider can be overridden with Duration.zero in tests', () async {
+    test(
+        'initialUpdateDelayProvider can be overridden with Duration.zero in tests',
+        () async {
       final container = ProviderContainer(
         overrides: [
           initialUpdateDelayProvider.overrideWithValue(Duration.zero),

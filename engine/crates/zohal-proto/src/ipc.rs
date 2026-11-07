@@ -7,7 +7,10 @@ use std::collections::HashMap;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "t", rename_all = "snake_case")]
 pub enum ClientMessage {
-    Hello { proto: u32, client: String },
+    Hello {
+        proto: u32,
+        client: String,
+    },
     SetDesired {
         up: bool,
         epoch: u64,
@@ -15,11 +18,15 @@ pub enum ClientMessage {
         mode: Option<ConnectionMode>,
     },
     GetState,
-    Subscribe { stats: bool },
+    Subscribe {
+        stats: bool,
+    },
     Unsubscribe,
     GetSettings,
     GetLogs,
-    PatchSettings { settings: Box<Settings> },
+    PatchSettings {
+        settings: Box<Settings>,
+    },
     ProbeNow,
     ExportDiagnostics,
     ResetIdentity,

@@ -133,14 +133,18 @@ void main() {
             if (range == null) {
               // First connection: Stream chunks with pacing
               request.response.statusCode = HttpStatus.ok;
-              request.response.headers.set('Content-Type', 'application/octet-stream');
-              request.response.headers.set('Content-Length', totalSize.toString());
+              request.response.headers
+                  .set('Content-Type', 'application/octet-stream');
+              request.response.headers
+                  .set('Content-Length', totalSize.toString());
               request.response.headers.set('Accept-Ranges', 'bytes');
 
               const chunkSize = 2048;
               int offset = 0;
               while (offset < totalSize) {
-                final end = (offset + chunkSize > totalSize) ? totalSize : offset + chunkSize;
+                final end = (offset + chunkSize > totalSize)
+                    ? totalSize
+                    : offset + chunkSize;
                 request.response.add(payload.sublist(offset, end));
                 await request.response.flush();
                 offset = end;
@@ -152,7 +156,8 @@ void main() {
             } else {
               // Resumed connection: Must have Range header
               final match = RegExp(r'bytes=(\d+)-').firstMatch(range);
-              expect(match, isNotNull, reason: 'Range header must match bytes=X-');
+              expect(match, isNotNull,
+                  reason: 'Range header must match bytes=X-');
               final startOffset = int.parse(match!.group(1)!);
               final remaining = totalSize - startOffset;
 
@@ -161,8 +166,10 @@ void main() {
                 'Content-Range',
                 'bytes $startOffset-${totalSize - 1}/$totalSize',
               );
-              request.response.headers.set('Content-Length', remaining.toString());
-              request.response.headers.set('Content-Type', 'application/octet-stream');
+              request.response.headers
+                  .set('Content-Length', remaining.toString());
+              request.response.headers
+                  .set('Content-Type', 'application/octet-stream');
 
               request.response.add(payload.sublist(startOffset));
               await request.response.flush();
@@ -207,7 +214,8 @@ void main() {
         await Future<void>.delayed(const Duration(milliseconds: 150));
 
         final partFile = File('${tempDir.path}/$filename.part');
-        expect(await partFile.exists(), isTrue, reason: '.part file must exist on disk after pause');
+        expect(await partFile.exists(), isTrue,
+            reason: '.part file must exist on disk after pause');
 
         final pausedLength = await partFile.length();
         expect(pausedLength, greaterThanOrEqualTo(19200),
@@ -242,7 +250,8 @@ void main() {
         expect(
           server.capturedRequests[1].rangeHeader,
           equals('bytes=$pausedLength-'),
-          reason: 'Resumed HTTP request must specify exact byte offset in Range header',
+          reason:
+              'Resumed HTTP request must specify exact byte offset in Range header',
         );
       },
       timeout: const Timeout(Duration(seconds: 30)),
@@ -272,8 +281,10 @@ void main() {
               // Attempt 1: Send 32,000 bytes (40%), then prematurely close the connection
               // With Content-Length: 80000, this triggers ClientException (connection closed while receiving data)
               request.response.statusCode = HttpStatus.ok;
-              request.response.headers.set('Content-Length', totalSize.toString());
-              request.response.headers.set('Content-Type', 'application/octet-stream');
+              request.response.headers
+                  .set('Content-Length', totalSize.toString());
+              request.response.headers
+                  .set('Content-Type', 'application/octet-stream');
 
               droppedOffset = 32000;
               request.response.add(payload.sublist(0, droppedOffset));
@@ -301,8 +312,10 @@ void main() {
                 'Content-Range',
                 'bytes $requestedOffset-${totalSize - 1}/$totalSize',
               );
-              request.response.headers.set('Content-Length', remaining.toString());
-              request.response.headers.set('Content-Type', 'application/octet-stream');
+              request.response.headers
+                  .set('Content-Length', remaining.toString());
+              request.response.headers
+                  .set('Content-Type', 'application/octet-stream');
 
               request.response.add(payload.sublist(requestedOffset));
               await request.response.flush();
@@ -341,15 +354,15 @@ void main() {
         expect(resultBytes, equals(payload));
 
         // Verify progress sequence encountered 'retrying' and did not reset receivedBytes to 0
-        final retryingEvents =
-            progressList.where((p) => p.status == DownloadStatus.retrying).toList();
+        final retryingEvents = progressList
+            .where((p) => p.status == DownloadStatus.retrying)
+            .toList();
         expect(retryingEvents, isNotEmpty,
             reason: 'Must enter retrying state on socket exception');
 
         final postRetryDownloading = progressList
             .where((p) =>
-                p.status == DownloadStatus.downloading &&
-                p.retryAttempt > 0)
+                p.status == DownloadStatus.downloading && p.retryAttempt > 0)
             .toList();
         expect(postRetryDownloading, isNotEmpty);
         expect(
@@ -386,7 +399,8 @@ void main() {
             if (attempt == 1) {
               // 1st attempt: Stream 20,000 bytes then drop prematurely
               request.response.statusCode = HttpStatus.ok;
-              request.response.headers.set('Content-Length', totalSize.toString());
+              request.response.headers
+                  .set('Content-Length', totalSize.toString());
               request.response.add(payload.sublist(0, drop1Offset));
               await request.response.flush();
               try {
@@ -486,8 +500,10 @@ void main() {
 
             // Server ignores Range header and returns 200 OK with full file
             request.response.statusCode = HttpStatus.ok;
-            request.response.headers.set('Content-Length', totalSize.toString());
-            request.response.headers.set('Content-Type', 'application/octet-stream');
+            request.response.headers
+                .set('Content-Length', totalSize.toString());
+            request.response.headers
+                .set('Content-Type', 'application/octet-stream');
 
             request.response.add(payload);
             await request.response.flush();
@@ -530,7 +546,8 @@ void main() {
   // ===========================================================================
   // CHALLENGE 6: SHA256 Checksum Integrity & Corrupted Byte Purging
   // ===========================================================================
-  group('CHALLENGE 6: SHA256 Integrity Verification & Corrupt File Purging', () {
+  group('CHALLENGE 6: SHA256 Integrity Verification & Corrupt File Purging',
+      () {
     test(
       'Rejects payload when single bit is flipped, deletes .part file, and throws ChecksumMismatchException',
       () async {
@@ -547,8 +564,10 @@ void main() {
         server = await MockUpdateServer.start(
           handler: (request, s) async {
             request.response.statusCode = HttpStatus.ok;
-            request.response.headers.set('Content-Length', totalSize.toString());
-            request.response.headers.set('Content-Type', 'application/octet-stream');
+            request.response.headers
+                .set('Content-Length', totalSize.toString());
+            request.response.headers
+                .set('Content-Type', 'application/octet-stream');
             request.response.add(corruptedPayload);
             await request.response.flush();
             await request.response.close();
@@ -581,7 +600,8 @@ void main() {
         final targetFile = File('${tempDir.path}/$filename');
 
         expect(await partFile.exists(), isFalse,
-            reason: '.part file MUST be purged on checksum mismatch to prevent corrupt installs');
+            reason:
+                '.part file MUST be purged on checksum mismatch to prevent corrupt installs');
         expect(await targetFile.exists(), isFalse,
             reason: 'Target file MUST never be created from corrupted payload');
         expect(downloader.status, equals(DownloadStatus.failed));
@@ -610,7 +630,8 @@ void main() {
         server = await MockUpdateServer.start(
           handler: (request, s) async {
             // Server sees range offset >= totalSize and returns 416
-            request.response.statusCode = HttpStatus.requestedRangeNotSatisfiable;
+            request.response.statusCode =
+                HttpStatus.requestedRangeNotSatisfiable;
             request.response.headers.set('Content-Range', 'bytes */$totalSize');
             await request.response.close();
           },
@@ -657,14 +678,17 @@ void main() {
             requestCount++;
             if (requestCount == 1) {
               // First request: reject Range with 416
-              request.response.statusCode = HttpStatus.requestedRangeNotSatisfiable;
-              request.response.headers.set('Content-Range', 'bytes */$totalSize');
+              request.response.statusCode =
+                  HttpStatus.requestedRangeNotSatisfiable;
+              request.response.headers
+                  .set('Content-Range', 'bytes */$totalSize');
               await request.response.close();
             } else {
               // Second request: client deleted .part and sent fresh request (no Range)
               expect(request.headers.value('range'), isNull);
               request.response.statusCode = HttpStatus.ok;
-              request.response.headers.set('Content-Length', totalSize.toString());
+              request.response.headers
+                  .set('Content-Length', totalSize.toString());
               request.response.add(payload);
               await request.response.flush();
               await request.response.close();
@@ -710,7 +734,8 @@ void main() {
         server = await MockUpdateServer.start(
           handler: (request, s) async {
             request.response.statusCode = HttpStatus.ok;
-            request.response.headers.set('Content-Length', totalSize.toString());
+            request.response.headers
+                .set('Content-Length', totalSize.toString());
 
             // Stream slowly
             for (int i = 0; i < 10; i++) {
@@ -770,7 +795,8 @@ void main() {
         server = await MockUpdateServer.start(
           handler: (request, s) async {
             request.response.statusCode = HttpStatus.ok;
-            request.response.headers.set('Content-Length', totalSize.toString());
+            request.response.headers
+                .set('Content-Length', totalSize.toString());
             request.response.add(payload);
             await request.response.flush();
             await request.response.close();
@@ -816,11 +842,14 @@ void main() {
         server = await MockUpdateServer.start(
           handler: (request, s) async {
             request.response.statusCode = HttpStatus.ok;
-            request.response.headers.set('Content-Length', totalSize.toString());
+            request.response.headers
+                .set('Content-Length', totalSize.toString());
 
             const chunkSize = 5000;
             for (int offset = 0; offset < totalSize; offset += chunkSize) {
-              final end = (offset + chunkSize > totalSize) ? totalSize : offset + chunkSize;
+              final end = (offset + chunkSize > totalSize)
+                  ? totalSize
+                  : offset + chunkSize;
               request.response.add(payload.sublist(offset, end));
               await request.response.flush();
               await Future<void>.delayed(const Duration(milliseconds: 30));
@@ -850,7 +879,9 @@ void main() {
         expect(await resultFile.exists(), isTrue);
 
         final activeSpeeds = progressEvents
-            .where((p) => p.status == DownloadStatus.downloading && p.speedBytesPerSec > 0)
+            .where((p) =>
+                p.status == DownloadStatus.downloading &&
+                p.speedBytesPerSec > 0)
             .map((p) => p.speedBytesPerSec)
             .toList();
 
@@ -858,7 +889,9 @@ void main() {
             reason: 'Must compute non-zero speed during active streaming');
 
         final etas = progressEvents
-            .where((p) => p.status == DownloadStatus.downloading && p.estimatedTimeRemaining != null)
+            .where((p) =>
+                p.status == DownloadStatus.downloading &&
+                p.estimatedTimeRemaining != null)
             .map((p) => p.estimatedTimeRemaining!)
             .toList();
 
@@ -894,10 +927,12 @@ void main() {
           handler: (request, s) async {
             // Must NOT have received a Range header
             expect(request.headers.value('range'), isNull,
-                reason: 'Oversized .part must be purged and download restarted from 0 without Range');
+                reason:
+                    'Oversized .part must be purged and download restarted from 0 without Range');
 
             request.response.statusCode = HttpStatus.ok;
-            request.response.headers.set('Content-Length', totalSize.toString());
+            request.response.headers
+                .set('Content-Length', totalSize.toString());
             request.response.add(payload);
             await request.response.flush();
             await request.response.close();
@@ -956,4 +991,3 @@ void main() {
     );
   });
 }
-

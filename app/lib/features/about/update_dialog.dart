@@ -433,7 +433,8 @@ class _UpdateDialogState extends State<UpdateDialog> {
         ),
       ),
       actions: [
-        if (_progress.status == DownloadStatus.idle && _errorMessage == null) ...[
+        if (_progress.status == DownloadStatus.idle &&
+            _errorMessage == null) ...[
           SharpButton(
             label: StringsFa.updateLater,
             isOutlined: true,

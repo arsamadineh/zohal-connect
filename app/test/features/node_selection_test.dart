@@ -47,7 +47,8 @@ void main() {
       expect(notifier.state.first.id, equals('warp_auto_gateway'));
     });
 
-    test('addFromText parses and appends valid VLESS and VMess nodes', () async {
+    test('addFromText parses and appends valid VLESS and VMess nodes',
+        () async {
       final notifier = ProxyNodesNotifier();
 
       const input = '''
@@ -59,7 +60,8 @@ vmess://eyJhZGQiOiAiMTk4LjUxLjEwMC4yIiwgInBvcnQiOiA0NDMsICJpZCI6ICJhM2JiMTg5ZS04
       expect(count, equals(2));
       expect(notifier.state.length, equals(defaultProxyNodes.length + 2));
 
-      final deNode = notifier.state.firstWhere((n) => n.isCustom && n.countryCode == 'DE');
+      final deNode =
+          notifier.state.firstWhere((n) => n.isCustom && n.countryCode == 'DE');
       expect(deNode.name, equals('[DE] Frankfurt'));
       expect(deNode.protocol, equals(ProxyProtocol.vless));
 
@@ -97,12 +99,14 @@ vmess://eyJhZGQiOiAiMTk4LjUxLjEwMC4yIiwgInBvcnQiOiA0NDMsICJpZCI6ICJhM2JiMTg5ZS04
       expect(selectedNotifier.state?.id, equals(targetNode.id));
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('zohal_selected_proxy_node_id'), equals(targetNode.id));
+      expect(prefs.getString('zohal_selected_proxy_node_id'),
+          equals(targetNode.id));
     });
   });
 
   group('PublicIpDetector Unit Tests', () {
-    test('Extracts exit IP and country location code from Cloudflare trace', () async {
+    test('Extracts exit IP and country location code from Cloudflare trace',
+        () async {
       const tracePayload = '''
 fl=123f45
 h=cloudflare.com
@@ -123,7 +127,8 @@ kex=X25519
 ''';
 
       final mockClient = MockTraceHttpClient(tracePayload);
-      final result = await PublicIpDetector.detectExitIpAndLocation(client: mockClient);
+      final result =
+          await PublicIpDetector.detectExitIpAndLocation(client: mockClient);
 
       expect(result, isNotNull);
       expect(result!['ip'], equals('198.51.100.99'));
@@ -132,7 +137,8 @@ kex=X25519
   });
 
   group('CustomProxyRunner Connection Lifecycle', () {
-    test('Runner connects and transitions through stages into connected state', () async {
+    test('Runner connects and transitions through stages into connected state',
+        () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
@@ -149,7 +155,9 @@ kex=X25519
   });
 
   group('NodeSheet & AddConfigDialog Widget Tests', () {
-    testWidgets('NodeSheet displays server list, ping all button, and add config trigger', (
+    testWidgets(
+        'NodeSheet displays server list, ping all button, and add config trigger',
+        (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
@@ -180,7 +188,9 @@ kex=X25519
       expect(find.text('[DE] فرانکفورت (Cloudflare Edge)'), findsOneWidget);
     });
 
-    testWidgets('AddConfigDialog parses pasted VLESS URI and displays live preview card', (
+    testWidgets(
+        'AddConfigDialog parses pasted VLESS URI and displays live preview card',
+        (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(
@@ -220,9 +230,11 @@ kex=X25519
       expect(find.textContaining('VLESS'), findsOneWidget);
 
       // Verify the Add button is enabled
-      final addButtonFinder = find.widgetWithText(ElevatedButton, StringsFa.add);
+      final addButtonFinder =
+          find.widgetWithText(ElevatedButton, StringsFa.add);
       if (addButtonFinder.evaluate().isNotEmpty) {
-        expect(tester.widget<ElevatedButton>(addButtonFinder).onPressed, isNotNull);
+        expect(tester.widget<ElevatedButton>(addButtonFinder).onPressed,
+            isNotNull);
       }
     });
   });

@@ -61,7 +61,8 @@ class EngineStateNotifier extends StateNotifier<EngineState> {
     });
   }
 
-  void setDesired(bool up, {ZohalSettings? settings, Map<String, dynamic>? mode}) {
+  void setDesired(bool up,
+      {ZohalSettings? settings, Map<String, dynamic>? mode}) {
     // Optimistic UI (spec 12.6): the control reacts within one frame while
     // the engine confirms asynchronously. If the engine disagrees for more
     // than 2 s, the engine's last real state wins back.
@@ -86,7 +87,8 @@ class EngineStateNotifier extends StateNotifier<EngineState> {
     state = newState;
   }
 
-  void updateCustomProxyState(EngineState Function(EngineState current) updater) {
+  void updateCustomProxyState(
+      EngineState Function(EngineState current) updater) {
     _convergeTimer?.cancel();
     state = updater(state);
   }
@@ -260,7 +262,8 @@ class ZohalBridgeClient {
         );
         return;
       }
-      final modeStr = mode != null ? 'custom' : _lastSettings.connectionMode.name;
+      final modeStr =
+          mode != null ? 'custom' : _lastSettings.connectionMode.name;
       await channel.start({
         'mode': modeStr,
         if (mode != null) 'customMode': mode,
@@ -573,7 +576,8 @@ class ZohalBridgeClient {
     return VpnChannel().prepare();
   }
 
-  void setDesired(bool up, {ZohalSettings? settings, Map<String, dynamic>? mode}) {
+  void setDesired(bool up,
+      {ZohalSettings? settings, Map<String, dynamic>? mode}) {
     if (settings != null) _lastSettings = settings;
     _epoch++;
     if (VpnChannel.isSupported) {

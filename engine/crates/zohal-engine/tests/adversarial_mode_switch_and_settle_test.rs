@@ -98,7 +98,9 @@ impl TunnelBackend for TrackingBackend {
         Box<dyn std::future::Future<Output = Result<PathTrace, BackendError>> + Send + 'a>,
     > {
         Box::pin(async move {
-            self.history.lock().push(TrackingEvent::Verify { id: handle.id });
+            self.history
+                .lock()
+                .push(TrackingEvent::Verify { id: handle.id });
             if self.fail_verify.load(Ordering::SeqCst) {
                 return Err(BackendError::VerificationFailed("Simulated failure".into()));
             }
@@ -115,7 +117,8 @@ impl TunnelBackend for TrackingBackend {
         &'a self,
         handle: &'a CandidateHandle,
         journal: &'a Journal,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BackendError>> + Send + 'a>> {
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BackendError>> + Send + 'a>>
+    {
         Box::pin(async move {
             let _ = journal.record_action(
                 "tun",
@@ -132,7 +135,8 @@ impl TunnelBackend for TrackingBackend {
     fn teardown_system_tunnel<'a>(
         &'a self,
         journal: &'a Journal,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BackendError>> + Send + 'a>> {
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BackendError>> + Send + 'a>>
+    {
         Box::pin(async move {
             let _ = journal.clear();
             self.history.lock().push(TrackingEvent::TeardownTunnel);
@@ -143,7 +147,8 @@ impl TunnelBackend for TrackingBackend {
     fn stop_candidate<'a>(
         &'a self,
         handle: CandidateHandle,
-    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BackendError>> + Send + 'a>> {
+    ) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(), BackendError>> + Send + 'a>>
+    {
         Box::pin(async move {
             self.active_processes.fetch_sub(1, Ordering::SeqCst);
             self.history
@@ -447,7 +452,7 @@ signal.signal(signal.SIGTERM, signal.SIG_IGN)
 
 while True:
     time.sleep(1)
-"#
+"#,
     );
     cmd.stdout(std::process::Stdio::piped());
     cmd.stderr(std::process::Stdio::piped());
@@ -488,7 +493,11 @@ while True:
     }
 
     // Because child ignored SIGTERM, it should NOT have exited via SIGTERM
-    assert!(exit_status.is_none(), "Adversarial child unexpectedly exited on SIGTERM: {:?}", exit_status);
+    assert!(
+        exit_status.is_none(),
+        "Adversarial child unexpectedly exited on SIGTERM: {:?}",
+        exit_status
+    );
 
     // 3. Escalate to SIGKILL!
     let kill_res = child.kill().await;

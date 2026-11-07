@@ -118,7 +118,8 @@ class ProxyNode {
     final cleanText = text.trim();
 
     // 1. Check bracketed ISO code: e.g. [DE], (NL), DE - Server
-    final bracketMatch = RegExp(r'[\[\(\s]([A-Za-z]{2})[\]\)\s\-]').firstMatch(cleanText);
+    final bracketMatch =
+        RegExp(r'[\[\(\s]([A-Za-z]{2})[\]\)\s\-]').firstMatch(cleanText);
     if (bracketMatch != null) {
       final code = bracketMatch.group(1)!.toUpperCase();
       if (_knownCountryCodes.contains(code)) return code;
@@ -144,7 +145,8 @@ class ProxyNode {
         if (kw.length <= 2) {
           // Strict word boundary check for 2-letter codes to prevent false positives
           // e.g. "us" in "custom", "de" in "node"
-          final regex = RegExp('(^|[^a-zA-Z0-9])$kw([^a-zA-Z0-9]|\$)', caseSensitive: false);
+          final regex = RegExp('(^|[^a-zA-Z0-9])$kw([^a-zA-Z0-9]|\$)',
+              caseSensitive: false);
           if (regex.hasMatch(lower)) {
             return entry.key;
           }
@@ -169,18 +171,71 @@ class ProxyNode {
   }
 
   static const Set<String> _knownCountryCodes = {
-    'DE', 'US', 'NL', 'FR', 'TR', 'GB', 'FI', 'CA', 'SG', 'JP',
-    'SE', 'CH', 'AE', 'RU', 'PL', 'IT', 'ES', 'IR', 'AT', 'AU',
-    'BE', 'BR', 'DK', 'HK', 'IN', 'KR', 'NO', 'RO', 'UA', 'UN'
+    'DE',
+    'US',
+    'NL',
+    'FR',
+    'TR',
+    'GB',
+    'FI',
+    'CA',
+    'SG',
+    'JP',
+    'SE',
+    'CH',
+    'AE',
+    'RU',
+    'PL',
+    'IT',
+    'ES',
+    'IR',
+    'AT',
+    'AU',
+    'BE',
+    'BR',
+    'DK',
+    'HK',
+    'IN',
+    'KR',
+    'NO',
+    'RO',
+    'UA',
+    'UN'
   };
 
   static const Map<String, List<String>> _countryKeywords = {
-    'DE': ['germany', 'frankfurt', 'berlin', 'آلمان', 'فرانکفورت', 'برلین', 'de'],
-    'US': ['united states', 'usa', 'america', 'new york', 'los angeles', 'آمریکا', 'us'],
+    'DE': [
+      'germany',
+      'frankfurt',
+      'berlin',
+      'آلمان',
+      'فرانکفورت',
+      'برلین',
+      'de'
+    ],
+    'US': [
+      'united states',
+      'usa',
+      'america',
+      'new york',
+      'los angeles',
+      'آمریکا',
+      'us'
+    ],
     'NL': ['netherlands', 'holland', 'amsterdam', 'هلند', 'آمستردام', 'nl'],
     'FR': ['france', 'paris', 'فرانسه', 'پاریس', 'fr'],
     'TR': ['turkey', 'istanbul', 'ترکیه', 'استانبول', 'tr'],
-    'GB': ['united kingdom', 'britain', 'london', 'england', 'انگلیس', 'لندن', 'بریتانیا', 'uk', 'gb'],
+    'GB': [
+      'united kingdom',
+      'britain',
+      'london',
+      'england',
+      'انگلیس',
+      'لندن',
+      'بریتانیا',
+      'uk',
+      'gb'
+    ],
     'FI': ['finland', 'helsinki', 'فنلاند', 'هلسینکی', 'fi'],
     'CA': ['canada', 'toronto', 'کانادا', 'تورنتو', 'ca'],
     'SG': ['singapore', 'سنگاپور', 'sg'],
@@ -284,7 +339,8 @@ class ProxyParser {
       jsonStr = utf8.decode(base64.decode(base64.normalize(b64Content)));
     } catch (_) {
       try {
-        jsonStr = utf8.decode(base64Url.decode(base64Url.normalize(b64Content)));
+        jsonStr =
+            utf8.decode(base64Url.decode(base64Url.normalize(b64Content)));
       } catch (_) {
         return null;
       }
@@ -293,7 +349,9 @@ class ProxyParser {
     final json = jsonDecode(jsonStr) as Map<String, dynamic>;
     final server = (json['add'] as String? ?? '').trim();
     final rawPort = json['port'];
-    final port = rawPort is int ? rawPort : int.tryParse(rawPort?.toString() ?? '443') ?? 443;
+    final port = rawPort is int
+        ? rawPort
+        : int.tryParse(rawPort?.toString() ?? '443') ?? 443;
     final uuid = (json['id'] as String? ?? '').trim();
     final remark = (json['ps'] as String? ?? 'VMess $server:$port').trim();
 
@@ -341,7 +399,8 @@ class ProxyParser {
         password = parts.sublist(1).join(':');
       } else {
         try {
-          final decoded = utf8.decode(base64.decode(base64.normalize(uri.userInfo)));
+          final decoded =
+              utf8.decode(base64.decode(base64.normalize(uri.userInfo)));
           final parts = decoded.split(':');
           if (parts.length >= 2) {
             method = parts[0];
@@ -400,9 +459,12 @@ class ProxyParser {
 
   static ProxyNode? _parseWarp(String uriStr) {
     final uri = Uri.parse(uriStr);
-    final server = uri.host.isNotEmpty ? uri.host : 'engage.cloudflareclient.com';
+    final server =
+        uri.host.isNotEmpty ? uri.host : 'engage.cloudflareclient.com';
     final port = uri.port > 0 ? uri.port : 2408;
-    final remark = uri.fragment.isNotEmpty ? Uri.decodeComponent(uri.fragment) : 'Cloudflare WARP';
+    final remark = uri.fragment.isNotEmpty
+        ? Uri.decodeComponent(uri.fragment)
+        : 'Cloudflare WARP';
 
     return ProxyNode(
       id: 'warp_${server}_$port',

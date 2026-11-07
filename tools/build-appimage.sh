@@ -32,6 +32,10 @@ cp -r "$BUNDLE/data" "$APPDIR/usr/bin/data"
 cp "engine/target/release/zohald" "$APPDIR/usr/bin/zohald"
 cp "third_party/dist/linux-x86_64/aether" "$APPDIR/usr/bin/aether"
 chmod +x "$APPDIR/usr/bin/zohal" "$APPDIR/usr/bin/zohald" "$APPDIR/usr/bin/aether"
+if [ -x "third_party/dist/linux-x86_64/sing-box" ]; then
+  cp "third_party/dist/linux-x86_64/sing-box" "$APPDIR/usr/bin/sing-box"
+  chmod +x "$APPDIR/usr/bin/sing-box"
+fi
 
 # Desktop entry + icon (Exec is rewritten to the AppImage-relative binary).
 sed 's|^Exec=.*|Exec=zohal|; s|^Icon=.*|Icon=zohal|' \

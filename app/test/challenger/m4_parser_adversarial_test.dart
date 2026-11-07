@@ -68,7 +68,8 @@ void main() {
       }
 
       // Adversarial Finding: vless://:secret@1.1.1.1:443 treats ':secret' as uuid because uri.userInfo is ':secret'
-      final colonUserInfoNode = ProxyParser.parseSingle('vless://:secret@1.1.1.1:443');
+      final colonUserInfoNode =
+          ProxyParser.parseSingle('vless://:secret@1.1.1.1:443');
       expect(colonUserInfoNode, isNotNull);
       expect(colonUserInfoNode!.metadata['uuid'], equals(':secret'));
 
@@ -134,7 +135,8 @@ void main() {
       }
     });
 
-    test('VMess with non-object JSON payloads (array, string, number, null)', () {
+    test('VMess with non-object JSON payloads (array, string, number, null)',
+        () {
       final nonObjectPayloads = [
         '["item1", "item2", 42]',
         '"just a plain string"',
@@ -157,7 +159,8 @@ void main() {
       }
     });
 
-    test('Port boundary cases (0, string ports, negative, floats, overflows)', () {
+    test('Port boundary cases (0, string ports, negative, floats, overflows)',
+        () {
       // VMess port variations
       final portCases = [
         {'port': 0, 'valid': true},
@@ -182,14 +185,16 @@ void main() {
       }
     });
 
-    test('Batch multi-line stress test with 1,000 mixed valid & corrupt lines', () {
+    test('Batch multi-line stress test with 1,000 mixed valid & corrupt lines',
+        () {
       final buffer = StringBuffer();
       int expectedValid = 0;
 
       for (int i = 0; i < 1000; i++) {
         if (i % 5 == 0) {
           // Valid VLESS
-          buffer.writeln('vless://uuid$i@node$i.de:443?security=reality#[DE] Node $i');
+          buffer.writeln(
+              'vless://uuid$i@node$i.de:443?security=reality#[DE] Node $i');
           expectedValid++;
         } else if (i % 5 == 1) {
           // Valid VMess
@@ -219,7 +224,8 @@ void main() {
 
       expect(nodes.length, equals(expectedValid));
       expect(stopwatch.elapsedMilliseconds, lessThan(1000),
-          reason: '1000 line parse took longer than 1s: ${stopwatch.elapsedMilliseconds}ms');
+          reason:
+              '1000 line parse took longer than 1s: ${stopwatch.elapsedMilliseconds}ms');
     });
   });
 }

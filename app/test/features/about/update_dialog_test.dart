@@ -145,7 +145,8 @@ void main() {
       mockDownloader.dispose();
     });
 
-    testWidgets('Initial Idle State renders version, size, notes, and sharp buttons', (
+    testWidgets(
+        'Initial Idle State renders version, size, notes, and sharp buttons', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(createTestWidget(mockDownloader: mockDownloader));
@@ -156,11 +157,13 @@ void main() {
       expect(find.text(StringsFa.updateAvailableTitle), findsOneWidget);
 
       // 2. Verify Version formatted with Persian digits in LTR isolate
-      final versionText = Persian.ltrIsolate(Persian.toPersianDigits(testInfo.version));
+      final versionText =
+          Persian.ltrIsolate(Persian.toPersianDigits(testInfo.version));
       expect(find.textContaining(versionText), findsOneWidget);
 
       // 3. Verify Formatted Size
-      expect(find.text(Persian.formatBytes(testInfo.sizeBytes!)), findsOneWidget);
+      expect(
+          find.text(Persian.formatBytes(testInfo.sizeBytes!)), findsOneWidget);
 
       // 4. Verify Release Notes
       expect(find.textContaining('ویژگی‌های نسخه جدید'), findsOneWidget);
@@ -171,14 +174,16 @@ void main() {
       expect(shape.borderRadius, equals(BorderRadius.zero));
 
       // 6. Verify Action Buttons (Later and Download&Install)
-      expect(find.widgetWithText(SharpButton, StringsFa.updateLater), findsOneWidget);
+      expect(find.widgetWithText(SharpButton, StringsFa.updateLater),
+          findsOneWidget);
       expect(
         find.widgetWithText(SharpButton, StringsFa.updateDownloadAndInstall),
         findsOneWidget,
       );
     });
 
-    testWidgets('Tapping Later dismisses dialog cleanly', (WidgetTester tester) async {
+    testWidgets('Tapping Later dismisses dialog cleanly',
+        (WidgetTester tester) async {
       await tester.pumpWidget(createTestWidget(mockDownloader: mockDownloader));
       await tester.tap(find.text('نمایش دیالوگ'));
       await tester.pumpAndSettle();
@@ -191,7 +196,8 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
     });
 
-    testWidgets('Download Progress displays speed, ETA, percentage, and Pause button', (
+    testWidgets(
+        'Download Progress displays speed, ETA, percentage, and Pause button', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(createTestWidget(mockDownloader: mockDownloader));
@@ -226,11 +232,14 @@ void main() {
       expect(find.textContaining('~۵ ثانیه'), findsOneWidget);
 
       // Verify buttons switched to Pause and Cancel
-      expect(find.widgetWithText(SharpButton, StringsFa.updatePause), findsOneWidget);
-      expect(find.widgetWithText(SharpButton, StringsFa.cancel), findsOneWidget);
+      expect(find.widgetWithText(SharpButton, StringsFa.updatePause),
+          findsOneWidget);
+      expect(
+          find.widgetWithText(SharpButton, StringsFa.cancel), findsOneWidget);
     });
 
-    testWidgets('Pause and Resume transitions UI and invokes downloader handles', (
+    testWidgets(
+        'Pause and Resume transitions UI and invokes downloader handles', (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(createTestWidget(mockDownloader: mockDownloader));
@@ -261,10 +270,12 @@ void main() {
 
       // UI must reflect paused state
       expect(find.text(StringsFa.updatePaused), findsOneWidget);
-      expect(find.widgetWithText(SharpButton, StringsFa.updateResume), findsOneWidget);
+      expect(find.widgetWithText(SharpButton, StringsFa.updateResume),
+          findsOneWidget);
 
       // Tap Resume
-      await tester.tap(find.widgetWithText(SharpButton, StringsFa.updateResume));
+      await tester
+          .tap(find.widgetWithText(SharpButton, StringsFa.updateResume));
       await tester.pump();
 
       expect(mockDownloader.resumeCalled, isTrue);
@@ -295,11 +306,14 @@ void main() {
 
       expect(find.textContaining(StringsFa.updateReconnecting), findsOneWidget);
       expect(find.textContaining('۲ از ۵'), findsOneWidget);
-      expect(find.widgetWithText(SharpButton, StringsFa.updateRetry), findsOneWidget);
-      expect(find.widgetWithText(SharpButton, StringsFa.cancel), findsOneWidget);
+      expect(find.widgetWithText(SharpButton, StringsFa.updateRetry),
+          findsOneWidget);
+      expect(
+          find.widgetWithText(SharpButton, StringsFa.cancel), findsOneWidget);
     });
 
-    testWidgets('Verifying State displays verification text', (WidgetTester tester) async {
+    testWidgets('Verifying State displays verification text',
+        (WidgetTester tester) async {
       await tester.pumpWidget(createTestWidget(mockDownloader: mockDownloader));
       await tester.tap(find.text('نمایش دیالوگ'));
       await tester.pumpAndSettle();
@@ -345,10 +359,13 @@ void main() {
 
       expect(find.text('خطای شبکه'), findsOneWidget);
       expect(find.widgetWithText(SharpButton, StringsFa.close), findsOneWidget);
-      expect(find.widgetWithText(SharpButton, StringsFa.updateRetry), findsOneWidget);
+      expect(find.widgetWithText(SharpButton, StringsFa.updateRetry),
+          findsOneWidget);
     });
 
-    testWidgets('Tapping Cancel in downloading state invokes cancel and dismisses dialog', (
+    testWidgets(
+        'Tapping Cancel in downloading state invokes cancel and dismisses dialog',
+        (
       WidgetTester tester,
     ) async {
       await tester.pumpWidget(createTestWidget(mockDownloader: mockDownloader));

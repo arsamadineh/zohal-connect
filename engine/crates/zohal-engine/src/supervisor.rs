@@ -112,7 +112,8 @@ impl Supervisor {
             let needs_bring_up = desired.intent == DesiredIntent::Up
                 && (current_phase == Phase::Idle || current_phase == Phase::Failed);
 
-            let needs_tear_down = (desired.intent == DesiredIntent::Down && current_phase != Phase::Idle)
+            let needs_tear_down = (desired.intent == DesiredIntent::Down
+                && current_phase != Phase::Idle)
                 || (desired.intent == DesiredIntent::Up && mode_changed);
 
             if needs_bring_up {

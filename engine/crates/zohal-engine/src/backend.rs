@@ -93,7 +93,10 @@ impl TunnelBackend for CompositeBackend {
         rung: &'a RungConfig,
         endpoint: Option<&'a str>,
     ) -> Pin<Box<dyn Future<Output = Result<CandidateHandle, BackendError>> + Send + 'a>> {
-        if matches!(rung.transport, zohal_proto::types::Transport::Vless | zohal_proto::types::Transport::Vmess) {
+        if matches!(
+            rung.transport,
+            zohal_proto::types::Transport::Vless | zohal_proto::types::Transport::Vmess
+        ) {
             self.custom.start_candidate(rung, endpoint)
         } else {
             self.aether.start_candidate(rung, endpoint)

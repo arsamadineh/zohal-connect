@@ -21,11 +21,13 @@ import 'package:zohal/features/about/update_dialog.dart';
 import 'package:zohal/l10n/strings_fa.dart';
 
 class MockHttpClient extends http.BaseClient {
-  final Future<http.StreamedResponse> Function(http.BaseRequest request) handler;
+  final Future<http.StreamedResponse> Function(http.BaseRequest request)
+      handler;
   MockHttpClient(this.handler);
 
   @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) => handler(request);
+  Future<http.StreamedResponse> send(http.BaseRequest request) =>
+      handler(request);
 }
 
 class _TestMockDownloader implements IResumableDownloader {
@@ -157,7 +159,9 @@ void main() {
   // 1. Bit-Flip Attacks & Checksum Integrity Verification
   // ===========================================================================
   group('1. Bit-Flip Attacks & SHA256 Integrity Verification', () {
-    test('Bit-flip attack at byte 0 (MSB) purges .part and prevents replacement', () async {
+    test(
+        'Bit-flip attack at byte 0 (MSB) purges .part and prevents replacement',
+        () async {
       const filename = 'zohal-bitflip-byte0.AppImage';
       final validPayload = generatePayload(10000);
       final expectedSha256 = sha256.convert(validPayload).toString();
@@ -202,12 +206,15 @@ void main() {
 
       // Assert target file was NEVER created
       expect(await targetFile.exists(), isFalse,
-          reason: 'Target file must not be created or replaced on checksum failure');
+          reason:
+              'Target file must not be created or replaced on checksum failure');
 
       expect(downloader.status, equals(DownloadStatus.failed));
     });
 
-    test('Bit-flip attack at the final byte (LSB) purges .part and fails gracefully', () async {
+    test(
+        'Bit-flip attack at the final byte (LSB) purges .part and fails gracefully',
+        () async {
       const filename = 'zohal-bitflip-lastbyte.AppImage';
       final validPayload = generatePayload(8192);
       final expectedSha256 = sha256.convert(validPayload).toString();
@@ -249,7 +256,9 @@ void main() {
       expect(downloader.status, equals(DownloadStatus.failed));
     });
 
-    test('Pre-existing valid target installation is preserved when download is corrupt', () async {
+    test(
+        'Pre-existing valid target installation is preserved when download is corrupt',
+        () async {
       const filename = 'zohal-preserve-target.AppImage';
       final oldPayload = utf8.encode('existing installed version 0.1.15');
       final targetFile = File('${tempDir.path}/$filename');
@@ -288,7 +297,9 @@ void main() {
       expect(await partFile.exists(), isFalse);
     });
 
-    test('Bit-flip injected into pre-existing .part file triggers mismatch on resumption', () async {
+    test(
+        'Bit-flip injected into pre-existing .part file triggers mismatch on resumption',
+        () async {
       const filename = 'zohal-corrupt-part.AppImage';
       const totalSize = 10000;
       final fullPayload = generatePayload(totalSize);
@@ -328,7 +339,8 @@ void main() {
       expect(downloader.status, equals(DownloadStatus.failed));
     });
 
-    test('Case-insensitive SHA256 matching succeeds with uppercase hex', () async {
+    test('Case-insensitive SHA256 matching succeeds with uppercase hex',
+        () async {
       const filename = 'zohal-case-insensitive.AppImage';
       final payload = generatePayload(2048);
       // Uppercase hash
@@ -373,13 +385,19 @@ void main() {
           "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8 *app.apk\r\n";
       final map = parseSha256Sums(raw);
       expect(map.length, equals(2));
-      expect(map['app.AppImage'],
-          equals('b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9'));
-      expect(map['app.apk'],
-          equals('5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'));
+      expect(
+          map['app.AppImage'],
+          equals(
+              'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9'));
+      expect(
+          map['app.apk'],
+          equals(
+              '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'));
     });
 
-    test('ignores comments, short hashes, long hashes, non-hex chars, and missing filenames', () {
+    test(
+        'ignores comments, short hashes, long hashes, non-hex chars, and missing filenames',
+        () {
       const malformedText = '''
 # Top level comment
 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8  valid.AppImage
@@ -407,18 +425,24 @@ b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9  ./build/output
 5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8 *artifacts\\windows\\zohal.exe
 ''';
       final map = parseSha256Sums(pathsText);
-      expect(map['zohal.AppImage'],
-          equals('b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9'));
-      expect(map['zohal.exe'],
-          equals('5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'));
+      expect(
+          map['zohal.AppImage'],
+          equals(
+              'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9'));
+      expect(
+          map['zohal.exe'],
+          equals(
+              '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'));
     });
 
     test('parses filenames containing internal spaces properly', () {
       const spaceText =
           'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 *Zohal Connect Setup 0.2.0.AppImage\n';
       final map = parseSha256Sums(spaceText);
-      expect(map['Zohal Connect Setup 0.2.0.AppImage'],
-          equals('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'));
+      expect(
+          map['Zohal Connect Setup 0.2.0.AppImage'],
+          equals(
+              'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'));
     });
   });
 
@@ -426,7 +450,9 @@ b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9  ./build/output
   // 3. Rapid UI Button Toggling & Concurrency Stress Testing
   // ===========================================================================
   group('3. Rapid UI Button Toggling & Concurrency Stress', () {
-    testWidgets('Rapid Pause -> Resume -> Pause -> Cancel clicks do not throw or corrupt UI', (
+    testWidgets(
+        'Rapid Pause -> Resume -> Pause -> Cancel clicks do not throw or corrupt UI',
+        (
       WidgetTester tester,
     ) async {
       final mockDownloader = _TestMockDownloader();
@@ -456,13 +482,16 @@ b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9  ./build/output
       await tester.tap(find.widgetWithText(SharpButton, StringsFa.updatePause));
       await tester.pump();
       expect(mockDownloader.pauseCalls, equals(1));
-      expect(find.widgetWithText(SharpButton, StringsFa.updateResume), findsOneWidget);
+      expect(find.widgetWithText(SharpButton, StringsFa.updateResume),
+          findsOneWidget);
 
       // 2. Resume
-      await tester.tap(find.widgetWithText(SharpButton, StringsFa.updateResume));
+      await tester
+          .tap(find.widgetWithText(SharpButton, StringsFa.updateResume));
       await tester.pump();
       expect(mockDownloader.resumeCalls, equals(1));
-      expect(find.widgetWithText(SharpButton, StringsFa.updatePause), findsOneWidget);
+      expect(find.widgetWithText(SharpButton, StringsFa.updatePause),
+          findsOneWidget);
 
       // 3. Pause again
       await tester.tap(find.widgetWithText(SharpButton, StringsFa.updatePause));
@@ -513,7 +542,9 @@ b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9  ./build/output
       await downloader.cancel();
     });
 
-    test('Probing concurrent start() calls reveals un-guarded async window in start()', () async {
+    test(
+        'Probing concurrent start() calls reveals un-guarded async window in start()',
+        () async {
       final streamController = StreamController<List<int>>();
       addTearDown(streamController.close);
 
@@ -541,7 +572,8 @@ b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9  ./build/output
       // Because _status is only set to connecting inside _runDownloadLoop,
       // synchronous double-call creates two distinct futures and two competing loops:
       expect(identical(f1, f2), isFalse,
-          reason: 'Synchronous start() calls before event loop yield are not deduped');
+          reason:
+              'Synchronous start() calls before event loop yield are not deduped');
 
       // Let event loop run to establish connecting state
       await Future<void>.delayed(const Duration(milliseconds: 50));
@@ -554,7 +586,9 @@ b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9  ./build/output
   // 4. Installation Edge Cases & Android ABI Matching
   // ===========================================================================
   group('4. Installation & Platform Edge Cases', () {
-    test('Android ABI selector handles empty, universal, and mismatched device ABIs', () {
+    test(
+        'Android ABI selector handles empty, universal, and mismatched device ABIs',
+        () {
       final assets = [
         {
           'name': 'zohal-0.2.0-universal.apk',
@@ -597,7 +631,10 @@ b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9  ./build/output
       // 4. Returns null if asset list has no APKs
       final emptyMatch = selectAndroidApkAsset(
         assets: [
-          {'name': 'zohal.AppImage', 'browser_download_url': 'https://example.com/app'},
+          {
+            'name': 'zohal.AppImage',
+            'browser_download_url': 'https://example.com/app'
+          },
         ],
         deviceAbis: ['arm64-v8a'],
       );

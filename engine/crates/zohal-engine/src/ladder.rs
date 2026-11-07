@@ -205,6 +205,23 @@ impl Ladder {
                     deadline: Duration::from_secs(12),
                 },
             ],
+            ConnectionMode::Custom(ref config) => {
+                let transport = if config.protocol.eq_ignore_ascii_case("vmess") {
+                    Transport::Vmess
+                } else {
+                    Transport::Vless
+                };
+                vec![RungConfig {
+                    rung_number: 1,
+                    transport,
+                    scan: ScanProfile::Turbo,
+                    noize: NoizeProfile::Off,
+                    use_cache: false,
+                    h2_proven_only: false,
+                    fragment: false,
+                    deadline: Duration::from_secs(10),
+                }]
+            }
         };
 
         if skip_udp && mode == ConnectionMode::Auto {
@@ -297,5 +314,45 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn test_custom_ladder_vless_and_vmess() {
+        use zohal_proto::types::CustomNodeConfig;
+        let vless_node = CustomNodeConfig {
+            protocol: "vless".to_string(),
+            server: "1.1.1.1".to_string(),
+            port: 443,
+            uuid: "uuid1".to_string(),
+            security: None,
+            sni: None,
+            transport: None,
+            path: None,
+            fingerprint: None,
+            public_key: None,
+            short_id: None,
+            flow: None,
+        };
+        let l1 = Ladder::build(ConnectionMode::Custom(Box::new(vless_node)), false, None);
+        assert_eq!(l1.rungs.len(), 1);
+        assert_eq!(l1.rungs[0].transport, Transport::Vless);
+
+        let vmess_node = CustomNodeConfig {
+            protocol: "vmess".to_string(),
+            server: "2.2.2.2".to_string(),
+            port: 443,
+            uuid: "uuid2".to_string(),
+            security: None,
+            sni: None,
+            transport: None,
+            path: None,
+            fingerprint: None,
+            public_key: None,
+            short_id: None,
+            flow: None,
+        };
+        let l2 = Ladder::build(ConnectionMode::Custom(Box::new(vmess_node)), false, None);
+        assert_eq!(l2.rungs.len(), 1);
+        assert_eq!(l2.rungs[0].transport, Transport::Vmess);
     }
 }

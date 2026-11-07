@@ -63,10 +63,12 @@ class DesktopTrayService with TrayListener, WindowListener {
           }
           final iconFile =
               File('${Directory.systemTemp.path}/zohal_tray_icon.png');
-          await iconFile.writeAsBytes(
-            byteData.buffer.asUint8List(),
-            flush: true,
-          );
+          if (!await iconFile.exists() || await iconFile.length() == 0) {
+            await iconFile.writeAsBytes(
+              byteData.buffer.asUint8List(),
+              flush: false,
+            );
+          }
           iconPath = iconFile.path;
         } catch (e) {
           ZohalLogger().debug('Tray icon extraction fallback: $e');

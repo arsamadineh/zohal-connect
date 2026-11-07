@@ -10,7 +10,9 @@ use tokio::time::sleep;
 use tracing::{error, info, warn};
 use zohal_proto::error::ErrorCode;
 use zohal_proto::settings::Settings;
-use zohal_proto::types::{DesiredIntent, DesiredState, EngineState, Phase, Stage, Transport};
+use zohal_proto::types::{
+    ConnectionMode, DesiredIntent, DesiredState, EngineState, Phase, Stage, Transport,
+};
 
 const SETTLE_WINDOW_MS: u64 = 120;
 
@@ -23,6 +25,7 @@ pub struct Supervisor {
     log_ring: LogRingBuffer,
     settings: Arc<parking_lot::RwLock<Settings>>,
     active_candidate: Option<CandidateHandle>,
+    active_mode: Option<ConnectionMode>,
 }
 
 impl Supervisor {
@@ -50,6 +53,7 @@ impl Supervisor {
             log_ring,
             settings,
             active_candidate: None,
+            active_mode: None,
         };
 
         (sup, state_rx, desired_tx)
@@ -102,11 +106,14 @@ impl Supervisor {
             let desired = *self.desired_rx.borrow();
             let current_phase = self.state_tx.borrow().phase;
 
+            let mode_changed = current_phase == Phase::Connected
+                && self.active_mode.as_ref() != Some(&self.settings.read().connection_mode);
+
             let needs_bring_up = desired.intent == DesiredIntent::Up
                 && (current_phase == Phase::Idle || current_phase == Phase::Failed);
 
-            let needs_tear_down =
-                desired.intent == DesiredIntent::Down && current_phase != Phase::Idle;
+            let needs_tear_down = (desired.intent == DesiredIntent::Down && current_phase != Phase::Idle)
+                || (desired.intent == DesiredIntent::Up && mode_changed);
 
             if needs_bring_up {
                 // Settle window: wait 120 ms for desired to stay stable
@@ -159,10 +166,10 @@ impl Supervisor {
         // Small prepare pause to verify journal and initial environment
         sleep(Duration::from_millis(20)).await;
 
-        let mode = self.settings.read().connection_mode;
+        let mode = self.settings.read().connection_mode.clone();
         let fp = self.cache.compute_fingerprint("default", "10.0.0.1");
         let winning_rung = self.cache.get_winning_rung(&fp);
-        let mut ladder = Ladder::build(mode, false, winning_rung);
+        let mut ladder = Ladder::build(mode.clone(), false, winning_rung);
 
         self.update_state(|s| {
             s.phase = Phase::Connecting;
@@ -222,11 +229,12 @@ impl Supervisor {
                         s.since_unix = Some(now);
                         s.fail_streak = 0;
                     });
+                    self.active_mode = Some(mode);
 
                     // Fetch trace in background to populate real exit IP and location without blocking connect
                     let state_tx_clone = self.state_tx.clone();
                     tokio::spawn(async move {
-                        let proxy_url = format!("socks5h://127.0.0.1:{cand_port}");
+                        let proxy_url = format!("socks5://127.0.0.1:{cand_port}");
                         let target_url = "https://1.1.1.1/cdn-cgi/trace";
                         if let Ok(proxy_agent) = ureq::Proxy::new(&proxy_url) {
                             let agent = ureq::builder()
@@ -380,6 +388,7 @@ impl Supervisor {
             s.colo = None;
             s.since_unix = None;
         });
+        self.active_mode = None;
         info!("[supervisor] tear_down completed");
     }
 }

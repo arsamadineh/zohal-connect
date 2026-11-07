@@ -50,6 +50,8 @@ pub enum Transport {
     WireGuard,
     GoolMasque,
     GoolClassic,
+    Vless,
+    Vmess,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -110,7 +112,31 @@ pub enum NoizeProfile {
     Gfw,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct CustomNodeConfig {
+    pub protocol: String, // "vless" | "vmess"
+    pub server: String,
+    pub port: u16,
+    pub uuid: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub security: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub sni: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub transport: Option<String>, // "tcp" | "ws" | "grpc"
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub path: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub fingerprint: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub public_key: Option<String>, // Reality pbk
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub short_id: Option<String>,   // Reality sid
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub flow: Option<String>,       // e.g. "xtls-rprx-vision"
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
 pub enum ConnectionMode {
     #[serde(alias = "auto")]
@@ -123,6 +149,8 @@ pub enum ConnectionMode {
     WireGuard,
     #[serde(alias = "gool")]
     Gool,
+    #[serde(alias = "custom")]
+    Custom(Box<CustomNodeConfig>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]

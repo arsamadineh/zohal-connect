@@ -102,6 +102,21 @@ class StringsFa {
       'روش اتصال تغییر کرد؛ اتصال دوباره برقرار می‌شود';
   static const String toastDirectInternet =
       'اتصال قطع شد؛ اینترنت مستقیم فعال است';
+  static const String toastConfigAdded = 'پیکربندی با موفقیت اضافه شد';
+  static const String toastInvalidConfig = 'پیوند پیکربندی معتبر نیست';
+
+  // Configs & Servers
+  static const String serverAndConfig = 'سرور و پیکربندی';
+  static const String configsTitle = 'پیکربندی‌ها و سرورها';
+  static const String addConfig = 'افزودن پیکربندی';
+  static const String pasteConfig = 'جای‌گذاری از کلیپ‌بورد';
+  static const String configInputHint = 'پیوند پیکربندی (VLESS یا VMess) را وارد کنید';
+  static const String pingAll = 'آزمایش پینگ همه';
+  static const String pingTesting = 'در حال آزمایش...';
+  static const String untested = 'تست نشده';
+  static const String ms = 'میلی‌ثانیه';
+  static const String activeServer = 'سرور فعال';
+  static const String deleteServer = 'حذف سرور';
 
   // Dialogs
   static const String dialogCancelConnectTitle = 'لغو اتصال؟';
@@ -214,6 +229,16 @@ class StringsFa {
   static const String updateFailed = 'دریافت به‌روزرسانی با خطا مواجه شد.';
   static const String updateRetry = 'تلاش مجدد';
   static const String updateLater = 'بعداً';
+  static const String updatePause = 'توقف';
+  static const String updateResume = 'ادامه دانلود';
+  static const String updatePaused = 'دانلود متوقف شد';
+  static const String updateReconnecting = 'در حال اتصال مجدد...';
+  static const String updateVerifying = 'در حال بررسی صحت فایل...';
+  static const String updateVerificationFailed = 'بررسی صحت فایل با خطا مواجه شد.';
+  static const String updateSpeed = 'سرعت:';
+  static const String updateEta = 'زمان باقی‌مانده:';
+  static const String updateInstallRestart = 'نصب و راه‌اندازی مجدد';
+  static const String updateRetryOffset = 'ادامه از بخش دریافت‌شده';
 
   // Onboarding
   static const String onboardingIntro =

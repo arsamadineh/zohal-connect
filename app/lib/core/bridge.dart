@@ -61,7 +61,7 @@ class EngineStateNotifier extends StateNotifier<EngineState> {
     });
   }
 
-  void setDesired(bool up, {ZohalSettings? settings}) {
+  void setDesired(bool up, {ZohalSettings? settings, Map<String, dynamic>? mode}) {
     // Optimistic UI (spec 12.6): the control reacts within one frame while
     // the engine confirms asynchronously. If the engine disagrees for more
     // than 2 s, the engine's last real state wins back.
@@ -76,7 +76,19 @@ class EngineStateNotifier extends StateNotifier<EngineState> {
     _convergeTimer = Timer(const Duration(seconds: 15), () {
       state = _lastEngineState;
     });
-    bridge.setDesired(up, settings: settings);
+    bridge.setDesired(up, settings: settings, mode: mode);
+  }
+
+  EngineState get currentState => state;
+
+  void setCustomProxyState(EngineState newState) {
+    _convergeTimer?.cancel();
+    state = newState;
+  }
+
+  void updateCustomProxyState(EngineState Function(EngineState current) updater) {
+    _convergeTimer?.cancel();
+    state = updater(state);
   }
 
   @override
@@ -95,6 +107,12 @@ class EngineStatsNotifier extends StateNotifier<EngineStats> {
     _sub = bridge.statsStream.listen((newStats) {
       state = newStats;
     });
+  }
+
+  EngineStats get currentStats => state;
+
+  void setCustomStats(EngineStats newStats) {
+    state = newStats;
   }
 
   @override
@@ -232,7 +250,7 @@ class ZohalBridgeClient {
     });
   }
 
-  Future<void> _androidSetDesired(bool up) async {
+  Future<void> _androidSetDesired(bool up, {Map<String, dynamic>? mode}) async {
     final channel = VpnChannel();
     if (up) {
       final granted = await channel.prepare();
@@ -242,8 +260,10 @@ class ZohalBridgeClient {
         );
         return;
       }
+      final modeStr = mode != null ? 'custom' : _lastSettings.connectionMode.name;
       await channel.start({
-        'mode': _lastSettings.connectionMode.name,
+        'mode': modeStr,
+        if (mode != null) 'customMode': mode,
         'dns': _lastSettings.dnsServers,
         'ipVersion': _lastSettings.ipVersion.name,
         'killSwitch': _lastSettings.killSwitch,
@@ -359,7 +379,11 @@ class ZohalBridgeClient {
         socketPath,
         type: InternetAddressType.unix,
       );
-      _socket = await Socket.connect(address, 0);
+      _socket = await Socket.connect(
+        address,
+        0,
+        timeout: const Duration(milliseconds: 500),
+      );
       _onSocketConnected();
       return true;
     } catch (e) {
@@ -549,14 +573,19 @@ class ZohalBridgeClient {
     return VpnChannel().prepare();
   }
 
-  void setDesired(bool up, {ZohalSettings? settings}) {
+  void setDesired(bool up, {ZohalSettings? settings, Map<String, dynamic>? mode}) {
     if (settings != null) _lastSettings = settings;
     _epoch++;
     if (VpnChannel.isSupported) {
-      _androidSetDesired(up);
+      _androidSetDesired(up, mode: mode);
       return;
     }
-    final cmd = jsonEncode({'t': 'set_desired', 'up': up, 'epoch': _epoch});
+    final cmd = jsonEncode({
+      't': 'set_desired',
+      'up': up,
+      'epoch': _epoch,
+      if (mode != null) 'mode': mode,
+    });
     _send(cmd);
   }
 

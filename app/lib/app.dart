@@ -9,9 +9,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'core/bridge.dart';
 import 'core/tray_service.dart';
+import 'design/motion.dart';
 import 'design/theme.dart';
 import 'features/connect/main_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/splash/splash_screen.dart';
 import 'l10n/strings_fa.dart';
 
 final onboardingCompletedProvider = FutureProvider<bool>((ref) async {
@@ -36,7 +38,11 @@ class _ZohalAppState extends ConsumerState<ZohalApp> {
   @override
   void initState() {
     super.initState();
-    ref.read(trayServiceProvider).init();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ref.read(trayServiceProvider).init();
+      }
+    });
   }
 
   @override
@@ -67,11 +73,24 @@ class _ZohalAppState extends ConsumerState<ZohalApp> {
           child: child ?? const SizedBox.shrink(),
         );
       },
-      home: onboarding.when(
-        data: (completed) =>
-            completed ? const MainScreen() : const OnboardingScreen(),
-        loading: () => const Scaffold(body: SizedBox.shrink()),
-        error: (_, __) => const MainScreen(),
+      home: AnimatedSwitcher(
+        duration: ZohalMotion.durationMicro,
+        switchInCurve: ZohalMotion.easeStandard,
+        switchOutCurve: ZohalMotion.easeStandard,
+        layoutBuilder: (currentChild, previousChildren) => Stack(
+          fit: StackFit.expand,
+          children: [
+            ...previousChildren,
+            if (currentChild != null) currentChild,
+          ],
+        ),
+        child: onboarding.when(
+          data: (completed) => completed
+              ? const MainScreen(key: ValueKey('main'))
+              : const OnboardingScreen(key: ValueKey('onboarding')),
+          loading: () => const SplashScreen(key: ValueKey('splash')),
+          error: (_, __) => const MainScreen(key: ValueKey('main_error')),
+        ),
       ),
     );
   }

@@ -2,6 +2,7 @@
 
 pub mod backend;
 pub mod cache;
+pub mod custom_backend;
 pub mod ipc;
 pub mod ipc_client;
 pub mod journal;

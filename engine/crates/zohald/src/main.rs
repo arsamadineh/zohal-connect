@@ -6,8 +6,9 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 use tokio::signal;
 use tracing::{error, info, warn};
-use zohal_engine::backend::TunnelBackend;
+use zohal_engine::backend::{CompositeBackend, TunnelBackend};
 use zohal_engine::cache::CacheManager;
+use zohal_engine::custom_backend::{find_sing_box_bin, CustomProxyBackend};
 use zohal_engine::ipc::IpcServer;
 use zohal_engine::ipc_client::IpcClient;
 use zohal_engine::journal::Journal;
@@ -157,7 +158,26 @@ async fn run_service() -> Result<(), Box<dyn std::error::Error>> {
     let log_ring = LogRingBuffer::new();
     let settings = Arc::new(parking_lot::RwLock::new(Settings::default()));
 
-    let backend = Arc::new(RealAetherBackend::new(aether_bin, &data_dir));
+    let aether_backend = Arc::new(RealAetherBackend::new(aether_bin, &data_dir));
+    let sing_box_bin = find_sing_box_bin();
+    if let Some(ref sb) = sing_box_bin {
+        info!("[zohald] found sing-box binary at {:?}", sb);
+    } else {
+        warn!("[zohald] sing-box binary not found on host");
+    }
+    let custom_backend = Arc::new(CustomProxyBackend::new(
+        sing_box_bin,
+        &data_dir,
+        aether_backend.platform(),
+        aether_backend.tun_frontend(),
+        Arc::new(parking_lot::RwLock::new(None)),
+        Some(settings.clone()),
+    ));
+    let backend = Arc::new(CompositeBackend::new(
+        aether_backend,
+        custom_backend,
+        settings.clone(),
+    ));
 
     let initial_desired = DesiredState {
         intent: DesiredIntent::Down,
@@ -234,7 +254,21 @@ async fn run_user_proxy() -> Result<(), Box<dyn std::error::Error>> {
     let journal = Arc::new(Journal::new(&user_dir)?);
 
     let aether_bin = find_aether_bin();
-    let backend = Arc::new(RealAetherBackend::new(aether_bin, &user_dir));
+    let aether_backend = Arc::new(RealAetherBackend::new(aether_bin, &user_dir));
+    let sing_box_bin = find_sing_box_bin();
+    let custom_backend = Arc::new(CustomProxyBackend::new(
+        sing_box_bin,
+        &user_dir,
+        aether_backend.platform(),
+        aether_backend.tun_frontend(),
+        Arc::new(parking_lot::RwLock::new(None)),
+        Some(settings.clone()),
+    ));
+    let backend = Arc::new(CompositeBackend::new(
+        aether_backend,
+        custom_backend,
+        settings.clone(),
+    ));
 
     let (mut supervisor, state_rx, desired_tx) = Supervisor::new(
         DesiredState::default(),

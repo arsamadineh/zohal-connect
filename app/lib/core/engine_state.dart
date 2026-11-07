@@ -20,6 +20,10 @@ enum TransportKind {
   wireguard,
   goolMasque,
   goolClassic,
+  vless,
+  vmess,
+  shadowsocks,
+  trojan,
 }
 
 enum ConnectionScope { tun, systemProxy }
@@ -112,6 +116,15 @@ class EngineState {
           return TransportKind.goolMasque;
         case 'goolclassic':
           return TransportKind.goolClassic;
+        case 'vless':
+          return TransportKind.vless;
+        case 'vmess':
+          return TransportKind.vmess;
+        case 'shadowsocks':
+        case 'ss':
+          return TransportKind.shadowsocks;
+        case 'trojan':
+          return TransportKind.trojan;
         default:
           return TransportKind.none;
       }

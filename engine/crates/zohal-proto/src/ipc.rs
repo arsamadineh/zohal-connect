@@ -1,6 +1,6 @@
 use crate::error::ErrorCode;
 use crate::settings::Settings;
-use crate::types::{EngineState, TrafficStats};
+use crate::types::{ConnectionMode, EngineState, TrafficStats};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -8,7 +8,12 @@ use std::collections::HashMap;
 #[serde(tag = "t", rename_all = "snake_case")]
 pub enum ClientMessage {
     Hello { proto: u32, client: String },
-    SetDesired { up: bool, epoch: u64 },
+    SetDesired {
+        up: bool,
+        epoch: u64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        mode: Option<ConnectionMode>,
+    },
     GetState,
     Subscribe { stats: bool },
     Unsubscribe,

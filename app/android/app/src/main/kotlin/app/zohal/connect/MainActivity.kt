@@ -155,10 +155,34 @@ class MainActivity : FlutterActivity() {
                         result.success("idle")
                     }
                 }
+                "getSupportedAbis" -> {
+                    try {
+                        val abis = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            Build.SUPPORTED_ABIS.toList()
+                        } else {
+                            @Suppress("DEPRECATION")
+                            listOf(Build.CPU_ABI, Build.CPU_ABI2).filterNotNull()
+                        }
+                        result.success(abis)
+                    } catch (e: Exception) {
+                        result.error("ABI_ERROR", e.message, null)
+                    }
+                }
                 "installApk" -> {
                     val apkPath = call.argument<String>("path")
                     if (apkPath != null) {
                         try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                if (!packageManager.canRequestPackageInstalls()) {
+                                    val intent = Intent(android.provider.Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                                        data = android.net.Uri.parse("package:$packageName")
+                                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                    }
+                                    startActivity(intent)
+                                    result.error("PERMISSION_DENIED", "Unknown app sources permission required", null)
+                                    return@setMethodCallHandler
+                                }
+                            }
                             val file = File(apkPath)
                             val uri = FileProvider.getUriForFile(
                                 this,

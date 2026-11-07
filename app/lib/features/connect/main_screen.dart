@@ -13,6 +13,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/bridge.dart';
 import '../../core/engine_state.dart';
 import '../../core/persian.dart';
+import '../../core/proxy_models.dart';
+import '../../core/proxy_runner.dart';
+import '../../core/proxy_service.dart';
 import '../../core/settings.dart';
 import '../../core/updater.dart';
 import '../../design/components/brand_logo.dart';
@@ -25,6 +28,7 @@ import '../../design/tokens.dart';
 import '../../l10n/strings_fa.dart';
 import '../about/update_dialog.dart';
 import '../mode/mode_sheet.dart';
+import '../nodes/node_sheet.dart';
 import '../routing/routing_screen.dart';
 import '../settings/settings_screen.dart';
 
@@ -65,6 +69,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _handleConnectTap(EngineState state) {
+    final selectedNode = ref.read(selectedNodeProvider);
+    if (selectedNode != null && selectedNode.isCustom) {
+      final runner = ref.read(customProxyRunnerProvider);
+      if (state.phase == ConnectionPhase.idle ||
+          state.phase == ConnectionPhase.failed) {
+        runner.connect(selectedNode);
+      } else if (state.phase == ConnectionPhase.connected ||
+          state.phase == ConnectionPhase.connecting ||
+          state.phase == ConnectionPhase.preparing) {
+        runner.disconnect();
+      }
+      return;
+    }
+
     final settings = ref.read(zohalSettingsProvider);
     if (state.phase == ConnectionPhase.idle ||
         state.phase == ConnectionPhase.failed) {
@@ -158,7 +176,15 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     }
   }
 
-  String _getMethodLabel(ZohalSettings settings, EngineState state) {
+  String _getMethodLabel(
+    ZohalSettings settings,
+    EngineState state,
+    ProxyNode? selectedNode,
+  ) {
+    if (selectedNode != null && selectedNode.isCustom) {
+      return Persian.ltrIsolate(selectedNode.protocol.name.toUpperCase());
+    }
+
     if (settings.connectionMode == ConnectionMode.auto) {
       if (state.phase == ConnectionPhase.connected &&
           state.transport != TransportKind.none) {
@@ -197,6 +223,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final engineStats = ref.watch(engineStatsProvider);
     final settings = ref.watch(zohalSettingsProvider);
     final updateInfo = ref.watch(updateInfoProvider);
+    final selectedNode = ref.watch(selectedNodeProvider);
 
     final isConnected = engineState.phase == ConnectionPhase.connected;
 
@@ -440,6 +467,51 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // Server & Configuration Row
+                      SharpRow(
+                        title: StringsFa.serverAndConfig,
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (selectedNode != null &&
+                                selectedNode.countryCode != 'UN')
+                              Padding(
+                                padding: const EdgeInsets.only(left: 6.0),
+                                child: CountryFlag.fromCountryCode(
+                                  selectedNode.countryCode,
+                                  height: 12.0,
+                                  width: 18.0,
+                                  borderRadius: 0,
+                                ),
+                              ),
+                            ConstrainedBox(
+                              constraints:
+                                  const BoxConstraints(maxWidth: 150.0),
+                              child: Text(
+                                selectedNode?.name ?? StringsFa.activeServer,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  fontFamily: ZohalTokens.fontFamily,
+                                  fontSize: 13.0,
+                                  fontWeight: FontWeight.w500,
+                                  color: textSecondary,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 4.0),
+                            Icon(
+                              Icons.arrow_back_ios_new_sharp,
+                              size: 12.0,
+                              color: textSecondary,
+                            ),
+                          ],
+                        ),
+                        onTap: () {
+                          NodeSheet.show(context);
+                        },
+                      ),
+
                       // Mode Selector Row
                       SharpRow(
                         title: StringsFa.connectionMethod,
@@ -447,7 +519,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              _getMethodLabel(settings, engineState),
+                              _getMethodLabel(
+                                settings,
+                                engineState,
+                                selectedNode,
+                              ),
                               style: TextStyle(
                                 fontFamily: ZohalTokens.fontFamily,
                                 fontSize: 13.0,

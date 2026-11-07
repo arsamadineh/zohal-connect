@@ -69,7 +69,16 @@ impl IpcClient {
         up: bool,
         epoch: u64,
     ) -> Result<EngineState, Box<dyn std::error::Error + Send + Sync>> {
-        let cmd = ClientMessage::SetDesired { up, epoch };
+        self.set_desired_with_mode(up, epoch, None).await
+    }
+
+    pub async fn set_desired_with_mode(
+        &mut self,
+        up: bool,
+        epoch: u64,
+        mode: Option<zohal_proto::types::ConnectionMode>,
+    ) -> Result<EngineState, Box<dyn std::error::Error + Send + Sync>> {
+        let cmd = ClientMessage::SetDesired { up, epoch, mode };
         match self.send_cmd(&cmd).await? {
             ServerMessage::State { state } => Ok(*state),
             ServerMessage::Error { code, msg } => {

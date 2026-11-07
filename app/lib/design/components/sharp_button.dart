@@ -57,6 +57,11 @@ class _SharpButtonState extends State<SharpButton>
   void _handleTapUp(TapUpDetails details) {
     if (widget.onPressed == null) return;
     _pressController.reverse();
+  }
+
+  void _handleTap() {
+    if (widget.onPressed == null) return;
+    _pressController.reverse();
     widget.onPressed!();
   }
 
@@ -104,6 +109,8 @@ class _SharpButtonState extends State<SharpButton>
       enabled: widget.onPressed != null,
       label: widget.label,
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onPressed != null ? _handleTap : null,
         onTapDown: _handleTapDown,
         onTapUp: _handleTapUp,
         onTapCancel: _handleTapCancel,

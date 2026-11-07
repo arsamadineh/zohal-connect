@@ -13,14 +13,46 @@ pub use settings::{
     AppSplit, AppSplitMode, DnsSettings, RoutingSettings, Rule, RuleKind, Settings,
 };
 pub use types::{
-    ConnectionMode, DesiredIntent, DesiredState, EngineState, IpVersion, NoizeProfile, Phase,
-    ScanProfile, Scope, Stage, TrafficStats, Transport,
+    ConnectionMode, CustomNodeConfig, DesiredIntent, DesiredState, EngineState, IpVersion,
+    NoizeProfile, Phase, ScanProfile, Scope, Stage, TrafficStats, Transport,
 };
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use proptest::prelude::*;
+
+    #[test]
+    fn test_custom_node_config_serde_roundtrip() {
+        let cfg = CustomNodeConfig {
+            protocol: "vless".to_string(),
+            server: "1.1.1.1".to_string(),
+            port: 443,
+            uuid: "a3bb189e-8bf9-3888-9912-ace4e6543002".to_string(),
+            security: Some("reality".to_string()),
+            sni: Some("example.com".to_string()),
+            transport: Some("tcp".to_string()),
+            path: None,
+            fingerprint: Some("chrome".to_string()),
+            public_key: Some("test_pbk".to_string()),
+            short_id: Some("01234567".to_string()),
+            flow: Some("xtls-rprx-vision".to_string()),
+        };
+        let mode = ConnectionMode::Custom(Box::new(cfg.clone()));
+        let json = serde_json::to_string(&mode).unwrap();
+        let parsed: ConnectionMode = serde_json::from_str(&json).unwrap();
+        assert_eq!(mode, parsed);
+
+        // Also test ClientMessage with Custom mode
+        let msg = ClientMessage::SetDesired {
+            up: true,
+            epoch: 10,
+            mode: Some(mode),
+        };
+        let line = msg.to_line().unwrap();
+        let parsed_msg = ClientMessage::from_line(&line).unwrap();
+        assert_eq!(msg, parsed_msg);
+    }
 
     #[test]
     fn test_default_settings_valid() {
@@ -46,6 +78,7 @@ mod tests {
         let msg = ClientMessage::SetDesired {
             up: true,
             epoch: 42,
+            mode: None,
         };
         let line = msg.to_line().unwrap();
         let parsed = ClientMessage::from_line(&line).unwrap();

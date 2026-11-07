@@ -115,6 +115,49 @@ class Persian {
     }
   }
 
+  /// Formats byte transfer rates into Persian string (بایت/ث، کیلوبایت/ث، مگابایت/ث، گیگابایت/ث).
+  /// Rate is in bytes per second.
+  static String formatByteRate(num bytesPerSecond) {
+    if (bytesPerSecond < 0) bytesPerSecond = 0;
+    const double kb = 1024.0;
+    const double mb = 1024.0 * 1024.0;
+    const double gb = 1024.0 * 1024.0 * 1024.0;
+
+    if (bytesPerSecond >= gb) {
+      final double val = bytesPerSecond / gb;
+      return '${formatDecimal(val, 1)} گیگابایت/ث';
+    } else if (bytesPerSecond >= mb) {
+      final double val = bytesPerSecond / mb;
+      return '${formatDecimal(val, 1)} مگابایت/ث';
+    } else if (bytesPerSecond >= kb) {
+      final double val = bytesPerSecond / kb;
+      return '${formatDecimal(val, 1)} کیلوبایت/ث';
+    } else {
+      return '${formatDecimal(bytesPerSecond.toDouble(), 0)} بایت/ث';
+    }
+  }
+
+  /// Formats estimated remaining time into human-friendly Persian.
+  /// Example: 25s -> «~۲۵ ثانیه»، 130s -> «~۲ دقیقه»، 3670s -> «~۱ ساعت و ۱ دقیقه».
+  static String formatEta(Duration? duration) {
+    if (duration == null || duration.isNegative) return 'نامشخص';
+    final int seconds = duration.inSeconds;
+    if (seconds < 5) return 'چند لحظه';
+    if (seconds < 60) {
+      return '~${toPersianDigits(seconds.toString())} ثانیه';
+    }
+    final int minutes = duration.inMinutes;
+    if (minutes < 60) {
+      return '~${toPersianDigits(minutes.toString())} دقیقه';
+    }
+    final int hours = duration.inHours;
+    final int remMinutes = minutes % 60;
+    if (remMinutes == 0) {
+      return '~${toPersianDigits(hours.toString())} ساعت';
+    }
+    return '~${toPersianDigits(hours.toString())} ساعت و ${toPersianDigits(remMinutes.toString())} دقیقه';
+  }
+
   /// Formats a float with specific decimal places using Persian digits and Persian decimal separator «٫».
   static String formatDecimal(double value, int fractionDigits) {
     final String fixed = value.toStringAsFixed(fractionDigits);

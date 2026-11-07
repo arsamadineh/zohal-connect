@@ -172,7 +172,10 @@ async fn handle_client(
                 };
 
                 match msg {
-                    ClientMessage::SetDesired { up, epoch } => {
+                    ClientMessage::SetDesired { up, epoch, mode } => {
+                        if let Some(m) = mode {
+                            settings.write().connection_mode = m;
+                        }
                         let intent = if up {
                             DesiredIntent::Up
                         } else {

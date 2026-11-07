@@ -149,6 +149,14 @@ impl RealAetherBackend {
             next_id: Arc::new(AtomicU64::new(1)),
         }
     }
+
+    pub fn platform(&self) -> Arc<LinuxPlatform> {
+        self.platform.clone()
+    }
+
+    pub fn tun_frontend(&self) -> Arc<parking_lot::Mutex<Tun2ProxyFrontend>> {
+        self.tun_frontend.clone()
+    }
 }
 
 impl TunnelBackend for RealAetherBackend {
@@ -191,6 +199,11 @@ impl TunnelBackend for RealAetherBackend {
                     cmd.arg("--gool-classic");
                 }
                 Transport::None => {}
+                Transport::Vless | Transport::Vmess => {
+                    return Err(BackendError::ProcessFailed(
+                        "RealAetherBackend does not support custom proxy protocols".into(),
+                    ));
+                }
             }
 
             cmd.arg("--bind").arg(format!("127.0.0.1:{socks_port}"));

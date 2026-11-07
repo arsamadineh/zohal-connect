@@ -52,7 +52,17 @@ static void my_application_activate(GApplication* application) {
     gtk_window_set_title(window, "Zohal");
   }
 
-  gtk_window_set_default_size(window, 1280, 720);
+  gtk_window_set_default_size(window, 400, 680);
+  gtk_window_set_position(window, GTK_WIN_POS_CENTER);
+
+  GdkGeometry geometry = {};
+  geometry.min_width = 360;
+  geometry.min_height = 600;
+  geometry.max_width = 480;
+  geometry.max_height = 900;
+  gtk_window_set_geometry_hints(
+      window, nullptr, &geometry,
+      static_cast<GdkWindowHints>(GDK_HINT_MIN_SIZE | GDK_HINT_MAX_SIZE));
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();
   fl_dart_project_set_dart_entrypoint_arguments(
@@ -60,9 +70,8 @@ static void my_application_activate(GApplication* application) {
 
   FlView* view = fl_view_new(project);
   GdkRGBA background_color;
-  // Background defaults to black, override it here if necessary, e.g. #00000000
-  // for transparent.
-  gdk_rgba_parse(&background_color, "#000000");
+  // Background aligned with ZohalTokens.darkSurface (#0E0F10)
+  gdk_rgba_parse(&background_color, "#0E0F10");
   fl_view_set_background_color(view, &background_color);
   gtk_widget_show(GTK_WIDGET(view));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
